@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Practice Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f1f5f9;--s:#fff;--b:#e2e8f0;--t:#0f172a;--t2:#64748b;--t3:#94a3b8;
+  --bl:#2563a8;--bl-b:#eff6ff;--gr:#16a34a;--gr-b:#dcfce7;--am:#b45309;--am-b:#fef3c7;
+  --rd:#dc2626;--rd-b:#fef2f2;--pu:#7c3aed;--pu-b:#f5f3ff;--r:8px;--rs:5px;
+  --navy:#1a3a5c;--accent:#2563a8}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--t);font-size:14px}
+input,select,button,textarea{font-family:inherit;font-size:14px}
+#login{min-height:100vh;display:flex;align-items:center;justify-content:center}
+#app{display:none;min-height:100vh}
+.shell{display:flex;min-height:100vh}
+.sb{width:220px;min-width:220px;background:var(--s);border-right:1px solid var(--b);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;overflow-y:auto;z-index:100}
+.sbtop{padding:18px;border-bottom:1px solid var(--b)}
+.sbmark{width:32px;height:32px;background:var(--navy);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;margin-bottom:8px}
+.sbname{font-size:13px;font-weight:600}.sbsub{font-size:11px;color:var(--t2)}
+.ns{padding:12px 16px 4px;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.08em}
+.ni{display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:13px;cursor:pointer;color:var(--t2);border-left:2px solid transparent;user-select:none}
+.ni:hover{color:var(--t);background:var(--bg)}.ni.on{color:var(--t);background:var(--bg);border-left-color:var(--t);font-weight:500}
+.nic{width:18px;text-align:center;font-size:14px}
+.sbbot{margin-top:auto;padding:14px 16px;border-top:1px solid var(--b);display:flex;align-items:center;gap:10px}
+.av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+.av0{background:var(--navy);color:#fff}.av1{background:var(--bl-b);color:var(--bl)}.av2{background:var(--pu-b);color:var(--pu)}
+.uname{font-size:12px;font-weight:500}.urole{font-size:10px;color:var(--t2)}
+.xbtn{margin-left:auto;font-size:11px;color:var(--t3);cursor:pointer;padding:4px 8px;border:1px solid var(--b);border-radius:5px;background:none}
+.main{margin-left:220px;flex:1;min-height:100vh}
+.tb{position:sticky;top:0;z-index:50;background:var(--s);border-bottom:1px solid var(--b);padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.ttl{font-size:16px;font-weight:600}
+.tr{display:flex;align-items:center;gap:8px}
+.syn{font-size:11px;color:var(--t3);display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--b);border-radius:20px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--gr);flex-shrink:0}
+.dot.sp{background:var(--am);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.pg{padding:24px;display:none}.pg.on{display:block}
+.btn{padding:8px 14px;border-radius:var(--rs);border:1px solid var(--b);font-size:12px;cursor:pointer;background:var(--s);color:var(--t);font-weight:500}
+.btn:hover{background:var(--bg)}.btn:disabled{opacity:.5;cursor:not-allowed}
+.btk{background:var(--navy);color:#fff;border-color:var(--accent)}.btk:hover{opacity:.85}
+.bts{padding:4px 9px;font-size:11px}
+.btr{background:var(--rd-b);color:var(--rd);border-color:#FCA5A5}
+.btg{background:var(--gr-b);color:var(--gr);border-color:#86EFAC}
+.bdg{display:inline-flex;align-items:center;font-size:10px;font-weight:500;padding:3px 8px;border-radius:20px;white-space:nowrap}
+.bb{background:var(--bl-b);color:var(--bl)}.bg{background:var(--gr-b);color:var(--gr)}
+.ba{background:var(--am-b);color:var(--am)}.br{background:var(--rd-b);color:var(--rd)}
+.bp{background:var(--pu-b);color:var(--pu)}.bx{background:#F0EFE9;color:var(--t2)}
+.card{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:18px;margin-bottom:18px}
+.ctit{font-size:13px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.stat{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:16px}
+.sl{font-size:11px;color:var(--t2);margin-bottom:6px;font-weight:500}.sv{font-size:26px;font-weight:600}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+.fr{display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+.si{padding:8px 12px;border:1px solid var(--b);border-radius:var(--rs);outline:none;background:var(--s)}
+.si:focus{border-color:var(--accent)}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-size:11px;font-weight:600;color:var(--t2);padding:10px 12px;text-align:left;border-bottom:2px solid var(--b);background:var(--bg);white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid var(--b);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg)}
+.trow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--b)}
+.trow:last-child{border-bottom:none}
+.dot2{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dh{background:#E24B4A}.dm{background:#F59E0B}.dl{background:#22C55E}.dd{background:#D1D5DB}
+.ri{width:100%;padding:5px 8px;border:1px solid var(--b);border-radius:4px;font-size:11px;background:var(--bg);outline:none}
+.ri:focus{border-color:var(--accent);background:var(--s)}
+.tabs{display:flex;gap:2px;margin-bottom:18px;border-bottom:1px solid var(--b)}
+.tab{padding:9px 16px;font-size:13px;cursor:pointer;color:var(--t2);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab:hover{color:var(--navy)}.tab.on{color:var(--t);border-bottom-color:var(--t);font-weight:500}
+.fi{margin-bottom:14px}
+.fi label{display:block;font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+.fi input,.fi select,.fi textarea{width:100%;padding:9px 12px;border:1px solid var(--b);border-radius:var(--rs);outline:none;background:var(--s)}
+.fi input:focus,.fi select:focus,.fi textarea:focus{border-color:var(--accent)}
+.fi textarea{resize:vertical;min-height:60px}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center;padding:16px}
+.mo.on{display:flex}
+.md{background:var(--s);border-radius:14px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.mh{padding:18px 24px 14px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--s);z-index:1}
+.mt{font-size:16px;font-weight:600}.ms{font-size:12px;color:var(--t2);margin-top:2px}
+.mx{background:none;border:none;font-size:22px;cursor:pointer;color:var(--t2);line-height:1}
+.mb{padding:22px}
+.mf{padding:14px 24px;border-top:1px solid var(--b);display:flex;align-items:center;justify-content:flex-end;gap:8px;background:var(--bg);border-radius:0 0 14px 14px}
+.emp{text-align:center;padding:36px;color:var(--t3);font-size:13px}
+.cpl{background:var(--bg);border:1px solid var(--b);border-radius:var(--r);padding:14px}
+.cpi{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--b);font-size:12px}
+.cpi:last-child{border-bottom:none}
+.dr{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--b);font-size:12px}
+.dr:last-child{border-bottom:none}
+.ddbadge{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:4px 10px;border-radius:20px;font-weight:500}
+</style>
+</head>
+<body>
+
+<div id="app">
+ <div class="shell">
+  <nav class="sb">
+   <div class="sbtop">
+    <div class="sbmark">CA</div>
+    <div class="sbname">Practice Manager</div>
+   </div>
+   <div id="anav" style="display:none">
+    <div class="ns">Main</div>
+    <div class="ni" onclick="go('dash',this)"><span class="nic">&#9679;</span><span>Dashboard</span></div>
+    <div class="ni" onclick="go('tasks',this)"><span class="nic">T</span><span>Tasks</span></div>
+    <div class="ni" onclick="go('dates',this)"><span class="nic">D</span><span>Due Dates</span></div>
+    <div class="ns">GST</div>
+    <div class="ni" onclick="go('gst',this)"><span class="nic">G</span><span>GST Compliance</span></div>
+    <div class="ns">Clients</div>
+    <div class="ni" onclick="go('clients',this)"><span class="nic">C</span><span>All Clients</span></div>
+    <div class="ns">Storage</div>
+    <div class="ni" onclick="go('pendoc',this)"><span class="nic">P</span><span>Pending Docs</span></div>
+   </div>
+   <div id="snav" style="display:none">
+    <div class="ns">My Work</div>
+    <div class="ni" onclick="go('mine',this)"><span class="nic">T</span><span>My Tasks</span></div>
+    <div class="ns">Storage</div>
+    <div class="ni" onclick="go('pendoc',this)"><span class="nic">P</span><span>Pending Docs</span></div>
+   </div>
+   <div class="sbbot">
+    <div class="av" id="uav"></div>
+    <div><div class="uname" id="uname"></div><div class="urole" id="urole"></div></div>
+    <button class="xbtn" onclick="doLogout()">Exit</button>
+   </div>
+  </nav>
+
+  <div class="main">
+   <div class="tb">
+    <div class="ttl" id="ptitle">Dashboard</div>
+    <div class="tr">
+     <div class="syn"><div class="dot" id="sdot"></div><span id="stext">Synced</span></div>
+     <button class="btn" onclick="refresh()" style="color:var(--bl)">&#8635; Refresh</button>
+     <div id="pact"></div>
+    </div>
+   </div>
+
+   <!-- DASHBOARD -->
+   <div class="pg" id="p-dash">
+    <div class="stats" id="dstats"></div>
+    <div class="g2">
+     <div class="card"><div class="ctit">Pending Tasks <span style="font-size:11px;font-weight:400;color:var(--t2)">by due date</span></div><div id="dtasks"></div></div>
+     <div class="card"><div class="ctit">Upcoming Due Dates <span style="font-size:11px;font-weight:400;color:var(--t2)">this month</span></div><div id="ddates"></div></div>
+    </div>
+    <div class="card"><div class="ctit">Pending Documents <span style="font-size:11px;font-weight:400;color:var(--t2)">awaiting from clients</span></div><div id="dpend"></div></div>
+   </div>
+
+   <!-- TASKS -->
+   <div class="pg" id="p-tasks">
+    <div class="tabs">
+     <div class="tab on" onclick="setTTab('active',this)">Pending / In Progress</div>
+     <div class="tab" onclick="setTTab('done',this)">Completed</div>
+    </div>
+    <div class="fr">
+     <input class="si" type="text" id="tsq" placeholder="Search tasks..." oninput="renderTasks()" style="min-width:200px">
+     <select class="btn si" id="tscl" onchange="renderTasks()"><option value="">All clients</option></select>
+     <select class="btn si" id="tsas" onchange="renderTasks()"><option value="">All staff</option><option>Atik Bhayani</option><option>Rushiraj</option><option>Sahil</option></select>
+     <select class="btn si" id="tscat" onchange="renderTasks()"><option value="">All categories</option><option>GST</option><option>TDS</option><option>Income Tax</option><option>ROC / MCA</option><option>PF / ESIC</option><option>Audit</option><option>Other</option></select>
+    </div>
+    <div class="card" style="padding:0"><div class="tw"><table>
+     <thead><tr><th></th><th>Task</th><th>Client</th><th>Category</th><th>Assignee</th><th>Due Date</th><th>Status</th><th style="min-width:160px">Remarks</th><th>Actions</th></tr></thead>
+     <tbody id="ttb"></tbody>
+    </table></div></div>
+   </div>
+
+   <!-- DUE DATES -->
+   <div class="pg" id="p-dates">
+    <div class="fr">
+     <select class="btn si" id="ddmon" onchange="renderDD()">
+      <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+      <option value="4" selected>April</option><option value="5">May</option><option value="6">June</option>
+      <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+      <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+     </select>
+     <select class="btn si" id="ddyr" onchange="renderDD()">
+      <option value="2026">2026</option><option value="2027">2027</option>
+     </select>
+     <select class="btn si" id="ddcli" onchange="renderDD()" style="min-width:180px"><option value="">All clients</option></select>
+     <select class="btn si" id="ddcat" onchange="renderDD()"><option value="">All types</option><option>GST</option><option>TDS</option><option>PF / ESIC</option><option>Income Tax</option><option>ROC / MCA</option></select>
+     <select class="btn si" id="ddst" onchange="renderDD()"><option value="">All status</option><option value="done">Completed</option><option value="pending">Pending</option><option value="none">Not Started</option></select>
+    </div>
+    <div class="card" style="padding:0"><div class="tw"><table>
+     <thead><tr><th>Due Date</th><th>Compliance</th><th>Period</th><th>Client</th><th>Category</th><th>Status</th><th>Action</th></tr></thead>
+     <tbody id="ddtb"></tbody>
+    </table></div></div>
+   </div>
+
+   <!-- GST COMPLIANCE -->
+   <div class="pg" id="p-gst">
+    <div class="fr">
+     <select class="btn" id="gstm"></select>
+     <select class="btn" id="gsty"></select>
+     <button class="btn" onclick="loadGST()">Load</button>
+     <span style="font-size:11px;color:var(--t2);margin-left:8px">Tick = Filed in that month</span>
+    </div>
+    <div class="card" id="gcard"><div class="emp">Select month and click Load</div></div>
+   </div>
+
+   <!-- CLIENTS -->
+   <div class="pg" id="p-clients">
+    <div class="fr">
+     <input class="si" type="text" placeholder="Search..." oninput="renderClients(this.value)" style="min-width:200px">
+     <select class="btn si" onchange="filterEnt(this.value)"><option value="">All types</option><option>Private Limited</option><option>LLP</option><option>Proprietorship</option><option>Partnership</option><option>HUF</option></select>
+    </div>
+    <div class="card" style="padding:0"><div class="tw"><table>
+     <thead><tr><th>Client</th><th>Type</th><th>PAN</th><th>GSTIN</th><th>GST Filing</th><th>Open Tasks</th><th>Actions</th></tr></thead>
+     <tbody id="ctb"></tbody>
+    </table></div></div>
+   </div>
+
+   <!-- PENDING DOCS -->
+   <div class="pg" id="p-pendoc">
+    <div class="fr">
+     <select class="btn si" id="pdcl" onchange="renderPD()"><option value="">All clients</option></select>
+     <button class="btn btk" onclick="openPDModal()">+ Add Pending</button>
+    </div>
+    <div class="card"><div id="pdlist"></div></div>
+   </div>
+
+   <!-- MY TASKS (Staff) -->
+   <div class="pg" id="p-mine">
+    <div class="tabs">
+     <div class="tab on" onclick="setMTab('active',this)">Pending / In Progress</div>
+     <div class="tab" onclick="setMTab('done',this)">Completed</div>
+    </div>
+    <div class="fr">
+     <select class="btn si" id="mscl" onchange="renderMine()"><option value="">All clients</option></select>
+    </div>
+    <div class="stats" id="mystats" style="grid-template-columns:repeat(3,1fr)"></div>
+    <div class="card" style="padding:0"><div class="tw"><table>
+     <thead><tr><th></th><th>Task</th><th>Client</th><th>Category</th><th>Due Date</th><th>Status</th><th style="min-width:160px">Remarks</th><th>Actions</th></tr></thead>
+     <tbody id="mtb"></tbody>
+    </table></div></div>
+   </div>
+  </div>
+ </div>
+</div>
+
+<!-- TASK MODAL -->
+<div class="mo" id="mo-task">
+ <div class="md">
+  <div class="mh"><div><div class="mt" id="tmtit">Add Task</div></div><button class="mx" onclick="closeMo('mo-task')">&#x2715;</button></div>
+  <div class="mb">
+   <input type="hidden" id="tid">
+   <input type="hidden" id="tddid">
+   <div class="fi"><label>Task Name *</label><input type="text" id="tname"></div>
+   <div class="fi"><label>Client *</label><select id="tcli"><option value="">Select client</option></select></div>
+   <div class="fi"><label>Category</label><select id="tcat"><option>GST</option><option>TDS</option><option>Income Tax</option><option>ROC / MCA</option><option>PF / ESIC</option><option>Audit</option><option>Other</option></select></div>
+   <div class="fi" id="tassdiv"><label>Assign To</label><select id="tass"><option>Atik Bhayani</option><option>Rushiraj</option><option>Sahil</option></select></div>
+   <div class="fi"><label>Due Date *</label><input type="date" id="tdue"></div>
+   <div class="fi"><label>Priority</label><select id="tpri"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select></div>
+   <div class="fi"><label>Status</label><select id="tsts"><option value="pending">Pending</option><option value="inprogress">In Progress</option><option value="done">Done</option></select></div>
+   <div class="fi"><label>Remarks</label><textarea id="trm" placeholder="Notes..."></textarea></div>
+  </div>
+  <div class="mf"><button class="btn" onclick="closeMo('mo-task')">Cancel</button><button class="btn btk" id="tsavebtn" onclick="saveTask()">Save Task</button></div>
+ </div>
+</div>
+
+<!-- CLIENT MODAL -->
+<div class="mo" id="mo-client">
+ <div class="md" style="max-width:700px">
+  <div class="mh"><div><div class="mt" id="cmtit">Add Client</div></div><button class="mx" onclick="closeMo('mo-client')">&#x2715;</button></div>
+  <div class="mb">
+   <input type="hidden" id="cid">
+   <div class="fg">
+    <div>
+     <div class="fi"><label>Client Name *</label><input type="text" id="cname"></div>
+     <div class="fi"><label>PAN *</label><input type="text" id="cpan" maxlength="10" style="text-transform:uppercase"></div>
+     <div class="fi"><label>Entity Type *</label><select id="cent" onchange="updComps()"><option value="">Select</option><option>Private Limited</option><option>LLP</option><option>Proprietorship</option><option>Partnership</option><option>HUF</option></select></div>
+     <div class="fi"><label>GST Type</label><select id="cgst" onchange="updComps()"><option value="regular">Regular</option><option value="composition">Composition</option><option value="none">Not Registered</option></select></div>
+     <div class="fi" id="gstidiv"><label>GSTIN</label><input type="text" id="cgstin" maxlength="15" style="text-transform:uppercase"></div>
+     <div class="fi" id="gstfdiv"><label>GST Frequency</label><select id="cgstf" onchange="updComps()"><option value="monthly">Monthly</option><option value="quarterly">Quarterly (QRMP)</option></select></div>
+     <div class="fi"><label>Has Employees (TDS/PF)</label><select id="cemp" onchange="updComps()"><option value="no">No</option><option value="yes">Yes</option></select></div>
+     <div class="fi"><label>Turnover</label><select id="ctov" onchange="updComps()"><option value="above1cr">Above 1 Cr (Audit)</option><option value="above40l">40L to 1 Cr</option><option value="below40l">Below 40L</option></select></div>
+     <div class="fi"><label>Date Added / Registration</label><input type="date" id="cstart"></div>
+     <div class="fi"><label>Email</label><input type="email" id="cemail"></div>
+     <div class="fi"><label>Notes</label><textarea id="cnotes" placeholder="Portal, contact info..."></textarea></div>
+    </div>
+    <div>
+     <div class="cpl">
+      <div style="font-size:12px;font-weight:600;margin-bottom:10px">Applicable Compliances <span class="bdg bb" id="ccnt">0</span></div>
+      <div id="cpllist"></div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <div class="mf"><button class="btn" onclick="closeMo('mo-client')">Cancel</button><button class="btn btk" id="csavebtn" onclick="saveClient()">Save Client</button></div>
+ </div>
+</div>
+
+<!-- PENDING DOC MODAL -->
+<div class="mo" id="mo-pd">
+ <div class="md" style="max-width:480px">
+  <div class="mh"><div><div class="mt">Pending Document</div></div><button class="mx" onclick="closeMo('mo-pd')">&#x2715;</button></div>
+  <div class="mb">
+   <input type="hidden" id="pdid">
+   <div class="fi"><label>Client *</label><select id="pdcli"><option value="">Select</option></select></div>
+   <div class="fi"><label>Document Needed *</label><input type="text" id="pdname" placeholder="e.g. Bank statement April 2026"></div>
+   <div class="fi"><label>Category</label><select id="pdcat"><option>Bank Statement</option><option>Purchase Register</option><option>Sales Register</option><option>TDS Certificate</option><option>Salary Details</option><option>Others</option></select></div>
+   <div class="fi"><label>Needed By</label><input type="date" id="pddue"></div>
+   <div class="fi"><label>Remarks</label><textarea id="pdrm"></textarea></div>
+  </div>
+  <div class="mf"><button class="btn" onclick="closeMo('mo-pd')">Cancel</button><button class="btn btk" id="pdsavebtn" onclick="savePD()">Save</button></div>
+ </div>
+</div>
+
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="icon" href="data:,">
+<title>CA Atik Bhayani &amp; Associates — Practice Suite</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+:root{
+  --navy:#1a3a5c;--accent:#2563a8;--border:#e2e8f0;
+  --bg:#f1f5f9;--text:#0f172a;--muted:#64748b;
+  --green:#16a34a;--red:#dc2626;
+  --r:8px;--rs:5px;--sh:0 1px 4px rgba(0,0,0,.08);
+  --sb-w:220px;--sb-w-collapsed:60px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;}
+
+.login-wrap{position:fixed;inset:0;background:var(--navy);z-index:10000;display:flex;align-items:center;justify-content:center;}
+.login-box{background:#fff;border-radius:12px;padding:36px 32px;width:340px;max-width:92vw;box-shadow:0 8px 40px rgba(0,0,0,.3);}
+.login-logo{text-align:center;margin-bottom:20px;}
+.login-logo-title{font-size:17px;font-weight:700;color:var(--navy);}
+.login-logo-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+.login-divider{border:none;border-top:1px solid var(--border);margin:16px 0;}
+.login-field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.login-field label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);}
+.login-field input{padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px;outline:none;width:100%;}
+.login-field input:focus{border-color:var(--accent);}
+.login-btn{width:100%;padding:11px;background:var(--navy);color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;margin-top:4px;}
+.login-btn:hover{background:var(--accent);}
+.login-btn:disabled{opacity:.6;cursor:not-allowed;}
+.login-err{color:var(--red);font-size:12px;text-align:center;margin-top:8px;min-height:18px;}
+
+#app{display:none;height:100vh;}
+.layout{display:flex;height:100%;}
+
+.sidebar{width:var(--sb-w);min-width:var(--sb-w);background:var(--navy);display:flex;flex-direction:column;transition:width .18s,min-width .18s;overflow:hidden;}
+.sidebar.collapsed{width:var(--sb-w-collapsed);min-width:var(--sb-w-collapsed);}
+.sb-top{padding:16px 16px 14px;border-bottom:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.sb-brand{color:#fff;font-size:12px;font-weight:700;white-space:normal;line-height:1.3;overflow:hidden;}
+.sb-brand small{display:block;font-size:9.5px;color:rgba(255,255,255,.6);font-weight:500;margin-top:3px;white-space:normal;}
+.sb-collapse{background:rgba(255,255,255,.1);border:none;color:#fff;width:26px;height:26px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sb-collapse:hover{background:rgba(255,255,255,.2);}
+.sb-nav{flex:1;overflow-y:auto;padding:10px 0;}
+.sb-item{display:flex;align-items:center;gap:12px;padding:11px 18px;color:rgba(255,255,255,.75);cursor:pointer;font-size:13px;font-weight:500;white-space:nowrap;border-left:3px solid transparent;}
+.sb-item i{font-size:17px;width:18px;text-align:center;flex-shrink:0;}
+.sb-item:hover{background:rgba(255,255,255,.07);color:#fff;}
+.sb-item.active{background:rgba(255,255,255,.12);color:#fff;border-left-color:#fff;}
+.sb-label{overflow:hidden;text-overflow:ellipsis;}
+.sidebar.collapsed .sb-label,.sidebar.collapsed .sb-brand{display:none;}
+.sidebar.collapsed .sb-item{justify-content:center;padding:11px 0;}
+.sidebar.collapsed .sb-top{justify-content:center;}
+.sb-user{padding:14px 18px;border-top:1px solid rgba(255,255,255,.12);display:flex;align-items:center;gap:10px;}
+.sb-av{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
+.sb-uname{color:#fff;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;}
+.sb-urole{color:rgba(255,255,255,.55);font-size:10px;}
+.sb-logout{margin-left:auto;background:none;border:none;color:rgba(255,255,255,.6);cursor:pointer;font-size:15px;flex-shrink:0;}
+.sb-logout:hover{color:#fff;}
+.sidebar.collapsed .sb-user{justify-content:center;}
+.sidebar.collapsed .sb-uname,.sidebar.collapsed .sb-urole,.sidebar.collapsed .sb-logout{display:none;}
+
+.main{flex:1;display:flex;flex-direction:column;min-width:0;}
+
+.inner-tabs{display:flex;background:#fff;border-bottom:1px solid var(--border);padding:0 20px;flex-shrink:0;}
+.inner-tab{padding:12px 18px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;display:flex;align-items:center;gap:6px;}
+.inner-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
+.inner-panels{flex:1;min-height:0;}
+.inner-panel{display:none;height:100%;}
+.inner-panel.active{display:block;}
+
+.shell-panel{display:none;flex:1;min-height:0;}
+.shell-panel.active{display:flex;flex-direction:column;}
+.shell-panel iframe{width:100%;height:100%;border:none;display:block;flex:1;}
+
+.native-wrap{padding:20px;max-width:1200px;margin:0 auto;height:100%;overflow-y:auto;}
+
+.bar{display:flex;align-items:center;gap:8px;padding:0 0 16px;flex-wrap:wrap;}
+.sbox{position:relative;flex:1;min-width:160px;max-width:280px;}
+.sbox i{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;}
+.sbox input{width:100%;padding:8px 8px 8px 30px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;outline:none;}
+select.sel{padding:8px 10px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;outline:none;background:#fff;}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:var(--rs);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .12s;}
+.btn-p{background:var(--accent);color:#fff;}.btn-p:hover{background:#1d4ed8;}
+.btn-o{background:#fff;color:var(--text);border:1px solid var(--border);}.btn-o:hover{background:var(--bg);}
+.btn-r{background:#fef2f2;color:var(--red);border:1px solid #fca5a5;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.card{background:#fff;border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--sh);overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+th{padding:9px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);background:#f8fafc;border-bottom:1px solid var(--border);white-space:nowrap;}
+tr.row{border-bottom:1px solid var(--border);}
+tr.row:last-child{border-bottom:none;}
+tr.row:hover{background:#f8fafc;}
+tr.row td{padding:9px 12px;vertical-align:middle;font-size:13px;}
+.badge{display:inline-flex;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;}
+.empty{text-align:center;padding:50px;color:var(--muted);}
+.empty i{font-size:32px;display:block;margin-bottom:8px;opacity:.25;}
+.sp{width:15px;height:15px;border:2px solid rgba(0,0,0,.1);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.dropzone{border:2px dashed var(--border);border-radius:var(--r);padding:30px;text-align:center;color:var(--muted);margin-bottom:16px;background:#fff;cursor:pointer;}
+.dropzone.drag{border-color:var(--accent);background:#eff6ff;}
+.dropzone i{font-size:28px;display:block;margin-bottom:8px;opacity:.5;}
+h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--navy);color:#fff;padding:11px 18px;border-radius:var(--r);font-size:13px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,.2);opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none;z-index:999;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.err{background:var(--red);}
+.vf-field{margin-bottom:14px;}
+.vf-field label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:5px;}
+.vf-field input[type=text]{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;outline:none;}
+.vf-field input[type=text]:focus{border-color:var(--accent);}
+</style>
+</head>
+<body>
+
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-title">CA Atik Bhayani &amp; Associates</div>
+      <div class="login-logo-sub">Powered by Bhayani Business Solutions</div>
+    </div>
+    <hr class="login-divider">
+    <form onsubmit="doShellLogin();return false;" autocomplete="on">
+      <div class="login-field">
+        <label>User ID</label>
+        <input type="text" id="loginId" placeholder="Enter User ID" autocomplete="username">
+      </div>
+      <div class="login-field">
+        <label>Password</label>
+        <input type="password" id="loginPass" placeholder="Enter Password" autocomplete="current-password">
+      </div>
+      <button type="submit" class="login-btn" id="loginBtn">Sign in</button>
+    </form>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="layout">
+    <div class="sidebar" id="sidebar">
+      <div class="sb-top">
+        <div class="sb-brand">CA Atik Bhayani &amp; Associates<small>Powered by Bhayani Business Solutions</small></div>
+        <button class="sb-collapse" id="sbCollapseBtn" onclick="toggleSidebar()"><i class="ti ti-chevrons-left"></i></button>
+      </div>
+      <div class="sb-nav">
+        <div class="sb-item active" data-tab="pm" onclick="switchTab('pm')"><i class="ti ti-checklist"></i><span class="sb-label">Practice Manager</span></div>
+        <div class="sb-item" data-tab="billing" onclick="switchTab('billing')"><i class="ti ti-receipt-2"></i><span class="sb-label">Billing</span></div>
+        <div class="sb-item" data-tab="itr" onclick="switchTab('itr')"><i class="ti ti-file-text"></i><span class="sb-label">ITR Pack</span></div>
+        <div class="sb-item" data-tab="vault" onclick="switchTab('vault')"><i class="ti ti-folder"></i><span class="sb-label">Documents Vault</span></div>
+      </div>
+      <div class="sb-user">
+        <div class="sb-av" id="sbAv">--</div>
+        <div style="overflow:hidden;">
+          <div class="sb-uname" id="sbUname">—</div>
+          <div class="sb-urole" id="sbUrole">—</div>
+        </div>
+        <button class="sb-logout" title="Sign out" onclick="doShellLogout()"><i class="ti ti-logout"></i></button>
+      </div>
+    </div>
+
+    <div class="main">
+
+      <div class="shell-panel" id="panel-billing">
+        <iframe id="frame-billing" src=""></iframe>
+      </div>
+      <div class="shell-panel active" id="panel-pm">
+        <iframe id="frame-pm" src=""></iframe>
+      </div>
+
+      <div class="shell-panel" id="panel-itr">
+        <div class="inner-tabs">
+          <div class="inner-tab active" data-itab="builder" onclick="switchInnerTab('builder')"><i class="ti ti-file-plus"></i> Builder</div>
+          <div class="inner-tab" data-itab="history" onclick="switchInnerTab('history')"><i class="ti ti-history"></i> History</div>
+        </div>
+        <div class="inner-panels">
+          <div class="inner-panel active" id="ipanel-builder">
+            <iframe id="frame-itr" src=""></iframe>
+          </div>
+          <div class="inner-panel" id="ipanel-history">
+            <div class="native-wrap">
+              <h2 class="sectitle"><i class="ti ti-history"></i> Previously Generated ITR Packs</h2>
+              <div class="bar">
+                <div class="sbox"><i class="ti ti-search"></i><input type="text" id="ih-search" placeholder="Search client name…" oninput="renderItrHistory()"></div>
+                <button class="btn btn-o" onclick="loadItrHistory()"><i class="ti ti-refresh"></i> Refresh</button>
+              </div>
+              <div class="card">
+                <table>
+                  <thead><tr><th>Client</th><th>PAN</th><th>FY</th><th>AY</th><th>ITR Type</th><th>Created</th><th>Actions</th></tr></thead>
+                  <tbody id="ih-body"><tr><td colspan="7"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="shell-panel" id="panel-vault">
+        <div class="inner-tabs">
+          <div class="inner-tab active" data-vtab="upload" onclick="switchVaultTab('upload')"><i class="ti ti-cloud-upload"></i> Upload</div>
+          <div class="inner-tab" data-vtab="records" onclick="switchVaultTab('records')"><i class="ti ti-list"></i> Records</div>
+        </div>
+        <div class="inner-panels">
+
+          <!-- ===== Upload sub-tab ===== -->
+          <div class="inner-panel active" id="vpanel-upload">
+            <div class="native-wrap">
+              <h2 class="sectitle"><i class="ti ti-cloud-upload"></i> Upload a Document</h2>
+              <div class="card" style="padding:18px;max-width:560px;">
+                <div class="vf-field">
+                  <label>Client</label>
+                  <input type="text" id="dv-client" list="dv-client-list" placeholder="Type to search a client…" oninput="onDocClientPick()" autocomplete="off">
+                  <datalist id="dv-client-list"></datalist>
+                </div>
+                <div class="vf-field">
+                  <label>Category</label>
+                  <select class="sel" id="dv-main-cat" onchange="handleDocMainCategory()" style="width:100%;">
+                    <option value="">Select category…</option>
+                    <option>KYC</option><option>INCOME TAX</option><option>GST</option><option>ROC</option><option>OTHERS</option>
+                  </select>
+                </div>
+                <div class="vf-field" id="dv-subcat-wrap" style="display:none;">
+                  <label>Sub-Category</label>
+                  <select class="sel" id="dv-sub-cat" onchange="handleDocSubCategory()" style="width:100%;"></select>
+                </div>
+                <div class="vf-field" id="dv-other-wrap" style="display:none;">
+                  <label>Specify</label>
+                  <input type="text" id="dv-other-text" placeholder="Type the document type…">
+                </div>
+                <div class="vf-field">
+                  <label>File</label>
+                  <div class="dropzone" id="dv-drop" onclick="document.getElementById('dv-file').click()" style="padding:20px;">
+                    <i class="ti ti-cloud-upload"></i>
+                    <div id="dv-filename">Click to choose a file, or drag &amp; drop it here</div>
+                    <input type="file" id="dv-file" style="display:none" onchange="onDocFilePicked(this.files[0])">
+                  </div>
+                </div>
+                <div class="vf-field">
+                  <label>Note (optional)</label>
+                  <input type="text" id="dv-note" placeholder="Any remarks…">
+                </div>
+                <button class="btn btn-p" style="width:100%;justify-content:center;" onclick="saveDocument()" id="dv-upload-btn"><i class="ti ti-upload"></i> Upload</button>
+                <div id="dv-uploading" style="display:none;margin-top:10px;color:var(--muted);font-size:13px;"><div class="sp"></div> Uploading…</div>
+              </div>
+              <div style="font-size:11px;color:var(--muted);margin-top:10px;">Saved to Google Drive under <strong>Client Documents / &lt;client name&gt;</strong></div>
+            </div>
+          </div>
+
+          <!-- ===== Records sub-tab ===== -->
+          <div class="inner-panel" id="vpanel-records">
+            <div class="native-wrap">
+              <h2 class="sectitle"><i class="ti ti-list"></i> Document Records</h2>
+              <div class="bar">
+                <div class="sbox"><i class="ti ti-search"></i><input type="text" id="dv-search" placeholder="Search client or file name…" oninput="renderDocs()"></div>
+                <select class="sel" id="dv-filter-cat" onchange="renderDocs()">
+                  <option value="">All categories</option>
+                  <option>KYC</option><option>INCOME TAX</option><option>GST</option><option>ROC</option><option>OTHERS</option>
+                </select>
+                <button class="btn btn-o" onclick="fetchDocuments()"><i class="ti ti-refresh"></i> Refresh</button>
+              </div>
+              <div class="card">
+                <table>
+                  <thead><tr><th>Client</th><th>File</th><th>Category</th><th>Note</th><th>Uploaded</th><th>Actions</th></tr></thead>
+                  <tbody id="dv-body"><tr><td colspan="6"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i class="ti ti-check"></i><span id="tmsg"></span></div>
+
+<script>
+var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxoagx4t2EopKubBQs7iEc4RZAo81MDEyqs25J0YMXNOruPXpkKaoiPSy-0QwbW9Qt0/exec';
+var SHELL_USER = null;
+
+window.onload = function(){
+  var saved = sessionStorage.getItem('shellUser');
+  if (saved) { SHELL_USER = JSON.parse(saved); enterApp(); }
+  else document.getElementById('loginId').focus();
+};
+
+function doShellLogin(){
+  var u = document.getElementById('loginId').value.trim();
+  var p = document.getElementById('loginPass').value;
+  var err = document.getElementById('loginErr');
+  var btn = document.getElementById('loginBtn');
+  err.textContent = '';
+  if (!u || !p) { err.textContent = 'Enter username and password'; return; }
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  fetch(WEBAPP_URL + '?action=login&username=' + encodeURIComponent(u) + '&password=' + encodeURIComponent(p))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      btn.disabled = false; btn.textContent = 'Sign in';
+      if (!d.ok) { err.textContent = d.error || 'Login failed'; return; }
+      SHELL_USER = d.user;
+      sessionStorage.setItem('shellUser', JSON.stringify(SHELL_USER));
+      enterApp();
+    })
+    .catch(function(e){ btn.disabled = false; btn.textContent = 'Sign in'; err.textContent = 'Network error: ' + e.message; });
+}
+
+function doShellLogout(){
+  sessionStorage.removeItem('shellUser');
+  SHELL_USER = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginWrap').style.display = 'flex';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('frame-billing').src = '';
+  document.getElementById('frame-pm').src = '';
+  document.getElementById('frame-itr').src = '';
+}
+
+function enterApp(){
+  document.getElementById('loginWrap').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  var initials = (SHELL_USER.name || '?').split(' ').map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
+  document.getElementById('sbAv').textContent = initials;
+  document.getElementById('sbUname').textContent = SHELL_USER.name || SHELL_USER.username;
+  document.getElementById('sbUrole').textContent = SHELL_USER.role === 'admin' ? 'Admin' : 'Staff';
+
+  var authQS = '?embedded=1&name=' + encodeURIComponent(SHELL_USER.name||'')
+             + '&role=' + encodeURIComponent(SHELL_USER.role||'')
+             + '&username=' + encodeURIComponent(SHELL_USER.username||'');
+  document.getElementById('frame-billing').src = 'billing.html' + authQS;
+  document.getElementById('frame-pm').src = 'pm.html' + authQS;
+  document.getElementById('frame-itr').src = 'itr_pack.html' + authQS;
+}
+
+function toggleSidebar(){
+  var sb = document.getElementById('sidebar');
+  sb.classList.toggle('collapsed');
+  var icon = document.querySelector('#sbCollapseBtn i');
+  icon.className = sb.classList.contains('collapsed') ? 'ti ti-chevrons-right' : 'ti ti-chevrons-left';
+}
+
+function switchTab(name){
+  document.querySelectorAll('.sb-item').forEach(function(t){ t.classList.toggle('active', t.dataset.tab===name); });
+  document.querySelectorAll('.shell-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('panel-'+name).classList.add('active');
+  if(name==='itr' && document.querySelector('.inner-tab[data-itab="history"]').classList.contains('active')) loadItrHistory();
+  if(name==='vault') loadClientsForVault();
+}
+
+function switchInnerTab(name){
+  document.querySelectorAll('.inner-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.itab===name); });
+  document.querySelectorAll('.inner-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('ipanel-'+name).classList.add('active');
+  if(name==='history') loadItrHistory();
+}
+
+function toast(msg,type){
+  var t=document.getElementById('toast');
+  document.getElementById('tmsg').textContent=msg;
+  t.className='toast show'+(type?' '+type:'');
+  clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},3000);
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function api(action,params,cb){
+  var qs=Object.keys(params||{}).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);}).join('&');
+  fetch(WEBAPP_URL+'?action='+action+(qs?'&'+qs:'')).then(function(r){return r.json();}).then(cb).catch(function(e){toast('Network error: '+e.message,'err');});
+}
+function apiPost(body,cb){
+  fetch(WEBAPP_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)})
+    .then(function(r){return r.json();}).then(cb).catch(function(e){toast('Network error: '+e.message,'err');});
+}
+
+var ITR_HISTORY=[];
+function loadItrHistory(){
+  document.getElementById('ih-body').innerHTML='<tr><td colspan="7"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
+  api('listItrPacks',{},function(d){
+    if(!d.success){ document.getElementById('ih-body').innerHTML='<tr><td colspan="7"><div class="empty">Could not load history: '+esc(d.error||'')+'</div></td></tr>'; return; }
+    ITR_HISTORY=d.packs||[];
+    renderItrHistory();
+  });
+}
+function renderItrHistory(){
+  var q=(document.getElementById('ih-search').value||'').toLowerCase();
+  var list=ITR_HISTORY.filter(function(p){ return !q || (p.clientName||'').toLowerCase().indexOf(q)>-1; });
+  if(!list.length){ document.getElementById('ih-body').innerHTML='<tr><td colspan="7"><div class="empty"><i class="ti ti-file-off"></i>No ITR packs found.</div></td></tr>'; return; }
+  document.getElementById('ih-body').innerHTML=list.map(function(p){
+    var dt=p.createdAt?new Date(p.createdAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—';
+    return '<tr class="row">'
+      +'<td style="font-weight:500">'+esc(p.clientName)+'</td>'
+      +'<td style="font-family:monospace;font-size:12px">'+esc(p.pan||'—')+'</td>'
+      +'<td>'+esc(p.fy||'—')+'</td>'
+      +'<td>'+esc(p.ay||'—')+'</td>'
+      +'<td><span class="badge" style="background:#eff6ff;color:#2563a8">'+esc(p.itrType||'—')+'</span></td>'
+      +'<td style="font-size:12px;color:var(--muted)">'+dt+'</td>'
+      +'<td><a class="btn btn-o" style="padding:5px 10px;font-size:12px" href="'+esc(p.fileUrl)+'" target="_blank"><i class="ti ti-external-link"></i> Open PDF</a>'
+      +' <a class="btn btn-o" style="padding:5px 10px;font-size:12px" href="'+esc(p.folderUrl)+'" target="_blank"><i class="ti ti-folder"></i> Folder</a></td>'
+    +'</tr>';
+  }).join('');
+}
+
+/* ===================================================================
+   DOCUMENTS VAULT — Upload / Records sub-tabs, cascading categories
+   =================================================================== */
+var DOC_CATEGORY_MAP = {
+  'KYC': ['Aadhar Card','PAN Card','Partnership Deed','MOA / AOA','Photo',
+          'Address Proof','Bank Statement / Cancelled Cheque','Other'],
+  'INCOME TAX': ['ITR','P&L Account','Balance Sheet','Audit Report',
+          'Tax Audit Report (3CA-3CD / 3CB-3CD)','Computation of Income',
+          '26AS / AIS / TIS','Challan','Notice / Order','Other'],
+  'GST': ['GST Registration Certificate','GSTR-1','GSTR-3B','GSTR-9 / 9C',
+          'E-Way Bill','Reconciliation','Notice / Order','Other'],
+  'ROC': ['Certificate of Incorporation','MOA','AOA','Annual Return (MGT-7)',
+          'Financial Statements (AOC-4)','DIR-3 KYC','Board Resolution','Other'],
+  'OTHERS': ['Other']
+};
+var VAULT_CLIENTS = []; // {id, name}
+var ALL_DOCUMENTS = [];
+var DOC_PICKED_FILE = null;
+var VAULT_INITED = false;
+
+function switchVaultTab(name){
+  document.querySelectorAll('#panel-vault .inner-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.vtab===name); });
+  document.querySelectorAll('#panel-vault .inner-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('vpanel-'+name).classList.add('active');
+  if(name==='records') fetchDocuments();
+}
+
+function loadClientsForVault(){
+  if (VAULT_INITED) return;
+  VAULT_INITED = true;
+  api('clientList',{},function(d){
+    if(!d.success) return;
+    VAULT_CLIENTS = d.clients || [];
+    populateDocClientList();
+  });
+}
+function populateDocClientList(){
+  document.getElementById('dv-client-list').innerHTML = VAULT_CLIENTS.map(function(c){
+    return '<option value="'+esc(c.name)+'" data-id="'+esc(c.id)+'">';
+  }).join('');
+}
+function onDocClientPick(){
+  // resolved at upload-time by name match; nothing to do live, kept for parity/extension.
+}
+function resolveDocClient(){
+  var typed = document.getElementById('dv-client').value.trim();
+  var match = VAULT_CLIENTS.find(function(c){ return c.name.toLowerCase() === typed.toLowerCase(); });
+  return match || null;
+}
+
+function handleDocMainCategory(){
+  var main = document.getElementById('dv-main-cat').value;
+  var subWrap = document.getElementById('dv-subcat-wrap');
+  var subSel = document.getElementById('dv-sub-cat');
+  var otherWrap = document.getElementById('dv-other-wrap');
+  otherWrap.style.display = 'none';
+  if (!main || !DOC_CATEGORY_MAP[main]) { subWrap.style.display = 'none'; return; }
+  subSel.innerHTML = '<option value="">Select sub-category…</option>' + DOC_CATEGORY_MAP[main].map(function(s){
+    return '<option>'+esc(s)+'</option>';
+  }).join('');
+  subWrap.style.display = 'block';
+}
+function handleDocSubCategory(){
+  var sub = document.getElementById('dv-sub-cat').value;
+  document.getElementById('dv-other-wrap').style.display = (sub === 'Other') ? 'block' : 'none';
+}
+function onDocFilePicked(file){
+  DOC_PICKED_FILE = file || null;
+  document.getElementById('dv-filename').textContent = file ? file.name : 'Click to choose a file, or drag & drop it here';
+}
+
+function saveDocument(){
+  var client = resolveDocClient();
+  if (!client) { toast('Pick a valid client from the list','err'); return; }
+  var main = document.getElementById('dv-main-cat').value;
+  if (!main) { toast('Select a category','err'); return; }
+  var sub = document.getElementById('dv-sub-cat').value;
+  if (DOC_CATEGORY_MAP[main].length > 1 && !sub) { toast('Select a sub-category','err'); return; }
+  var finalCategory = sub === 'Other'
+    ? main + ' - ' + (document.getElementById('dv-other-text').value.trim() || 'Other')
+    : (sub ? main + ' - ' + sub : main);
+  if (!DOC_PICKED_FILE) { toast('Choose a file to upload','err'); return; }
+
+  var btn = document.getElementById('dv-upload-btn');
+  btn.disabled = true;
+  document.getElementById('dv-uploading').style.display = 'flex';
+  var reader = new FileReader();
+  reader.onload = function(){
+    var base64 = reader.result.split(',')[1];
+    apiPost({
+      clientId: client.id, clientName: client.name, fileName: DOC_PICKED_FILE.name,
+      category: finalCategory, note: document.getElementById('dv-note').value.trim(),
+      mimeType: DOC_PICKED_FILE.type || 'application/octet-stream', fileBase64: base64
+    }, function(d){
+      btn.disabled = false;
+      document.getElementById('dv-uploading').style.display = 'none';
+      if (d.success) {
+        toast('Uploaded ✓','ok');
+        document.getElementById('dv-client').value = '';
+        document.getElementById('dv-main-cat').value = '';
+        document.getElementById('dv-subcat-wrap').style.display = 'none';
+        document.getElementById('dv-other-wrap').style.display = 'none';
+        document.getElementById('dv-note').value = '';
+        document.getElementById('dv-file').value = '';
+        DOC_PICKED_FILE = null;
+        document.getElementById('dv-filename').textContent = 'Click to choose a file, or drag & drop it here';
+      } else toast(d.error || 'Upload failed','err');
+    });
+  };
+  reader.readAsDataURL(DOC_PICKED_FILE);
+}
+
+function fetchDocuments(){
+  document.getElementById('dv-body').innerHTML = '<tr><td colspan="6"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
+  api('listDocuments',{},function(d){
+    if (!d.success) { document.getElementById('dv-body').innerHTML = '<tr><td colspan="6"><div class="empty">Error loading documents.</div></td></tr>'; return; }
+    ALL_DOCUMENTS = d.documents || [];
+    renderDocs();
+  });
+}
+function renderDocs(){
+  var q = (document.getElementById('dv-search').value || '').toLowerCase();
+  var catFilter = document.getElementById('dv-filter-cat').value;
+  var list = ALL_DOCUMENTS.filter(function(doc){
+    if (catFilter && (doc.category||'').indexOf(catFilter) !== 0) return false;
+    if (q && (doc.clientName||'').toLowerCase().indexOf(q) === -1 && (doc.fileName||'').toLowerCase().indexOf(q) === -1) return false;
+    return true;
+  });
+  if (!list.length) { document.getElementById('dv-body').innerHTML = '<tr><td colspan="6"><div class="empty"><i class="ti ti-file-off"></i>No documents found.</div></td></tr>'; return; }
+  document.getElementById('dv-body').innerHTML = list.map(function(doc){
+    var dt = doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+    return '<tr class="row">'
+      +'<td style="font-weight:500">'+esc(doc.clientName)+'</td>'
+      +'<td><i class="ti ti-file-text" style="margin-right:6px;color:var(--muted)"></i>'+esc(doc.fileName)+'</td>'
+      +'<td><span class="badge" style="background:#f1f5f9;color:#475569">'+esc(doc.category||'Other')+'</span></td>'
+      +'<td style="font-size:12px;color:var(--muted)">'+esc(doc.note||'—')+'</td>'
+      +'<td style="font-size:12px;color:var(--muted)">'+dt+'</td>'
+      +'<td><a class="btn btn-o" style="padding:5px 10px;font-size:12px" href="'+esc(doc.fileUrl)+'" target="_blank"><i class="ti ti-external-link"></i> Open</a></td>'
+    +'</tr>';
+  }).join('');
+}
+(function(){
+  var dz=document.getElementById('dv-drop');
+  ['dragover','dragenter'].forEach(function(ev){ dz.addEventListener(ev,function(e){ e.preventDefault(); dz.classList.add('drag'); }); });
+  ['dragleave','drop'].forEach(function(ev){ dz.addEventListener(ev,function(e){ e.preventDefault(); dz.classList.remove('drag'); }); });
+  dz.addEventListener('drop',function(e){ if(e.dataTransfer.files[0]) onDocFilePicked(e.dataTransfer.files[0]); });
+})();
+</script>
+</body>
+</html>
