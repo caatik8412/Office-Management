@@ -14,21 +14,13 @@ function doLogout(){
 }
 
 function setup(){
-  var avm={'Atik Bhayani':'av0','Rushiraj':'av1','Sahil':'av2'};
-  var im={'Atik Bhayani':'AB','Rushiraj':'RJ','Sahil':'SH'};
-  var av=document.getElementById('uav');
-  if(av && CU){
-    av.textContent=im[CU.name]||'?';av.className='av '+(avm[CU.name]||'av1');
-  }
-  document.getElementById('uname').textContent=CU ? CU.name : '';
-  document.getElementById('urole').textContent=(CU && CU.role==='admin')?'Admin':'Staff';
   fillSelects();
   if(CU && CU.role==='admin'){
-    document.getElementById('anav').style.display='block';
-    go('dash',document.querySelector('#anav .ni'));
+    document.getElementById('anav').style.display='flex';
+    go('dash',document.querySelector('#anav .tab'));
   } else {
-    document.getElementById('snav').style.display='block';
-    go('mine',document.querySelector('#snav .ni'));
+    document.getElementById('snav').style.display='flex';
+    go('mine',document.querySelector('#snav .tab'));
   }
   
   if(TIMER) clearInterval(TIMER);
@@ -86,10 +78,10 @@ function silentRefresh(){
 
 function go(pg,el){
   if(CU&&CU.role==='staff'&&['tasks','dates','gst'].indexOf(pg)>-1){
-    go('mine',document.querySelector('#snav .ni'));return;
+    go('mine',document.querySelector('#snav .tab'));return;
   }
   document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
-  document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('on');});
+  document.querySelectorAll('.tab').forEach(function(n){n.classList.remove('on');});
   var p=document.getElementById('p-'+pg);if(p)p.classList.add('on');
   if(el)el.classList.add('on');
   var titles={dash:'Dashboard',tasks:'Tasks',dates:'Due Dates',gst:'GST Compliance',pendoc:'Pending Documents',mine:'My Tasks'};
