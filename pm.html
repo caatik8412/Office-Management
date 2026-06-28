@@ -206,8 +206,21 @@ tr:hover td{background:var(--bg)}
      <input class="si" type="text" placeholder="Search..." oninput="renderClients(this.value)" style="min-width:200px">
      <select class="btn si" onchange="filterEnt(this.value)"><option value="">All types</option><option>Private Limited</option><option>LLP</option><option>Proprietorship</option><option>Partnership</option><option>HUF</option></select>
     </div>
+    <div class="card" id="bulkbar" style="display:none;margin-bottom:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#eff6ff;border-color:var(--accent);">
+     <span style="font-size:12px;font-weight:600;color:var(--accent)"><span id="bulkcnt">0</span> selected</span>
+     <select class="btn si" id="bulkGstSel">
+       <option value="">— Set GST Type to... —</option>
+       <option value="none">No GST</option>
+       <option value="regular">Regular</option>
+       <option value="composition">Composition</option>
+     </select>
+     <button class="btn bts" onclick="bulkApplyGST()">Apply GST Type</button>
+     <button class="btn bts" onclick="bulkSetCompliance('Advance Tax',true)">+ Add Advance Tax</button>
+     <button class="btn bts btr" onclick="bulkSetCompliance('Advance Tax',false)">− Remove Advance Tax</button>
+     <button class="btn bts" style="margin-left:auto;" onclick="clearBulkSel()">Clear selection</button>
+    </div>
     <div class="card" style="padding:0"><div class="tw"><table>
-     <thead><tr><th>Client</th><th>Type</th><th>PAN</th><th>GSTIN</th><th>GST Filing</th><th>Open Tasks</th><th>Actions</th></tr></thead>
+     <thead><tr><th style="width:30px"><input type="checkbox" id="bulkAll" onchange="toggleAllBulk(this.checked)"></th><th>Client</th><th>Type</th><th>PAN</th><th>GSTIN</th><th>GST Filing</th><th>Open Tasks</th><th>Actions</th></tr></thead>
      <tbody id="ctb"></tbody>
     </table></div></div>
    </div>
