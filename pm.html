@@ -204,7 +204,7 @@ tr:hover td{background:var(--bg)}
    <div class="pg" id="p-clients">
     <div class="fr">
      <input class="si" type="text" placeholder="Search..." oninput="renderClients(this.value)" style="min-width:200px">
-     <select class="btn si" onchange="filterEnt(this.value)"><option value="">All types</option><option>Private Limited</option><option>LLP</option><option>Proprietorship</option><option>Partnership</option><option>HUF</option></select>
+     <select class="btn si" onchange="filterEnt(this.value)"><option value="">All types</option><option>Individual</option><option>Private Limited</option><option>LLP</option><option>Proprietorship</option><option>Partnership</option><option>HUF</option></select>
     </div>
     <div class="card" id="bulkbar" style="display:none;margin-bottom:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#eff6ff;border-color:var(--accent);">
      <span style="font-size:12px;font-weight:600;color:var(--accent)"><span id="bulkcnt">0</span> selected</span>
@@ -283,7 +283,7 @@ tr:hover td{background:var(--bg)}
     <div>
      <div class="fi"><label>Client Name *</label><input type="text" id="cname"></div>
      <div class="fi"><label>PAN *</label><input type="text" id="cpan" maxlength="10" style="text-transform:uppercase"></div>
-     <div class="fi"><label>Entity Type *</label><select id="cent" onchange="updComps()"><option value="">Select</option><option>Private Limited</option><option>LLP</option><option>Proprietorship</option><option>Partnership</option><option>HUF</option></select></div>
+     <div class="fi"><label>Entity Type *</label><select id="cent" onchange="updComps()"><option value="">Select</option><option>Individual</option><option>Private Limited</option><option>LLP</option><option>Proprietorship</option><option>Partnership</option><option>HUF</option></select></div>
      <div class="fi"><label>GST Type</label><select id="cgst" onchange="updComps()"><option value="regular">Regular</option><option value="composition">Composition</option><option value="none">Not Registered</option></select></div>
      <div class="fi" id="gstidiv"><label>GSTIN</label><input type="text" id="cgstin" maxlength="15" style="text-transform:uppercase"></div>
      <div class="fi" id="gstfdiv"><label>GST Frequency</label><select id="cgstf" onchange="updComps()"><option value="monthly">Monthly</option><option value="quarterly">Quarterly (QRMP)</option></select></div>
