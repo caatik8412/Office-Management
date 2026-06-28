@@ -195,7 +195,7 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
               <option value="">All types</option>
               <option>Individual</option><option>Private Limited</option><option>LLP</option><option>Proprietorship</option><option>Partnership</option><option>HUF</option>
             </select>
-            <button class="btn btn-o" onclick="loadClientsTab()"><i class="ti ti-refresh"></i> Refresh</button>
+            <button class="btn btn-o" onclick="GETALL_CACHE=null;loadClientsTab()"><i class="ti ti-refresh"></i> Refresh</button>
             <button class="btn btn-p" style="margin-left:auto;" onclick="openClientForm(null)"><i class="ti ti-user-plus"></i> Add Client</button>
           </div>
           <div class="card">
@@ -235,7 +235,7 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
                 <select class="sel" id="itrd-filter">
                   <option value="">All statuses</option><option value="filed">Filed only</option><option value="pending">Pending only</option>
                 </select>
-                <button class="btn btn-o" onclick="loadItrDueDates()"><i class="ti ti-refresh"></i> Refresh</button>
+                <button class="btn btn-o" onclick="GETALL_CACHE=null;loadItrDueDates()"><i class="ti ti-refresh"></i> Refresh</button>
               </div>
               <div class="card">
                 <table>
@@ -283,7 +283,7 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
               <option value="10">October</option><option value="11">November</option><option value="12">December</option>
             </select>
             <select class="sel" id="dd-year" onchange="renderDueDatesTab()"></select>
-            <button class="btn btn-o" onclick="loadDueDatesTab()"><i class="ti ti-refresh"></i> Refresh</button>
+            <button class="btn btn-o" onclick="GETALL_CACHE=null;loadDueDatesTab()"><i class="ti ti-refresh"></i> Refresh</button>
           </div>
 
           <div id="dd-stat-rows"></div>
@@ -545,6 +545,23 @@ function toast(msg,type){
   clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},3000);
 }
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+/* Shared cache for the expensive 'getAll' route — Clients/Due Dates/ITR
+   Tracking all need the same clients+tasks data. Without this, opening
+   the app fires 3 separate getAll calls in parallel, which compete with
+   each other against the same spreadsheet and make everything slower. */
+var GETALL_CACHE = null;
+var GETALL_INFLIGHT = null;
+function getAllShared(cb, forceRefresh){
+  if (GETALL_CACHE && !forceRefresh) { cb(GETALL_CACHE); return; }
+  if (GETALL_INFLIGHT) { GETALL_INFLIGHT.push(cb); return; }
+  GETALL_INFLIGHT = [cb];
+  api('getAll',{},function(d){
+    if (d.ok) GETALL_CACHE = d;
+    var waiters = GETALL_INFLIGHT; GETALL_INFLIGHT = null;
+    waiters.forEach(function(fn){ fn(d); });
+  });
+}
+
 function api(action,params,cb){
   var qs=Object.keys(params||{}).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);}).join('&');
   fetch(WEBAPP_URL+'?action='+action+(qs?'&'+qs:'')).then(function(r){return r.json();}).then(cb).catch(function(e){toast('Network error: '+e.message,'err'); if(cb)cb({ok:false,success:false,error:e.message});});
@@ -591,7 +608,7 @@ function getCheckedCompsTab(){return CL_CRULES.filter(function(r){var el=documen
 var ALL_CLIENTS_TAB = [];
 function loadClientsTab(cb){
   document.getElementById('cl-body').innerHTML = '<tr><td colspan="8"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
-  api('getAll',{},function(d){
+  getAllShared(function(d){
     if(!d.ok){ document.getElementById('cl-body').innerHTML = '<tr><td colspan="8"><div class="empty">Could not load clients.</div></td></tr>'; if(cb)cb(); return; }
     ALL_CLIENTS_TAB = d.clients || [];
     var groups = {}; ALL_CLIENTS_TAB.forEach(function(c){ if(c.group) groups[c.group]=true; });
@@ -682,14 +699,14 @@ function saveClientTab(){
   btn.disabled = true; btn.textContent = 'Saving…';
   api('saveClient',payload,function(d){
     btn.disabled = false; btn.textContent = 'Save Client';
-    if(d.ok){ toast(id?'Client updated ✓':'Client added ✓','ok'); closeClientForm(); loadClientsTab(); }
+    if(d.ok){ toast(id?'Client updated ✓':'Client added ✓','ok'); closeClientForm(); GETALL_CACHE=null; loadClientsTab(); }
     else toast(d.error||'Save failed','err');
   });
 }
 function deleteClientTab(id){
   if(!confirm('Remove this client? This does not delete their bills/tasks/documents.')) return;
   api('delClient',{id:id},function(d){
-    if(d.ok){ toast('Client removed ✓','ok'); loadClientsTab(); }
+    if(d.ok){ toast('Client removed ✓','ok'); GETALL_CACHE=null; loadClientsTab(); }
     else toast(d.error||'Remove failed','err');
   });
 }
@@ -758,7 +775,7 @@ function loadDueDatesTab(cb){
     document.getElementById('dd-month').value = new Date().getMonth()+1;
   }
   document.getElementById('dd-body').innerHTML='<tr><td colspan="6"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
-  api('getAll',{},function(d){
+  getAllShared(function(d){
     if(!d.ok){ if(cb)cb(); return; }
     DD_CLIENTS=d.clients||[]; DD_TASKS=d.tasks||[];
     renderDueDatesTab();
@@ -812,7 +829,7 @@ function ddToggle(ddid,cid,name,due,cat,isDone){
     ? {id:existing.id, status: isDone?'open':'done'}
     : {client_id:cid, name:name, category:cat, due_date:due, status:'done', dd_id:ddid, priority:'medium'};
   api('saveTask',payload,function(d){
-    if(d.ok){ toast('Updated ✓','ok'); loadDueDatesTab(); }
+    if(d.ok){ toast('Updated ✓','ok'); GETALL_CACHE=null; loadDueDatesTab(); }
     else toast(d.error||'Update failed','err');
   });
 }
@@ -831,7 +848,7 @@ function itrComputeDue(c,year){
 }
 function loadItrDueDates(cb){
   document.getElementById('itrd-body').innerHTML='<tr><td colspan="5"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
-  api('getAll',{},function(d){
+  getAllShared(function(d){
     if(!d.ok){ if(cb)cb(); return; }
     var clients=(d.clients||[]).filter(function(c){ return String(c.archived).toUpperCase()!=='TRUE'; });
     var tasks=d.tasks||[];
@@ -870,16 +887,16 @@ function renderItrDueDates(){
 }
 function itrToggleFiled(ddid,cid,wasFiled){
   var row=ITRD_ROWS.find(function(r){ return r.ddid===ddid; });
-  api('getAll',{},function(d){ // fetch fresh task list to find existing link reliably
+  getAllShared(function(d){
     var existing=(d.tasks||[]).find(function(t){ return t.dd_id===ddid; });
     var payload = existing
       ? {id:existing.id, status: wasFiled?'open':'done'}
       : {client_id:cid, name:'ITR Filing', category:'Income Tax', due_date:row?row.due:'', status:'done', dd_id:ddid, priority:'medium'};
     api('saveTask',payload,function(r){
-      if(r.ok){ toast('Updated ✓','ok'); loadItrDueDates(); }
+      if(r.ok){ toast('Updated ✓','ok'); GETALL_CACHE=null; loadItrDueDates(); }
       else toast(r.error||'Update failed','err');
     });
-  });
+  }, true);
 }
 
 var ITR_HISTORY=[];
