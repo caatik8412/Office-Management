@@ -154,14 +154,15 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
   <div class="layout">
     <div class="sidebar" id="sidebar">
       <div class="sb-top">
-        <div class="sb-brand">Bhayani Business Solutions</div>
+        <div class="sb-brand">CA Practice Manager<br><span style="font-size:10px;font-weight:400;opacity:.7;">Powered by Bhayani Business Solutions</span></div>
         <button class="sb-collapse" id="sbCollapseBtn" onclick="toggleSidebar()"><i class="ti ti-chevrons-left"></i></button>
       </div>
       <div class="sb-nav">
         <div class="sb-item active" data-tab="clients" onclick="switchTab('clients')"><i class="ti ti-users"></i><span class="sb-label">Clients</span></div>
-        <div class="sb-item" data-tab="pm" onclick="switchTab('pm')"><i class="ti ti-checklist"></i><span class="sb-label">Practice Manager</span></div>
+        <div class="sb-item" data-tab="pm" onclick="switchTab('pm')"><i class="ti ti-checklist"></i><span class="sb-label">Task Manager</span></div>
+        <div class="sb-item" data-tab="duedates" onclick="switchTab('duedates')"><i class="ti ti-calendar-due"></i><span class="sb-label">Due Dates</span></div>
         <div class="sb-item" data-tab="billing" onclick="switchTab('billing')"><i class="ti ti-receipt-2"></i><span class="sb-label">Billing</span></div>
-        <div class="sb-item" data-tab="itr" onclick="switchTab('itr')"><i class="ti ti-file-text"></i><span class="sb-label">ITR Pack</span></div>
+        <div class="sb-item" data-tab="itr" onclick="switchTab('itr')"><i class="ti ti-file-text"></i><span class="sb-label">ITR Tracking</span></div>
         <div class="sb-item" data-tab="vault" onclick="switchTab('vault')"><i class="ti ti-folder"></i><span class="sb-label">Documents Vault</span></div>
       </div>
       <div class="sb-user">
@@ -207,16 +208,40 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
 
       <div class="shell-panel" id="panel-itr">
         <div class="inner-tabs">
-          <div class="inner-tab active" data-itab="builder" onclick="switchInnerTab('builder')"><i class="ti ti-file-plus"></i> Builder</div>
-          <div class="inner-tab" data-itab="history" onclick="switchInnerTab('history')"><i class="ti ti-history"></i> History</div>
+          <div class="inner-tab active" data-itab="duedates" onclick="switchInnerTab('duedates')"><i class="ti ti-calendar-due"></i> Clients &amp; Due Dates</div>
+          <div class="inner-tab" data-itab="builder" onclick="switchInnerTab('builder')"><i class="ti ti-file-plus"></i> Create Set</div>
+          <div class="inner-tab" data-itab="history" onclick="switchInnerTab('history')"><i class="ti ti-list"></i> View Records</div>
         </div>
         <div class="inner-panels">
-          <div class="inner-panel active" id="ipanel-builder">
+          <div class="inner-panel active" id="ipanel-duedates">
+            <div class="native-wrap">
+              <h2 class="sectitle"><i class="ti ti-calendar-due"></i> ITR Clients &amp; Due Dates</h2>
+              <div class="bar" style="margin-bottom:14px;">
+                <div class="card" style="padding:12px 18px;flex:1;min-width:120px;"><div style="font-size:11px;color:var(--muted);">Total</div><div style="font-size:20px;font-weight:700;color:var(--navy);" id="itrd-total">0</div></div>
+                <div class="card" style="padding:12px 18px;flex:1;min-width:120px;"><div style="font-size:11px;color:var(--muted);">Filed</div><div style="font-size:20px;font-weight:700;color:var(--green);" id="itrd-filed">0</div></div>
+                <div class="card" style="padding:12px 18px;flex:1;min-width:120px;"><div style="font-size:11px;color:var(--muted);">Pending</div><div style="font-size:20px;font-weight:700;color:var(--red);" id="itrd-pending">0</div></div>
+              </div>
+              <div class="bar">
+                <div class="sbox"><i class="ti ti-search"></i><input type="text" id="itrd-search" placeholder="Search client…" oninput="renderItrDueDates()"></div>
+                <select class="sel" id="itrd-filter">
+                  <option value="">All statuses</option><option value="filed">Filed only</option><option value="pending">Pending only</option>
+                </select>
+                <button class="btn btn-o" onclick="loadItrDueDates()"><i class="ti ti-refresh"></i> Refresh</button>
+              </div>
+              <div class="card">
+                <table>
+                  <thead><tr><th>Client</th><th>ITR Type</th><th>Due Date</th><th>Status</th><th>Action</th></tr></thead>
+                  <tbody id="itrd-body"><tr><td colspan="5"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="inner-panel" id="ipanel-builder">
             <iframe id="frame-itr" src=""></iframe>
           </div>
           <div class="inner-panel" id="ipanel-history">
             <div class="native-wrap">
-              <h2 class="sectitle"><i class="ti ti-history"></i> Previously Generated ITR Packs</h2>
+              <h2 class="sectitle"><i class="ti ti-list"></i> Previously Generated ITR Packs</h2>
               <div class="bar">
                 <div class="sbox"><i class="ti ti-search"></i><input type="text" id="ih-search" placeholder="Search client name…" oninput="renderItrHistory()"></div>
                 <button class="btn btn-o" onclick="loadItrHistory()"><i class="ti ti-refresh"></i> Refresh</button>
@@ -228,6 +253,36 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
                 </table>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="shell-panel" id="panel-duedates">
+        <div class="native-wrap">
+          <h2 class="sectitle"><i class="ti ti-calendar-due"></i> Due Dates</h2>
+          <div class="bar">
+            <select class="sel" id="dd-month">
+              <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+              <option value="4">April</option><option value="5">May</option><option value="6">June</option>
+              <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+              <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+            </select>
+            <select class="sel" id="dd-year"></select>
+            <select class="sel" id="dd-category">
+              <option value="">All categories</option>
+              <option value="GST">GST</option><option value="Income Tax">Income Tax</option>
+              <option value="ROC / MCA">ROC</option><option value="Labour">Labour</option>
+            </select>
+            <button class="btn btn-o" onclick="loadDueDatesTab()"><i class="ti ti-refresh"></i> Refresh</button>
+          </div>
+
+          <div id="dd-stat-rows"></div>
+
+          <div class="card">
+            <table>
+              <thead><tr><th>Client</th><th>Category</th><th>Compliance</th><th>Due Date</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody id="dd-body"><tr><td colspan="6"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr></tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -443,9 +498,14 @@ function switchTab(name){
   document.querySelectorAll('.sb-item').forEach(function(t){ t.classList.toggle('active', t.dataset.tab===name); });
   document.querySelectorAll('.shell-panel').forEach(function(p){ p.classList.remove('active'); });
   document.getElementById('panel-'+name).classList.add('active');
-  if(name==='itr' && document.querySelector('.inner-tab[data-itab="history"]').classList.contains('active')) loadItrHistory();
+  if(name==='itr'){
+    var active=document.querySelector('#panel-itr .inner-tab.active').dataset.itab;
+    if(active==='history') loadItrHistory();
+    if(active==='duedates') loadItrDueDates();
+  }
   if(name==='vault') loadClientsForVault();
   if(name==='clients') loadClientsTab();
+  if(name==='duedates') loadDueDatesTab();
 }
 
 function switchInnerTab(name){
@@ -453,6 +513,7 @@ function switchInnerTab(name){
   document.querySelectorAll('.inner-panel').forEach(function(p){ p.classList.remove('active'); });
   document.getElementById('ipanel-'+name).classList.add('active');
   if(name==='history') loadItrHistory();
+  if(name==='duedates') loadItrDueDates();
 }
 
 function toast(msg,type){
@@ -607,6 +668,186 @@ function deleteClientTab(id){
   api('delClient',{id:id},function(d){
     if(d.ok){ toast('Client removed ✓','ok'); loadClientsTab(); }
     else toast(d.error||'Remove failed','err');
+  });
+}
+
+/* ===================================================================
+   DUE DATES — GST / Income Tax / ROC / Labour (ITR excluded, tracked
+   separately under ITR Tracking). Reuses getAll's clients+tasks.
+   =================================================================== */
+var DD_CLIENTS=[], DD_TASKS=[];
+function ddDateStr(y,m,d){return y+'-'+(m<10?'0'+m:m)+'-'+(d<10?'0'+d:d);}
+function genDueDatesShell(dispMonth,dispYear){
+  var dues=[];
+  var pm=dispMonth===1?12:dispMonth-1;
+  var py=dispMonth===1?dispYear-1:dispYear;
+  var isQE=(pm%3===0);
+  function dd(cid,cname,name,due,cat,type){
+    dues.push({ddid:cid+'_'+type+'_'+pm+'_'+py, cid:cid, cname:cname, name:name, due:due, cat:cat, type:type});
+  }
+  DD_CLIENTS.forEach(function(c){
+    if(String(c.archived).toUpperCase()==='TRUE') return;
+    var cstart=c.start_date?new Date(c.start_date):new Date('2025-04-01');
+    var periodEnd=new Date(py,pm-1,28);
+    if(cstart>periodEnd) return;
+    var g=c.gst_type||'none', f=c.gst_freq||'monthly', emp=c.has_employees==='yes';
+    var cn=c.short_name||c.name;
+    if(g==='regular'&&f==='monthly'){
+      dd(c.id,cn,'GSTR-1',ddDateStr(dispYear,dispMonth,11),'GST','GSTR-1');
+      dd(c.id,cn,'GSTR-3B',ddDateStr(dispYear,dispMonth,20),'GST','GSTR-3B');
+    }
+    if(g==='regular'&&f==='quarterly'){
+      if(isQE){
+        dd(c.id,cn,'GSTR-1 (Qtr)',ddDateStr(dispYear,dispMonth,13),'GST','GSTR-1Q');
+        dd(c.id,cn,'GSTR-3B (Qtr)',ddDateStr(dispYear,dispMonth,22),'GST','GSTR-3BQ');
+      } else {
+        dd(c.id,cn,'PMT-06',ddDateStr(dispYear,dispMonth,25),'GST','PMT06');
+      }
+    }
+    if(g==='composition'&&isQE) dd(c.id,cn,'CMP-08',ddDateStr(dispYear,dispMonth,18),'GST','CMP08');
+    if(emp){
+      dd(c.id,cn,'TDS Payment',ddDateStr(dispYear,dispMonth,7),'Labour','TDSPAY');
+      dd(c.id,cn,'PF / ESIC',ddDateStr(dispYear,dispMonth,15),'Labour','PFESIC');
+    }
+    if(emp&&(dispMonth===7||dispMonth===10||dispMonth===1||dispMonth===5)){
+      var qmap={7:'Q1',10:'Q2',1:'Q3',5:'Q4'};
+      dd(c.id,cn,'TDS Return '+qmap[dispMonth],ddDateStr(dispYear,dispMonth,31),'Labour','TDSRET'+qmap[dispMonth]);
+    }
+    var audit=c.turnover==='above1cr';
+    var pvt=c.entity==='Private Limited'||c.entity==='LLP';
+    if(dispMonth===9&&audit) dd(c.id,cn,'Tax Audit 3CD',ddDateStr(dispYear,9,30),'Income Tax','TAXAUDIT');
+    if(dispMonth===10&&pvt) dd(c.id,cn,'ROC AOC-4',ddDateStr(dispYear,10,29),'ROC / MCA','AOC4');
+    if(dispMonth===11&&pvt) dd(c.id,cn,'ROC MGT-7',ddDateStr(dispYear,11,29),'ROC / MCA','MGT7');
+    if(dispMonth===6) dd(c.id,cn,'Advance Tax Q1',ddDateStr(dispYear,6,15),'Income Tax','ADVQ1');
+    if(dispMonth===9) dd(c.id,cn,'Advance Tax Q2',ddDateStr(dispYear,9,15),'Income Tax','ADVQ2');
+    if(dispMonth===12) dd(c.id,cn,'Advance Tax Q3',ddDateStr(dispYear,12,15),'Income Tax','ADVQ3');
+    if(dispMonth===3) dd(c.id,cn,'Advance Tax Q4',ddDateStr(dispYear,3,15),'Income Tax','ADVQ4');
+  });
+  dues.sort(function(a,b){ return new Date(a.due)-new Date(b.due); });
+  return dues;
+}
+function ddFindTask(ddid){ return DD_TASKS.find(function(t){ return t.dd_id===ddid; }); }
+function loadDueDatesTab(){
+  var ySel=document.getElementById('dd-year');
+  if(!ySel.options.length){
+    var ny=new Date().getFullYear();
+    for(var y=ny-1;y<=ny+1;y++) ySel.innerHTML+='<option value="'+y+'"'+(y===ny?' selected':'')+'>'+y+'</option>';
+    document.getElementById('dd-month').value = new Date().getMonth()+1;
+  }
+  document.getElementById('dd-body').innerHTML='<tr><td colspan="6"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
+  api('getAll',{},function(d){
+    if(!d.ok) return;
+    DD_CLIENTS=d.clients||[]; DD_TASKS=d.tasks||[];
+    renderDueDatesTab();
+  });
+}
+function renderDueDatesTab(){
+  var month=parseInt(document.getElementById('dd-month').value,10);
+  var year=parseInt(document.getElementById('dd-year').value,10);
+  var catFilter=document.getElementById('dd-category').value;
+  var dues=genDueDatesShell(month,year);
+  if(catFilter) dues=dues.filter(function(x){ return x.cat===catFilter; });
+
+  var cats=['GST','Income Tax','ROC / MCA','Labour'];
+  var statsHtml=cats.map(function(cat){
+    var rows=dues.filter(function(x){ return x.cat===cat; });
+    var total=rows.length;
+    var completed=rows.filter(function(x){ var t=ddFindTask(x.ddid); return t&&t.status==='done'; }).length;
+    var pending=total-completed;
+    return '<div class="card" style="padding:12px 16px;flex:1;min-width:150px;"><div style="font-size:11px;color:var(--muted);">'+cat.replace(' / MCA','')+'</div>'
+      +'<div style="display:flex;gap:10px;margin-top:4px;">'
+      +'<span style="font-size:13px;"><b>'+total+'</b> total</span>'
+      +'<span style="font-size:13px;color:var(--green);"><b>'+completed+'</b> done</span>'
+      +'<span style="font-size:13px;color:var(--red);"><b>'+pending+'</b> pending</span></div></div>';
+  }).join('');
+  document.getElementById('dd-stat-rows').innerHTML='<div class="bar" style="flex-wrap:wrap;">'+statsHtml+'</div>';
+
+  if(!dues.length){ document.getElementById('dd-body').innerHTML='<tr><td colspan="6"><div class="empty"><i class="ti ti-calendar-off"></i>No due dates for this month.</div></td></tr>'; return; }
+  document.getElementById('dd-body').innerHTML=dues.map(function(x){
+    var t=ddFindTask(x.ddid);
+    var done=t&&t.status==='done';
+    return '<tr class="row">'
+      +'<td style="font-weight:500">'+esc(x.cname)+'</td>'
+      +'<td><span class="badge" style="background:#f1f5f9;color:#475569">'+esc(x.cat.replace(' / MCA',''))+'</span></td>'
+      +'<td>'+esc(x.name)+'</td>'
+      +'<td>'+new Date(x.due).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})+'</td>'
+      +'<td>'+(done?'<span class="badge" style="background:#dcfce7;color:#16a34a">Done</span>':'<span class="badge" style="background:#fef2f2;color:#dc2626">Pending</span>')+'</td>'
+      +'<td><button class="btn '+(done?'btn-o':'btn-p')+'" style="padding:5px 10px;font-size:12px" onclick="ddToggle(\''+x.ddid+'\',\''+x.cid+'\',\''+esc(x.name)+'\',\''+x.due+'\',\''+x.cat+'\','+(done?'true':'false')+')">'+(done?'Mark Pending':'Mark Done')+'</button></td>'
+    +'</tr>';
+  }).join('');
+}
+function ddToggle(ddid,cid,name,due,cat,isDone){
+  var existing=ddFindTask(ddid);
+  var payload = existing
+    ? {id:existing.id, status: isDone?'open':'done'}
+    : {client_id:cid, name:name, category:cat, due_date:due, status:'done', dd_id:ddid, priority:'medium'};
+  api('saveTask',payload,function(d){
+    if(d.ok){ toast('Updated ✓','ok'); loadDueDatesTab(); }
+    else toast(d.error||'Update failed','err');
+  });
+}
+
+/* ===================================================================
+   ITR TRACKING — Clients & Due Dates sub-tab
+   =================================================================== */
+var ITRD_ROWS=[];
+function itrComputeDue(c,year){
+  var audit=c.turnover==='above1cr';
+  var itrT=(c.itrType||'').toUpperCase();
+  var is34=itrT.indexOf('3')>-1||itrT.indexOf('4')>-1;
+  if(audit) return year+'-10-31';
+  if(is34) return year+'-08-31';
+  return year+'-07-31';
+}
+function loadItrDueDates(){
+  document.getElementById('itrd-body').innerHTML='<tr><td colspan="5"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
+  api('getAll',{},function(d){
+    if(!d.ok) return;
+    var clients=(d.clients||[]).filter(function(c){ return String(c.archived).toUpperCase()!=='TRUE'; });
+    var tasks=d.tasks||[];
+    var ay=new Date().getFullYear();
+    ITRD_ROWS=clients.map(function(c){
+      var ddid=c.id+'_ITR_'+ay;
+      var t=tasks.find(function(x){ return x.dd_id===ddid; });
+      return { cid:c.id, name:c.name, itrType:c.itrType||'—', due:itrComputeDue(c,ay), ddid:ddid, filed: t&&t.status==='done' };
+    });
+    renderItrDueDates();
+  });
+}
+function renderItrDueDates(){
+  var q=(document.getElementById('itrd-search').value||'').toLowerCase();
+  var f=document.getElementById('itrd-filter').value;
+  var list=ITRD_ROWS.filter(function(r){
+    if(q && r.name.toLowerCase().indexOf(q)===-1) return false;
+    if(f==='filed' && !r.filed) return false;
+    if(f==='pending' && r.filed) return false;
+    return true;
+  });
+  document.getElementById('itrd-total').textContent=ITRD_ROWS.length;
+  document.getElementById('itrd-filed').textContent=ITRD_ROWS.filter(function(r){return r.filed;}).length;
+  document.getElementById('itrd-pending').textContent=ITRD_ROWS.filter(function(r){return !r.filed;}).length;
+  if(!list.length){ document.getElementById('itrd-body').innerHTML='<tr><td colspan="5"><div class="empty"><i class="ti ti-users"></i>No clients found.</div></td></tr>'; return; }
+  document.getElementById('itrd-body').innerHTML=list.map(function(r){
+    return '<tr class="row">'
+      +'<td style="font-weight:500">'+esc(r.name)+'</td>'
+      +'<td>'+esc(r.itrType)+'</td>'
+      +'<td>'+new Date(r.due).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})+'</td>'
+      +'<td>'+(r.filed?'<span class="badge" style="background:#dcfce7;color:#16a34a">Filed</span>':'<span class="badge" style="background:#fef2f2;color:#dc2626">Pending</span>')+'</td>'
+      +'<td><button class="btn '+(r.filed?'btn-o':'btn-p')+'" style="padding:5px 10px;font-size:12px" onclick="itrToggleFiled(\''+r.ddid+'\',\''+r.cid+'\','+(r.filed?'true':'false')+')">'+(r.filed?'Mark Pending':'Mark Filed')+'</button></td>'
+    +'</tr>';
+  }).join('');
+}
+function itrToggleFiled(ddid,cid,wasFiled){
+  var row=ITRD_ROWS.find(function(r){ return r.ddid===ddid; });
+  api('getAll',{},function(d){ // fetch fresh task list to find existing link reliably
+    var existing=(d.tasks||[]).find(function(t){ return t.dd_id===ddid; });
+    var payload = existing
+      ? {id:existing.id, status: wasFiled?'open':'done'}
+      : {client_id:cid, name:'ITR Filing', category:'Income Tax', due_date:row?row.due:'', status:'done', dd_id:ddid, priority:'medium'};
+    api('saveTask',payload,function(r){
+      if(r.ok){ toast('Updated ✓','ok'); loadItrDueDates(); }
+      else toast(r.error||'Update failed','err');
+    });
   });
 }
 
