@@ -111,8 +111,6 @@ tr:hover td{background:var(--bg)}
     <div class="ni" onclick="go('dates',this)"><span class="nic">D</span><span>Due Dates</span></div>
     <div class="ns">GST</div>
     <div class="ni" onclick="go('gst',this)"><span class="nic">G</span><span>GST Compliance</span></div>
-    <div class="ns">Clients</div>
-    <div class="ni" onclick="go('clients',this)"><span class="nic">C</span><span>All Clients</span></div>
     <div class="ns">Storage</div>
     <div class="ni" onclick="go('pendoc',this)"><span class="nic">P</span><span>Pending Docs</span></div>
    </div>
@@ -200,31 +198,6 @@ tr:hover td{background:var(--bg)}
     <div class="card" id="gcard"><div class="emp">Select month and click Load</div></div>
    </div>
 
-   <!-- CLIENTS -->
-   <div class="pg" id="p-clients">
-    <div class="fr">
-     <input class="si" type="text" placeholder="Search..." oninput="renderClients(this.value)" style="min-width:200px">
-     <select class="btn si" onchange="filterEnt(this.value)"><option value="">All types</option><option>Individual</option><option>Private Limited</option><option>LLP</option><option>Proprietorship</option><option>Partnership</option><option>HUF</option></select>
-    </div>
-    <div class="card" id="bulkbar" style="display:none;margin-bottom:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#eff6ff;border-color:var(--accent);">
-     <span style="font-size:12px;font-weight:600;color:var(--accent)"><span id="bulkcnt">0</span> selected</span>
-     <select class="btn si" id="bulkGstSel">
-       <option value="">— Set GST Type to... —</option>
-       <option value="none">No GST</option>
-       <option value="regular">Regular</option>
-       <option value="composition">Composition</option>
-     </select>
-     <button class="btn bts" onclick="bulkApplyGST()">Apply GST Type</button>
-     <button class="btn bts" onclick="bulkSetCompliance('Advance Tax',true)">+ Add Advance Tax</button>
-     <button class="btn bts btr" onclick="bulkSetCompliance('Advance Tax',false)">− Remove Advance Tax</button>
-     <button class="btn bts" style="margin-left:auto;" onclick="clearBulkSel()">Clear selection</button>
-    </div>
-    <div class="card" style="padding:0"><div class="tw"><table>
-     <thead><tr><th style="width:30px"><input type="checkbox" id="bulkAll" onchange="toggleAllBulk(this.checked)"></th><th>Client</th><th>Type</th><th>PAN</th><th>GSTIN</th><th>GST Filing</th><th>Open Tasks</th><th>Actions</th></tr></thead>
-     <tbody id="ctb"></tbody>
-    </table></div></div>
-   </div>
-
    <!-- PENDING DOCS -->
    <div class="pg" id="p-pendoc">
     <div class="fr">
@@ -273,37 +246,6 @@ tr:hover td{background:var(--bg)}
  </div>
 </div>
 
-<!-- CLIENT MODAL -->
-<div class="mo" id="mo-client">
- <div class="md" style="max-width:700px">
-  <div class="mh"><div><div class="mt" id="cmtit">Add Client</div></div><button class="mx" onclick="closeMo('mo-client')">&#x2715;</button></div>
-  <div class="mb">
-   <input type="hidden" id="cid">
-   <div class="fg">
-    <div>
-     <div class="fi"><label>Client Name *</label><input type="text" id="cname"></div>
-     <div class="fi"><label>PAN *</label><input type="text" id="cpan" maxlength="10" style="text-transform:uppercase"></div>
-     <div class="fi"><label>Entity Type *</label><select id="cent" onchange="updComps()"><option value="">Select</option><option>Individual</option><option>Private Limited</option><option>LLP</option><option>Proprietorship</option><option>Partnership</option><option>HUF</option></select></div>
-     <div class="fi"><label>GST Type</label><select id="cgst" onchange="updComps()"><option value="regular">Regular</option><option value="composition">Composition</option><option value="none">Not Registered</option></select></div>
-     <div class="fi" id="gstidiv"><label>GSTIN</label><input type="text" id="cgstin" maxlength="15" style="text-transform:uppercase"></div>
-     <div class="fi" id="gstfdiv"><label>GST Frequency</label><select id="cgstf" onchange="updComps()"><option value="monthly">Monthly</option><option value="quarterly">Quarterly (QRMP)</option></select></div>
-     <div class="fi"><label>Has Employees (TDS/PF)</label><select id="cemp" onchange="updComps()"><option value="no">No</option><option value="yes">Yes</option></select></div>
-     <div class="fi"><label>Turnover</label><select id="ctov" onchange="updComps()"><option value="above1cr">Above 1 Cr (Audit)</option><option value="above40l">40L to 1 Cr</option><option value="below40l">Below 40L</option></select></div>
-     <div class="fi"><label>Date Added / Registration</label><input type="date" id="cstart"></div>
-     <div class="fi"><label>Email</label><input type="email" id="cemail"></div>
-     <div class="fi"><label>Notes</label><textarea id="cnotes" placeholder="Portal, contact info..."></textarea></div>
-    </div>
-    <div>
-     <div class="cpl">
-      <div style="font-size:12px;font-weight:600;margin-bottom:10px">Applicable Compliances <span class="bdg bb" id="ccnt">0</span></div>
-      <div id="cpllist"></div>
-     </div>
-    </div>
-   </div>
-  </div>
-  <div class="mf"><button class="btn" onclick="closeMo('mo-client')">Cancel</button><button class="btn btk" id="csavebtn" onclick="saveClient()">Save Client</button></div>
- </div>
-</div>
 
 <!-- PENDING DOC MODAL -->
 <div class="mo" id="mo-pd">
