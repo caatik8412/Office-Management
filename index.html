@@ -120,6 +120,14 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
 </head>
 <body>
 
+<div class="login-wrap" id="splashWrap" style="display:none;z-index:10001;">
+  <div style="text-align:center;color:#fff;">
+    <img src="ca-india-logo.png" alt="" style="height:54px;background:#fff;border-radius:10px;padding:8px 14px;margin-bottom:18px;">
+    <div style="font-size:16px;font-weight:700;margin-bottom:14px;">Loading your data…</div>
+    <div style="width:38px;height:38px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto;"></div>
+  </div>
+</div>
+
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
     <div class="login-logo">
@@ -297,6 +305,7 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
         </div>
         <div class="inner-panels">
 
+          <!-- ===== Upload sub-tab ===== -->
           <div class="inner-panel active" id="vpanel-upload">
             <div class="native-wrap">
               <h2 class="sectitle"><i class="ti ti-cloud-upload"></i> Upload a Document</h2>
@@ -340,6 +349,7 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
             </div>
           </div>
 
+          <!-- ===== Records sub-tab ===== -->
           <div class="inner-panel" id="vpanel-records">
             <div class="native-wrap">
               <h2 class="sectitle"><i class="ti ti-list"></i> Document Records</h2>
@@ -472,6 +482,7 @@ function doShellLogout(){
 
 function enterApp(){
   document.getElementById('loginWrap').style.display = 'none';
+  document.getElementById('splashWrap').style.display = 'flex';
 
   var initials = (SHELL_USER.name || '?').split(' ').map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
   document.getElementById('sbAv').textContent = initials;
@@ -485,13 +496,16 @@ function enterApp(){
   document.getElementById('frame-pm').src = 'pm.html' + authQS;
   document.getElementById('frame-itr').src = 'itr_pack.html' + authQS;
 
-  Promise.all([
+  var minWait = new Promise(function(res){ setTimeout(res, 5000); });
+  var dataReady = Promise.all([
     new Promise(function(res){ loadClientsTab(res); }),
     new Promise(function(res){ loadDueDatesTab(res); }),
     new Promise(function(res){ loadItrDueDates(res); }),
     new Promise(function(res){ loadItrHistory(res); }),
     new Promise(function(res){ loadClientsForVault(res); })
-  ]).then(function(){
+  ]);
+  Promise.all([minWait, dataReady]).then(function(){
+    document.getElementById('splashWrap').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
   });
 }
@@ -532,7 +546,10 @@ function toast(msg,type){
   clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},3000);
 }
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-
+/* Shared cache for the expensive 'getAll' route — Clients/Due Dates/ITR
+   Tracking all need the same clients+tasks data. Without this, opening
+   the app fires 3 separate getAll calls in parallel, which compete with
+   each other against the same spreadsheet and make everything slower. */
 var GETALL_CACHE = null;
 var GETALL_INFLIGHT = null;
 function getAllShared(cb, forceRefresh){
@@ -556,23 +573,23 @@ function apiPost(body,cb){
 }
 
 /* ===================================================================
-   CLIENTS — unified Add/Edit/Delete
+   CLIENTS — unified Add/Edit/Delete, used by every other tab
    =================================================================== */
 var CL_CRULES=[
-  {name:'GSTR-1',        freq:'Monthly',   rule:function(c){return c.gst==='regular'&&c.gstf==='monthly';}},
-  {name:'GSTR-3B',       freq:'Monthly',   rule:function(c){return c.gst==='regular'&&c.gstf==='monthly';}},
-  {name:'GSTR-1 Qtr',    freq:'Quarterly', rule:function(c){return c.gst==='regular'&&c.gstf==='quarterly';}},
-  {name:'GSTR-3B Qtr',   freq:'Quarterly', rule:function(c){return c.gst==='regular'&&c.gstf==='quarterly';}},
-  {name:'PMT-06',        freq:'Monthly',   rule:function(c){return c.gst==='regular'&&c.gstf==='quarterly';}},
-  {name:'CMP-08',        freq:'Quarterly', rule:function(c){return c.gst==='composition';}},
-  {name:'TDS Payment',   freq:'Monthly',   rule:function(c){return c.emp==='yes';}},
-  {name:'PF / ESIC',     freq:'Monthly',   rule:function(c){return c.emp==='yes';}},
-  {name:'TDS Returns',   freq:'Quarterly', rule:function(c){return c.emp==='yes';}},
-  {name:'Advance Tax',   freq:'4 dates',   manual:true, rule:function(){return false;}},
-  {name:'ITR',           freq:'Annual',    rule:function(){return true;}},
-  {name:'Tax Audit',     freq:'Annual',    rule:function(c){return c.tov==='above1cr';}},
-  {name:'ROC AOC-4',     freq:'Annual',    rule:function(c){return c.ent==='Private Limited'||c.ent==='LLP';}},
-  {name:'ROC MGT-7',     freq:'Annual',    rule:function(c){return c.ent==='Private Limited'||c.ent==='LLP';}}
+  {name:'GSTR-1',       freq:'Monthly',   rule:function(c){return c.gst==='regular'&&c.gstf==='monthly';}},
+  {name:'GSTR-3B',      freq:'Monthly',   rule:function(c){return c.gst==='regular'&&c.gstf==='monthly';}},
+  {name:'GSTR-1 Qtr',   freq:'Quarterly', rule:function(c){return c.gst==='regular'&&c.gstf==='quarterly';}},
+  {name:'GSTR-3B Qtr',  freq:'Quarterly', rule:function(c){return c.gst==='regular'&&c.gstf==='quarterly';}},
+  {name:'PMT-06',       freq:'Monthly',   rule:function(c){return c.gst==='regular'&&c.gstf==='quarterly';}},
+  {name:'CMP-08',       freq:'Quarterly', rule:function(c){return c.gst==='composition';}},
+  {name:'TDS Payment',  freq:'Monthly',   rule:function(c){return c.emp==='yes';}},
+  {name:'PF / ESIC',    freq:'Monthly',   rule:function(c){return c.emp==='yes';}},
+  {name:'TDS Returns',  freq:'Quarterly', rule:function(c){return c.emp==='yes';}},
+  {name:'Advance Tax',  freq:'4 dates',   manual:true, rule:function(){return false;}},
+  {name:'ITR',          freq:'Annual',    rule:function(){return true;}},
+  {name:'Tax Audit',    freq:'Annual',    rule:function(c){return c.tov==='above1cr';}},
+  {name:'ROC AOC-4',    freq:'Annual',    rule:function(c){return c.ent==='Private Limited'||c.ent==='LLP';}},
+  {name:'ROC MGT-7',    freq:'Annual',    rule:function(c){return c.ent==='Private Limited'||c.ent==='LLP';}}
 ];
 function updCompsTab(presetComps){
   var cfg={gst:document.getElementById('cl-gsttype').value,gstf:document.getElementById('cl-gstfreq').value,
@@ -696,7 +713,8 @@ function deleteClientTab(id){
 }
 
 /* ===================================================================
-   DUE DATES — GST / Income Tax / ROC / Labour
+   DUE DATES — GST / Income Tax / ROC / Labour (ITR excluded, tracked
+   separately under ITR Tracking). Reuses getAll's clients+tasks.
    =================================================================== */
 var DD_CLIENTS=[], DD_TASKS=[];
 function ddDateStr(y,m,d){return y+'-'+(m<10?'0'+m:m)+'-'+(d<10?'0'+d:d);}
@@ -706,9 +724,8 @@ function genDueDatesShell(dispMonth,dispYear){
   var py=dispMonth===1?dispYear-1:dispYear;
   var isQE=(pm%3===0);
   function dd(cid,cname,name,due,cat,type){
-    duues.push({ddid:cid+'_'+type+'_'+pm+'_'+py, cid:cid, cname:cname, name:name, due:due, cat:cat, type:type});
+    dues.push({ddid:cid+'_'+type+'_'+pm+'_'+py, cid:cid, cname:cname, name:name, due:due, cat:cat, type:type});
   }
-  var duues = dues; 
   DD_CLIENTS.forEach(function(c){
     if(String(c.archived).toUpperCase()==='TRUE') return;
     var cstart=c.start_date?new Date(c.start_date):new Date('2025-04-01');
@@ -939,7 +956,7 @@ function renderItrHistory(){
 }
 
 /* ===================================================================
-   DOCUMENTS VAULT — Upload / Records sub-tabs
+   DOCUMENTS VAULT — Upload / Records sub-tabs, cascading categories
    =================================================================== */
 var DOC_CATEGORY_MAP = {
   'KYC': ['Aadhar Card','PAN Card','Partnership Deed','MOA / AOA','Photo',
@@ -953,7 +970,7 @@ var DOC_CATEGORY_MAP = {
           'Financial Statements (AOC-4)','DIR-3 KYC','Board Resolution','Other'],
   'OTHERS': ['Other']
 };
-var VAULT_CLIENTS = [];
+var VAULT_CLIENTS = []; // {id, name}
 var ALL_DOCUMENTS = [];
 var DOC_PICKED_FILE = null;
 var VAULT_INITED = false;
@@ -980,7 +997,9 @@ function populateDocClientList(){
     return '<option value="'+esc(c.name)+'" data-id="'+esc(c.id)+'">';
   }).join('');
 }
-function onDocClientPick(){}
+function onDocClientPick(){
+  // resolved at upload-time by name match; nothing to do live, kept for parity/extension.
+}
 function resolveDocClient(){
   var typed = document.getElementById('dv-client').value.trim();
   var match = VAULT_CLIENTS.find(function(c){ return c.name.toLowerCase() === typed.toLowerCase(); });
