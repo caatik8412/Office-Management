@@ -45,8 +45,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 
 .sidebar{width:var(--sb-w);min-width:var(--sb-w);background:var(--navy);display:flex;flex-direction:column;transition:width .18s,min-width .18s;overflow:hidden;}
 .sidebar.collapsed{width:var(--sb-w-collapsed);min-width:var(--sb-w-collapsed);}
-.sb-top{padding:14px 14px;border-bottom:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:space-between;gap:8px;}
-.sb-brand{color:#fff;font-size:12px;font-weight:600;white-space:normal;line-height:1.3;overflow:hidden;}
+.sb-top{padding:14px 14px;border-bottom:1px solid rgba(255,255,255,.12);display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+.sb-brand{color:#fff;font-size:13px;font-weight:700;line-height:1.3;}
+.sb-brand .sb-brand-sub{font-size:10px;font-weight:400;opacity:.65;display:block;margin-top:3px;}
 .sidebar.collapsed .sb-brand{display:none;}
 .sidebar.collapsed .sb-top{padding:14px 8px;justify-content:center;}
 .sb-collapse{background:rgba(255,255,255,.1);border:none;color:#fff;width:26px;height:26px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -121,6 +122,14 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
 </head>
 <body>
 
+<div class="login-wrap" id="splashWrap" style="display:none;z-index:10001;">
+  <div style="text-align:center;color:#fff;">
+    <img src="ca-india-logo.png" alt="" style="height:54px;background:#fff;border-radius:10px;padding:8px 14px;margin-bottom:18px;">
+    <div style="font-size:16px;font-weight:700;margin-bottom:14px;">Loading your data…</div>
+    <div style="width:38px;height:38px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto;"></div>
+  </div>
+</div>
+
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
     <div class="login-logo">
@@ -154,12 +163,12 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
   <div class="layout">
     <div class="sidebar" id="sidebar">
       <div class="sb-top">
-        <div class="sb-brand">CA Practice Manager<br><span style="font-size:10px;font-weight:400;opacity:.7;">Powered by Bhayani Business Solutions</span></div>
+        <div class="sb-brand">CA Practice Manager<span class="sb-brand-sub">Powered by Bhayani Business Solutions</span></div>
         <button class="sb-collapse" id="sbCollapseBtn" onclick="toggleSidebar()"><i class="ti ti-chevrons-left"></i></button>
       </div>
       <div class="sb-nav">
-        <div class="sb-item active" data-tab="clients" onclick="switchTab('clients')"><i class="ti ti-users"></i><span class="sb-label">Clients</span></div>
-        <div class="sb-item" data-tab="pm" onclick="switchTab('pm')"><i class="ti ti-checklist"></i><span class="sb-label">Task Manager</span></div>
+        <div class="sb-item" data-tab="clients" onclick="switchTab('clients')"><i class="ti ti-users"></i><span class="sb-label">Clients</span></div>
+        <div class="sb-item active" data-tab="pm" onclick="switchTab('pm')"><i class="ti ti-checklist"></i><span class="sb-label">Task Manager</span></div>
         <div class="sb-item" data-tab="duedates" onclick="switchTab('duedates')"><i class="ti ti-calendar-due"></i><span class="sb-label">Due Dates</span></div>
         <div class="sb-item" data-tab="billing" onclick="switchTab('billing')"><i class="ti ti-receipt-2"></i><span class="sb-label">Billing</span></div>
         <div class="sb-item" data-tab="itr" onclick="switchTab('itr')"><i class="ti ti-file-text"></i><span class="sb-label">ITR Tracking</span></div>
@@ -177,7 +186,7 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
 
     <div class="main">
 
-      <div class="shell-panel active" id="panel-clients">
+      <div class="shell-panel" id="panel-clients">
         <div class="native-wrap">
           <h2 class="sectitle"><i class="ti ti-users"></i> Clients</h2>
           <div class="bar">
@@ -198,7 +207,7 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
         </div>
       </div>
 
-      <div class="shell-panel" id="panel-pm">
+      <div class="shell-panel active" id="panel-pm">
         <iframe id="frame-pm" src=""></iframe>
       </div>
 
@@ -258,21 +267,22 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
       </div>
 
       <div class="shell-panel" id="panel-duedates">
+        <div class="inner-tabs">
+          <div class="inner-tab active" data-ddtab="GST" onclick="switchDDTab('GST')"><i class="ti ti-receipt-tax"></i> GST</div>
+          <div class="inner-tab" data-ddtab="Income Tax" onclick="switchDDTab('Income Tax')"><i class="ti ti-coin-rupee"></i> Income Tax</div>
+          <div class="inner-tab" data-ddtab="ROC / MCA" onclick="switchDDTab('ROC / MCA')"><i class="ti ti-building"></i> ROC</div>
+          <div class="inner-tab" data-ddtab="Labour" onclick="switchDDTab('Labour')"><i class="ti ti-users-group"></i> Labour</div>
+          <div class="inner-tab" data-ddtab="" onclick="switchDDTab('')"><i class="ti ti-list"></i> All Due Dates</div>
+        </div>
         <div class="native-wrap">
-          <h2 class="sectitle"><i class="ti ti-calendar-due"></i> Due Dates</h2>
           <div class="bar">
-            <select class="sel" id="dd-month">
+            <select class="sel" id="dd-month" onchange="renderDueDatesTab()">
               <option value="1">January</option><option value="2">February</option><option value="3">March</option>
               <option value="4">April</option><option value="5">May</option><option value="6">June</option>
               <option value="7">July</option><option value="8">August</option><option value="9">September</option>
               <option value="10">October</option><option value="11">November</option><option value="12">December</option>
             </select>
-            <select class="sel" id="dd-year"></select>
-            <select class="sel" id="dd-category">
-              <option value="">All categories</option>
-              <option value="GST">GST</option><option value="Income Tax">Income Tax</option>
-              <option value="ROC / MCA">ROC</option><option value="Labour">Labour</option>
-            </select>
+            <select class="sel" id="dd-year" onchange="renderDueDatesTab()"></select>
             <button class="btn btn-o" onclick="loadDueDatesTab()"><i class="ti ti-refresh"></i> Refresh</button>
           </div>
 
@@ -471,7 +481,7 @@ function doShellLogout(){
 
 function enterApp(){
   document.getElementById('loginWrap').style.display = 'none';
-  document.getElementById('app').style.display = 'flex';
+  document.getElementById('splashWrap').style.display = 'flex';
 
   var initials = (SHELL_USER.name || '?').split(' ').map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
   document.getElementById('sbAv').textContent = initials;
@@ -484,7 +494,19 @@ function enterApp(){
   document.getElementById('frame-billing').src = 'billing.html' + authQS;
   document.getElementById('frame-pm').src = 'pm.html' + authQS;
   document.getElementById('frame-itr').src = 'itr_pack.html' + authQS;
-  loadClientsTab();
+
+  var minWait = new Promise(function(res){ setTimeout(res, 5000); });
+  var dataReady = Promise.all([
+    new Promise(function(res){ loadClientsTab(res); }),
+    new Promise(function(res){ loadDueDatesTab(res); }),
+    new Promise(function(res){ loadItrDueDates(res); }),
+    new Promise(function(res){ loadItrHistory(res); }),
+    new Promise(function(res){ loadClientsForVault(res); })
+  ]);
+  Promise.all([minWait, dataReady]).then(function(){
+    document.getElementById('splashWrap').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+  });
 }
 
 function toggleSidebar(){
@@ -509,8 +531,8 @@ function switchTab(name){
 }
 
 function switchInnerTab(name){
-  document.querySelectorAll('.inner-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.itab===name); });
-  document.querySelectorAll('.inner-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('#panel-itr .inner-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.itab===name); });
+  document.querySelectorAll('#panel-itr .inner-panel').forEach(function(p){ p.classList.remove('active'); });
   document.getElementById('ipanel-'+name).classList.add('active');
   if(name==='history') loadItrHistory();
   if(name==='duedates') loadItrDueDates();
@@ -525,11 +547,11 @@ function toast(msg,type){
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function api(action,params,cb){
   var qs=Object.keys(params||{}).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);}).join('&');
-  fetch(WEBAPP_URL+'?action='+action+(qs?'&'+qs:'')).then(function(r){return r.json();}).then(cb).catch(function(e){toast('Network error: '+e.message,'err');});
+  fetch(WEBAPP_URL+'?action='+action+(qs?'&'+qs:'')).then(function(r){return r.json();}).then(cb).catch(function(e){toast('Network error: '+e.message,'err'); if(cb)cb({ok:false,success:false,error:e.message});});
 }
 function apiPost(body,cb){
   fetch(WEBAPP_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)})
-    .then(function(r){return r.json();}).then(cb).catch(function(e){toast('Network error: '+e.message,'err');});
+    .then(function(r){return r.json();}).then(cb).catch(function(e){toast('Network error: '+e.message,'err'); if(cb)cb({ok:false,success:false,error:e.message});});
 }
 
 /* ===================================================================
@@ -567,14 +589,15 @@ function updCompsTab(presetComps){
 function getCheckedCompsTab(){return CL_CRULES.filter(function(r){var el=document.getElementById('clchk_'+r.name.replace(/[^a-zA-Z0-9]/g,'_'));return el&&el.checked;}).map(function(r){return r.name;});}
 
 var ALL_CLIENTS_TAB = [];
-function loadClientsTab(){
+function loadClientsTab(cb){
   document.getElementById('cl-body').innerHTML = '<tr><td colspan="8"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
   api('getAll',{},function(d){
-    if(!d.ok){ document.getElementById('cl-body').innerHTML = '<tr><td colspan="8"><div class="empty">Could not load clients.</div></td></tr>'; return; }
+    if(!d.ok){ document.getElementById('cl-body').innerHTML = '<tr><td colspan="8"><div class="empty">Could not load clients.</div></td></tr>'; if(cb)cb(); return; }
     ALL_CLIENTS_TAB = d.clients || [];
     var groups = {}; ALL_CLIENTS_TAB.forEach(function(c){ if(c.group) groups[c.group]=true; });
     document.getElementById('cl-groupList').innerHTML = Object.keys(groups).map(function(g){ return '<option value="'+esc(g)+'">'; }).join('');
     renderClientsTab();
+    if(cb)cb();
   });
 }
 function renderClientsTab(){
@@ -727,7 +750,7 @@ function genDueDatesShell(dispMonth,dispYear){
   return dues;
 }
 function ddFindTask(ddid){ return DD_TASKS.find(function(t){ return t.dd_id===ddid; }); }
-function loadDueDatesTab(){
+function loadDueDatesTab(cb){
   var ySel=document.getElementById('dd-year');
   if(!ySel.options.length){
     var ny=new Date().getFullYear();
@@ -736,15 +759,22 @@ function loadDueDatesTab(){
   }
   document.getElementById('dd-body').innerHTML='<tr><td colspan="6"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
   api('getAll',{},function(d){
-    if(!d.ok) return;
+    if(!d.ok){ if(cb)cb(); return; }
     DD_CLIENTS=d.clients||[]; DD_TASKS=d.tasks||[];
     renderDueDatesTab();
+    if(cb)cb();
   });
+}
+var DD_CURRENT_CAT = 'GST';
+function switchDDTab(cat){
+  DD_CURRENT_CAT = cat;
+  document.querySelectorAll('#panel-duedates .inner-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.ddtab===cat); });
+  renderDueDatesTab();
 }
 function renderDueDatesTab(){
   var month=parseInt(document.getElementById('dd-month').value,10);
   var year=parseInt(document.getElementById('dd-year').value,10);
-  var catFilter=document.getElementById('dd-category').value;
+  var catFilter=DD_CURRENT_CAT;
   var dues=genDueDatesShell(month,year);
   if(catFilter) dues=dues.filter(function(x){ return x.cat===catFilter; });
 
@@ -799,10 +829,10 @@ function itrComputeDue(c,year){
   if(is34) return year+'-08-31';
   return year+'-07-31';
 }
-function loadItrDueDates(){
+function loadItrDueDates(cb){
   document.getElementById('itrd-body').innerHTML='<tr><td colspan="5"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
   api('getAll',{},function(d){
-    if(!d.ok) return;
+    if(!d.ok){ if(cb)cb(); return; }
     var clients=(d.clients||[]).filter(function(c){ return String(c.archived).toUpperCase()!=='TRUE'; });
     var tasks=d.tasks||[];
     var ay=new Date().getFullYear();
@@ -812,6 +842,7 @@ function loadItrDueDates(){
       return { cid:c.id, name:c.name, itrType:c.itrType||'—', due:itrComputeDue(c,ay), ddid:ddid, filed: t&&t.status==='done' };
     });
     renderItrDueDates();
+    if(cb)cb();
   });
 }
 function renderItrDueDates(){
@@ -852,12 +883,13 @@ function itrToggleFiled(ddid,cid,wasFiled){
 }
 
 var ITR_HISTORY=[];
-function loadItrHistory(){
+function loadItrHistory(cb){
   document.getElementById('ih-body').innerHTML='<tr><td colspan="7"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
   api('listItrPacks',{},function(d){
-    if(!d.success){ document.getElementById('ih-body').innerHTML='<tr><td colspan="7"><div class="empty">Could not load history: '+esc(d.error||'')+'</div></td></tr>'; return; }
+    if(!d.success){ document.getElementById('ih-body').innerHTML='<tr><td colspan="7"><div class="empty">Could not load history: '+esc(d.error||'')+'</div></td></tr>'; if(cb)cb(); return; }
     ITR_HISTORY=d.packs||[];
     renderItrHistory();
+    if(cb)cb();
   });
 }
 function renderItrHistory(){
@@ -906,13 +938,14 @@ function switchVaultTab(name){
   if(name==='records') fetchDocuments();
 }
 
-function loadClientsForVault(){
-  if (VAULT_INITED) return;
+function loadClientsForVault(cb){
+  if (VAULT_INITED) { if(cb)cb(); return; }
   VAULT_INITED = true;
   api('clientList',{},function(d){
-    if(!d.success) return;
+    if(!d.success){ if(cb)cb(); return; }
     VAULT_CLIENTS = d.clients || [];
     populateDocClientList();
+    if(cb)cb();
   });
 }
 function populateDocClientList(){
