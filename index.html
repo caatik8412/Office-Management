@@ -45,9 +45,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 
 .sidebar{width:var(--sb-w);min-width:var(--sb-w);background:var(--navy);display:flex;flex-direction:column;transition:width .18s,min-width .18s;overflow:hidden;}
 .sidebar.collapsed{width:var(--sb-w-collapsed);min-width:var(--sb-w-collapsed);}
-.sb-top{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:space-between;gap:8px;}
-.sb-logo-wrap{background:#fff;border-radius:6px;padding:5px 9px;display:flex;align-items:center;flex-shrink:0;}
-.sb-logo{height:26px;width:auto;display:block;}
+.sb-top{padding:14px 14px;border-bottom:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.sb-brand{color:#fff;font-size:12px;font-weight:600;white-space:normal;line-height:1.3;overflow:hidden;}
+.sidebar.collapsed .sb-brand{display:none;}
 .sidebar.collapsed .sb-top{padding:14px 8px;justify-content:center;}
 .sb-collapse{background:rgba(255,255,255,.1);border:none;color:#fff;width:26px;height:26px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .sb-collapse:hover{background:rgba(255,255,255,.2);}
@@ -154,7 +154,7 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
   <div class="layout">
     <div class="sidebar" id="sidebar">
       <div class="sb-top">
-        <div class="sb-logo-wrap"><img class="sb-logo" src="ca-india-logo.png" alt="CA India"></div>
+        <div class="sb-brand">Bhayani Business Solutions</div>
         <button class="sb-collapse" id="sbCollapseBtn" onclick="toggleSidebar()"><i class="ti ti-chevrons-left"></i></button>
       </div>
       <div class="sb-nav">
