@@ -619,7 +619,7 @@ var CRULES=[
   {name:'TDS Payment',  freq:'Monthly',   rule:function(c){return c.emp==='yes';}},
   {name:'PF / ESIC',    freq:'Monthly',   rule:function(c){return c.emp==='yes';}},
   {name:'TDS Returns',  freq:'Quarterly', rule:function(c){return c.emp==='yes';}},
-  {name:'Advance Tax',  freq:'4 dates',   rule:function(){return true;}},
+  {name:'Advance Tax',  freq:'4 dates',   manual:true, rule:function(){return false;}},
   {name:'ITR',          freq:'Annual',    rule:function(){return true;}},
   {name:'Tax Audit',    freq:'Annual',    rule:function(c){return c.tov==='above1cr';}},
   {name:'ROC AOC-4',    freq:'Annual',    rule:function(c){return c.ent==='Private Limited'||c.ent==='LLP';}},
@@ -657,8 +657,8 @@ function updComps(){
   var on=CRULES.filter(function(r){return r.rule(cfg);});
   document.getElementById('ccnt').textContent=on.length;
   document.getElementById('cpllist').innerHTML=CRULES.map(function(r){
-    var ok=r.rule(cfg);var cid2='chk_'+r.name.replace(/[^a-zA-Z0-9]/g,'_');
-    return '<div class="cpi" style="'+(ok?'':'opacity:.4')+'">'+(ok?'<input type="checkbox" id="'+cid2+'" checked style="width:15px;height:15px;cursor:pointer;flex-shrink:0">':'<div style="width:15px;height:15px;background:var(--b);border-radius:3px;flex-shrink:0"></div>')+
+    var ok=r.rule(cfg);var interactive=ok||r.manual;var cid2='chk_'+r.name.replace(/[^a-zA-Z0-9]/g,'_');
+    return '<div class="cpi" style="'+(interactive?'':'opacity:.4')+'">'+(interactive?'<input type="checkbox" id="'+cid2+'"'+(ok?' checked':'')+' style="width:15px;height:15px;cursor:pointer;flex-shrink:0">':'<div style="width:15px;height:15px;background:var(--b);border-radius:3px;flex-shrink:0"></div>')+
       '<div style="font-size:12px;flex:1">'+r.name+'</div><div style="font-size:10px;color:var(--t3)">'+r.freq+'</div></div>';
   }).join('');
 }
@@ -667,7 +667,7 @@ function getCheckedComps(){return CRULES.filter(function(r){var el=document.getE
 function openAddClient(){
   document.getElementById('cid').value='';
   ['cname','cpan','cgstin','cemail','cnotes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('cent').value='';document.getElementById('cgst').value='regular';
+  document.getElementById('cent').value='';document.getElementById('cgst').value='none';
   document.getElementById('cgstf').value='monthly';document.getElementById('cemp').value='no';
   document.getElementById('ctov').value='below40l';
   document.getElementById('cstart').value=new Date().toISOString().split('T')[0];
