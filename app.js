@@ -632,13 +632,15 @@ function renderClients(q){
   buildCliTable(list);
 }
 function filterEnt(tp){buildCliTable(tp?CLIENTS.filter(function(c){return c.entity===tp;}):CLIENTS);}
+var BULK_SEL = {};
 function buildCliTable(list){
   var body=document.getElementById('ctb');if(!body)return;
   var oc=function(id){return TASKS.filter(function(t){return t.client_id===id&&t.status!=='done';}).length;};
-  if(!list.length){body.innerHTML='<tr><td colspan="7"><div class="emp">No clients</div></td></tr>';return;}
+  if(!list.length){body.innerHTML='<tr><td colspan="8"><div class="emp">No clients</div></td></tr>';return;}
   body.innerHTML=list.map(function(c){
     var freq=c.gst_type==='none'?'<span class="bdg bx">No GST</span>':c.gst_freq==='quarterly'?'<span class="bdg bp">QRMP</span>':c.gst_type==='composition'?'<span class="bdg ba">CMP</span>':'<span class="bdg bb">Monthly</span>';
-    return '<tr><td style="font-weight:500">'+esc(c.name)+'</td>'+
+    return '<tr><td><input type="checkbox" class="bulkChk" data-id="'+c.id+'" '+(BULK_SEL[c.id]?'checked':'')+' onchange="toggleBulk(\''+c.id+'\',this.checked)"></td>'+
+      '<td style="font-weight:500">'+esc(c.name)+'</td>'+
       '<td><span class="bdg bx">'+esc(c.entity||'')+'</span></td>'+
       '<td style="font-family:monospace;font-size:12px">'+esc(c.pan||'-')+'</td>'+
       '<td style="font-family:monospace;font-size:12px">'+esc(c.gstin||'-')+'</td>'+
@@ -646,6 +648,62 @@ function buildCliTable(list){
       '<td>'+(oc(c.id)>0?'<span class="bdg ba">'+oc(c.id)+' open</span>':'<span class="bdg bg">Clear</span>')+'</td>'+
       '<td style="display:flex;gap:4px"><button class="btn bts" onclick="openEditClient(\''+c.id+'\')">Edit</button><button class="btn bts btr" onclick="delCli(\''+c.id+'\')">Remove</button></td></tr>';
   }).join('');
+}
+function toggleBulk(id,checked){
+  if(checked) BULK_SEL[id]=true; else delete BULK_SEL[id];
+  updateBulkBar();
+}
+function toggleAllBulk(checked){
+  document.querySelectorAll('.bulkChk').forEach(function(el){
+    el.checked=checked;
+    if(checked) BULK_SEL[el.dataset.id]=true; else delete BULK_SEL[el.dataset.id];
+  });
+  updateBulkBar();
+}
+function clearBulkSel(){
+  BULK_SEL={};
+  document.querySelectorAll('.bulkChk').forEach(function(el){el.checked=false;});
+  var all=document.getElementById('bulkAll'); if(all) all.checked=false;
+  updateBulkBar();
+}
+function updateBulkBar(){
+  var ids=Object.keys(BULK_SEL);
+  document.getElementById('bulkcnt').textContent=ids.length;
+  document.getElementById('bulkbar').style.display=ids.length?'flex':'none';
+}
+function bulkApplyGST(){
+  var ids=Object.keys(BULK_SEL);
+  var val=document.getElementById('bulkGstSel').value;
+  if(!ids.length){alert('Select at least one client.');return;}
+  if(!val){alert('Pick a GST type to apply.');return;}
+  if(!confirm('Set GST Type to "'+val+'" for '+ids.length+' selected client(s)?'))return;
+  sync(true);
+  api('bulkUpdateClients',{ids:ids,field:'gst_type',value:val}).then(function(r){
+    sync(false);
+    if(r&&r.ok){
+      ids.forEach(function(id){var c=gc(id);if(c)c.gst_type=val;});
+      renderClients();alert('Updated '+ids.length+' client(s).');
+    } else alert((r&&r.error)||'Update failed');
+  }).catch(function(e){sync(false);alert('Error: '+e.message);});
+}
+function bulkSetCompliance(name,add){
+  var ids=Object.keys(BULK_SEL);
+  if(!ids.length){alert('Select at least one client.');return;}
+  if(!confirm((add?'Add':'Remove')+' "'+name+'" for '+ids.length+' selected client(s)?'))return;
+  sync(true);
+  api('bulkUpdateClients',{ids:ids,field:'compliance',compliance:name,add:add}).then(function(r){
+    sync(false);
+    if(r&&r.ok){
+      ids.forEach(function(id){
+        var c=gc(id);if(!c)return;
+        var comps=pArr(c.compliances);
+        if(add){ if(comps.indexOf(name)===-1) comps.push(name); }
+        else { comps=comps.filter(function(x){return x!==name;}); }
+        c.compliances=comps;
+      });
+      renderClients();alert('Updated '+ids.length+' client(s).');
+    } else alert((r&&r.error)||'Update failed');
+  }).catch(function(e){sync(false);alert('Error: '+e.message);});
 }
 function delCli(id){if(!confirm('Remove this client?'))return;sync(true);api('delClient',{id:id}).then(function(){CLIENTS=CLIENTS.filter(function(c){return c.id!==id;});sync(false);renderClients();fillSelects();});}
 
