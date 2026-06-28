@@ -158,7 +158,8 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
         <button class="sb-collapse" id="sbCollapseBtn" onclick="toggleSidebar()"><i class="ti ti-chevrons-left"></i></button>
       </div>
       <div class="sb-nav">
-        <div class="sb-item active" data-tab="pm" onclick="switchTab('pm')"><i class="ti ti-checklist"></i><span class="sb-label">Practice Manager</span></div>
+        <div class="sb-item active" data-tab="clients" onclick="switchTab('clients')"><i class="ti ti-users"></i><span class="sb-label">Clients</span></div>
+        <div class="sb-item" data-tab="pm" onclick="switchTab('pm')"><i class="ti ti-checklist"></i><span class="sb-label">Practice Manager</span></div>
         <div class="sb-item" data-tab="billing" onclick="switchTab('billing')"><i class="ti ti-receipt-2"></i><span class="sb-label">Billing</span></div>
         <div class="sb-item" data-tab="itr" onclick="switchTab('itr')"><i class="ti ti-file-text"></i><span class="sb-label">ITR Pack</span></div>
         <div class="sb-item" data-tab="vault" onclick="switchTab('vault')"><i class="ti ti-folder"></i><span class="sb-label">Documents Vault</span></div>
@@ -175,11 +176,33 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
 
     <div class="main">
 
+      <div class="shell-panel active" id="panel-clients">
+        <div class="native-wrap">
+          <h2 class="sectitle"><i class="ti ti-users"></i> Clients</h2>
+          <div class="bar">
+            <div class="sbox"><i class="ti ti-search"></i><input type="text" id="cl-search" placeholder="Search name, PAN, group…" oninput="renderClientsTab()"></div>
+            <select class="sel" id="cl-filter-entity" onchange="renderClientsTab()">
+              <option value="">All types</option>
+              <option>Individual</option><option>Private Limited</option><option>LLP</option><option>Proprietorship</option><option>Partnership</option><option>HUF</option>
+            </select>
+            <button class="btn btn-o" onclick="loadClientsTab()"><i class="ti ti-refresh"></i> Refresh</button>
+            <button class="btn btn-p" style="margin-left:auto;" onclick="openClientForm(null)"><i class="ti ti-user-plus"></i> Add Client</button>
+          </div>
+          <div class="card">
+            <table>
+              <thead><tr><th>Client</th><th>Group</th><th>Type</th><th>PAN</th><th>GSTIN</th><th>Mobile</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="cl-body"><tr><td colspan="8"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="shell-panel" id="panel-pm">
+        <iframe id="frame-pm" src=""></iframe>
+      </div>
+
       <div class="shell-panel" id="panel-billing">
         <iframe id="frame-billing" src=""></iframe>
-      </div>
-      <div class="shell-panel active" id="panel-pm">
-        <iframe id="frame-pm" src=""></iframe>
       </div>
 
       <div class="shell-panel" id="panel-itr">
@@ -288,6 +311,66 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
   </div>
 </div>
 
+<div class="modal-overlay" id="cl-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:10px;width:680px;max-width:94vw;max-height:88vh;overflow-y:auto;">
+    <div style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:15px;font-weight:700;color:var(--navy)" id="cl-modal-title">Add Client</div>
+      <button class="btn btn-o" style="padding:5px 10px;" onclick="closeClientForm()"><i class="ti ti-x"></i></button>
+    </div>
+    <div style="padding:22px;display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <input type="hidden" id="cl-id">
+      <div class="vf-field"><label>Client Name *</label><input type="text" id="cl-name"></div>
+      <div class="vf-field"><label>Group <span style="font-weight:400;color:var(--muted)">(family/business group)</span></label><input type="text" id="cl-group" list="cl-groupList"><datalist id="cl-groupList"></datalist></div>
+      <div class="vf-field"><label>PAN *</label><input type="text" id="cl-pan" maxlength="10" style="text-transform:uppercase"></div>
+      <div class="vf-field"><label>GSTIN</label><input type="text" id="cl-gstin" maxlength="15" style="text-transform:uppercase"></div>
+      <div class="vf-field"><label>Mobile</label><input type="text" id="cl-mobile"></div>
+      <div class="vf-field"><label>Email</label><input type="email" id="cl-email"></div>
+      <div class="vf-field"><label>Entity Type *</label>
+        <select class="sel" id="cl-entity" style="width:100%;" onchange="updCompsTab()">
+          <option value="">Select</option><option>Individual</option><option>Private Limited</option><option>LLP</option><option>Proprietorship</option><option>Partnership</option><option>HUF</option>
+        </select>
+      </div>
+      <div class="vf-field"><label>Tax Filing Status</label>
+        <select class="sel" id="cl-status" style="width:100%;">
+          <option value="">—</option><option>INDIVIDUAL</option><option>44AB</option><option>44AD</option><option>8% BUSINESS</option><option>PARTNER</option><option>DIRECTOR</option><option>OTHER</option><option>HUF</option><option>FIRM</option>
+        </select>
+      </div>
+      <div class="vf-field"><label>GST Type</label>
+        <select class="sel" id="cl-gsttype" style="width:100%;" onchange="updCompsTab()">
+          <option value="none">Not Registered</option><option value="regular">Regular</option><option value="composition">Composition</option>
+        </select>
+      </div>
+      <div class="vf-field"><label>GST Frequency</label>
+        <select class="sel" id="cl-gstfreq" style="width:100%;" onchange="updCompsTab()">
+          <option value="monthly">Monthly</option><option value="quarterly">Quarterly (QRMP)</option>
+        </select>
+      </div>
+      <div class="vf-field"><label>Has Employees (TDS/PF)</label>
+        <select class="sel" id="cl-emp" style="width:100%;" onchange="updCompsTab()"><option value="no">No</option><option value="yes">Yes</option></select>
+      </div>
+      <div class="vf-field"><label>Turnover</label>
+        <select class="sel" id="cl-turnover" style="width:100%;" onchange="updCompsTab()">
+          <option value="below40l">Below 40L</option><option value="above40l">40L to 1 Cr</option><option value="above1cr">Above 1 Cr (Audit)</option>
+        </select>
+      </div>
+      <div class="vf-field"><label>ITR Type</label><input type="text" id="cl-itrtype" placeholder="e.g. ITR-3"></div>
+      <div class="vf-field"><label>Start Date</label><input type="date" id="cl-startdate"></div>
+      <div class="vf-field" style="grid-column:1/-1;"><label>Notes</label><input type="text" id="cl-notes" placeholder="Portal logins, contact details…"></div>
+      <div class="vf-field" style="grid-column:1/-1;display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="cl-archived" style="width:16px;height:16px;"> <label for="cl-archived" style="margin:0;">Archived (inactive client)</label>
+      </div>
+      <div style="grid-column:1/-1;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:14px 16px;">
+        <div style="font-size:12px;font-weight:600;margin-bottom:10px;color:var(--navy);">Applicable Compliances <span class="badge" style="background:#eff6ff;color:#2563a8" id="cl-ccnt">0</span></div>
+        <div id="cl-cpllist" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;"></div>
+      </div>
+    </div>
+    <div style="padding:16px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;">
+      <button class="btn btn-o" onclick="closeClientForm()">Cancel</button>
+      <button class="btn btn-p" id="cl-save-btn" onclick="saveClientTab()">Save Client</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"><i class="ti ti-check"></i><span id="tmsg"></span></div>
 
 <script>
@@ -346,6 +429,7 @@ function enterApp(){
   document.getElementById('frame-billing').src = 'billing.html' + authQS;
   document.getElementById('frame-pm').src = 'pm.html' + authQS;
   document.getElementById('frame-itr').src = 'itr_pack.html' + authQS;
+  loadClientsTab();
 }
 
 function toggleSidebar(){
@@ -361,6 +445,7 @@ function switchTab(name){
   document.getElementById('panel-'+name).classList.add('active');
   if(name==='itr' && document.querySelector('.inner-tab[data-itab="history"]').classList.contains('active')) loadItrHistory();
   if(name==='vault') loadClientsForVault();
+  if(name==='clients') loadClientsTab();
 }
 
 function switchInnerTab(name){
@@ -384,6 +469,145 @@ function api(action,params,cb){
 function apiPost(body,cb){
   fetch(WEBAPP_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)})
     .then(function(r){return r.json();}).then(cb).catch(function(e){toast('Network error: '+e.message,'err');});
+}
+
+/* ===================================================================
+   CLIENTS — unified Add/Edit/Delete, used by every other tab
+   =================================================================== */
+var CL_CRULES=[
+  {name:'GSTR-1',       freq:'Monthly',   rule:function(c){return c.gst==='regular'&&c.gstf==='monthly';}},
+  {name:'GSTR-3B',      freq:'Monthly',   rule:function(c){return c.gst==='regular'&&c.gstf==='monthly';}},
+  {name:'GSTR-1 Qtr',   freq:'Quarterly', rule:function(c){return c.gst==='regular'&&c.gstf==='quarterly';}},
+  {name:'GSTR-3B Qtr',  freq:'Quarterly', rule:function(c){return c.gst==='regular'&&c.gstf==='quarterly';}},
+  {name:'PMT-06',       freq:'Monthly',   rule:function(c){return c.gst==='regular'&&c.gstf==='quarterly';}},
+  {name:'CMP-08',       freq:'Quarterly', rule:function(c){return c.gst==='composition';}},
+  {name:'TDS Payment',  freq:'Monthly',   rule:function(c){return c.emp==='yes';}},
+  {name:'PF / ESIC',    freq:'Monthly',   rule:function(c){return c.emp==='yes';}},
+  {name:'TDS Returns',  freq:'Quarterly', rule:function(c){return c.emp==='yes';}},
+  {name:'Advance Tax',  freq:'4 dates',   manual:true, rule:function(){return false;}},
+  {name:'ITR',          freq:'Annual',    rule:function(){return true;}},
+  {name:'Tax Audit',    freq:'Annual',    rule:function(c){return c.tov==='above1cr';}},
+  {name:'ROC AOC-4',    freq:'Annual',    rule:function(c){return c.ent==='Private Limited'||c.ent==='LLP';}},
+  {name:'ROC MGT-7',    freq:'Annual',    rule:function(c){return c.ent==='Private Limited'||c.ent==='LLP';}}
+];
+function updCompsTab(presetComps){
+  var cfg={gst:document.getElementById('cl-gsttype').value,gstf:document.getElementById('cl-gstfreq').value,
+    emp:document.getElementById('cl-emp').value,tov:document.getElementById('cl-turnover').value,ent:document.getElementById('cl-entity').value};
+  var preset = presetComps || null;
+  var on=CL_CRULES.filter(function(r){return r.rule(cfg);});
+  document.getElementById('cl-ccnt').textContent=on.length;
+  document.getElementById('cl-cpllist').innerHTML=CL_CRULES.map(function(r){
+    var ok=r.rule(cfg);var interactive=ok||r.manual;var cid='clchk_'+r.name.replace(/[^a-zA-Z0-9]/g,'_');
+    var checked = preset ? (preset.indexOf(r.name)>-1) : ok;
+    return '<div style="display:flex;align-items:center;gap:6px;'+(interactive?'':'opacity:.4')+'">'+(interactive?'<input type="checkbox" id="'+cid+'"'+(checked?' checked':'')+' style="width:14px;height:14px;cursor:pointer;flex-shrink:0">':'<div style="width:14px;height:14px;background:var(--border);border-radius:3px;flex-shrink:0"></div>')+
+      '<span style="font-size:12px;flex:1">'+r.name+'</span><span style="font-size:10px;color:var(--muted)">'+r.freq+'</span></div>';
+  }).join('');
+}
+function getCheckedCompsTab(){return CL_CRULES.filter(function(r){var el=document.getElementById('clchk_'+r.name.replace(/[^a-zA-Z0-9]/g,'_'));return el&&el.checked;}).map(function(r){return r.name;});}
+
+var ALL_CLIENTS_TAB = [];
+function loadClientsTab(){
+  document.getElementById('cl-body').innerHTML = '<tr><td colspan="8"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
+  api('getAll',{},function(d){
+    if(!d.ok){ document.getElementById('cl-body').innerHTML = '<tr><td colspan="8"><div class="empty">Could not load clients.</div></td></tr>'; return; }
+    ALL_CLIENTS_TAB = d.clients || [];
+    var groups = {}; ALL_CLIENTS_TAB.forEach(function(c){ if(c.group) groups[c.group]=true; });
+    document.getElementById('cl-groupList').innerHTML = Object.keys(groups).map(function(g){ return '<option value="'+esc(g)+'">'; }).join('');
+    renderClientsTab();
+  });
+}
+function renderClientsTab(){
+  var q = (document.getElementById('cl-search').value||'').toLowerCase();
+  var entFilter = document.getElementById('cl-filter-entity').value;
+  var list = ALL_CLIENTS_TAB.filter(function(c){
+    if(entFilter && c.entity!==entFilter) return false;
+    if(q){
+      var hay = ((c.name||'')+' '+(c.pan||'')+' '+(c.group||'')).toLowerCase();
+      if(hay.indexOf(q)===-1) return false;
+    }
+    return true;
+  });
+  if(!list.length){ document.getElementById('cl-body').innerHTML = '<tr><td colspan="8"><div class="empty"><i class="ti ti-users"></i>No clients found.</div></td></tr>'; return; }
+  document.getElementById('cl-body').innerHTML = list.map(function(c){
+    var isArchived = String(c.archived).toUpperCase()==='TRUE'||c.archived===true;
+    return '<tr class="row">'
+      +'<td style="font-weight:500">'+esc(c.name)+'</td>'
+      +'<td>'+esc(c.group||'—')+'</td>'
+      +'<td><span class="badge" style="background:#f1f5f9;color:#475569">'+esc(c.entity||'—')+'</span></td>'
+      +'<td style="font-family:monospace;font-size:12px">'+esc(c.pan||'—')+'</td>'
+      +'<td style="font-family:monospace;font-size:12px">'+esc(c.gstin||'—')+'</td>'
+      +'<td>'+esc(c.mobile||'—')+'</td>'
+      +'<td>'+(isArchived?'<span class="badge" style="background:#fef2f2;color:#dc2626">Archived</span>':'<span class="badge" style="background:#dcfce7;color:#16a34a">Active</span>')+'</td>'
+      +'<td><button class="btn btn-o" style="padding:5px 10px;font-size:12px" onclick="openClientForm(\''+c.id+'\')"><i class="ti ti-edit"></i> Edit</button> '
+      +'<button class="btn btn-r" style="padding:5px 10px;font-size:12px" onclick="deleteClientTab(\''+c.id+'\')"><i class="ti ti-trash"></i></button></td>'
+    +'</tr>';
+  }).join('');
+}
+function openClientForm(id){
+  var c = id ? ALL_CLIENTS_TAB.find(function(x){ return x.id===id; }) : null;
+  document.getElementById('cl-modal-title').textContent = c ? 'Edit Client' : 'Add Client';
+  document.getElementById('cl-id').value = c ? c.id : '';
+  document.getElementById('cl-name').value = c ? c.name||'' : '';
+  document.getElementById('cl-group').value = c ? c.group||'' : '';
+  document.getElementById('cl-pan').value = c ? c.pan||'' : '';
+  document.getElementById('cl-gstin').value = c ? c.gstin||'' : '';
+  document.getElementById('cl-mobile').value = c ? c.mobile||'' : '';
+  document.getElementById('cl-email').value = c ? c.email||'' : '';
+  document.getElementById('cl-entity').value = c ? c.entity||'' : '';
+  document.getElementById('cl-status').value = c ? c.status||'' : '';
+  document.getElementById('cl-gsttype').value = c ? c.gst_type||'none' : 'none';
+  document.getElementById('cl-gstfreq').value = c ? c.gst_freq||'monthly' : 'monthly';
+  document.getElementById('cl-emp').value = c ? c.has_employees||'no' : 'no';
+  document.getElementById('cl-turnover').value = c ? c.turnover||'below40l' : 'below40l';
+  document.getElementById('cl-itrtype').value = c ? c.itrType||'' : '';
+  document.getElementById('cl-startdate').value = c ? c.start_date||'' : new Date().toISOString().split('T')[0];
+  document.getElementById('cl-notes').value = c ? c.notes||'' : '';
+  document.getElementById('cl-archived').checked = c ? (String(c.archived).toUpperCase()==='TRUE'||c.archived===true) : false;
+  var existingComps = [];
+  if (c && c.compliances) { try { existingComps = JSON.parse(c.compliances); } catch(e) {} }
+  updCompsTab(c ? existingComps : null);
+  document.getElementById('cl-modal').style.display = 'flex';
+}
+function closeClientForm(){ document.getElementById('cl-modal').style.display = 'none'; }
+function saveClientTab(){
+  var name = document.getElementById('cl-name').value.trim();
+  var pan = document.getElementById('cl-pan').value.trim().toUpperCase();
+  var entity = document.getElementById('cl-entity').value;
+  if(!name || !pan || !entity){ toast('Fill client name, PAN, and entity type','err'); return; }
+  var id = document.getElementById('cl-id').value;
+  var existing = id ? ALL_CLIENTS_TAB.find(function(x){ return x.id===id; }) : null;
+  var payload = {
+    id: id || ('c'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)),
+    name: name, pan: pan, entity: entity,
+    group: document.getElementById('cl-group').value.trim(),
+    gstin: document.getElementById('cl-gstin').value.trim().toUpperCase(),
+    mobile: document.getElementById('cl-mobile').value.trim(),
+    email: document.getElementById('cl-email').value.trim(),
+    status: document.getElementById('cl-status').value,
+    gst_type: document.getElementById('cl-gsttype').value,
+    gst_freq: document.getElementById('cl-gstfreq').value,
+    has_employees: document.getElementById('cl-emp').value,
+    turnover: document.getElementById('cl-turnover').value,
+    itrType: document.getElementById('cl-itrtype').value.trim(),
+    start_date: document.getElementById('cl-startdate').value,
+    notes: document.getElementById('cl-notes').value.trim(),
+    archived: document.getElementById('cl-archived').checked,
+    compliances: JSON.stringify(getCheckedCompsTab())
+  };
+  var btn = document.getElementById('cl-save-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  api('saveClient',payload,function(d){
+    btn.disabled = false; btn.textContent = 'Save Client';
+    if(d.ok){ toast(id?'Client updated ✓':'Client added ✓','ok'); closeClientForm(); loadClientsTab(); }
+    else toast(d.error||'Save failed','err');
+  });
+}
+function deleteClientTab(id){
+  if(!confirm('Remove this client? This does not delete their bills/tasks/documents.')) return;
+  api('delClient',{id:id},function(d){
+    if(d.ok){ toast('Client removed ✓','ok'); loadClientsTab(); }
+    else toast(d.error||'Remove failed','err');
+  });
 }
 
 var ITR_HISTORY=[];
