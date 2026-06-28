@@ -259,8 +259,6 @@ function genDueDates(dispMonth, dispYear){
     }
     var audit=c.turnover==='above1cr';
     var pvt=c.entity==='Private Limited'||c.entity==='LLP';
-    if(dispMonth===8&&!audit) dd(c.id,cn,'ITR Filing | FY '+py+'-'+String(py+1).slice(2),dtStr(dispYear,8,31),'Income Tax','ITR Filing',py,py);
-    if(dispMonth===10&&audit) dd(c.id,cn,'ITR Filing | FY '+py+'-'+String(py+1).slice(2),dtStr(dispYear,10,31),'Income Tax','ITR Filing',py,py);
     if(dispMonth===9&&audit) dd(c.id,cn,'Tax Audit 3CD | FY '+py+'-'+String(py+1).slice(2),dtStr(dispYear,9,30),'Audit','Tax Audit',py,py);
     if(dispMonth===10&&pvt) dd(c.id,cn,'ROC AOC-4 | FY '+py+'-'+String(py+1).slice(2),dtStr(dispYear,10,30),'ROC / MCA','ROC AOC-4',py,py);
     if(dispMonth===11&&pvt) dd(c.id,cn,'ROC MGT-7 | FY '+py+'-'+String(py+1).slice(2),dtStr(dispYear,11,29),'ROC / MCA','ROC MGT-7',py,py);
@@ -478,7 +476,7 @@ function saveTask(){
 
 function setMTab(tab,el){
   MTAB=tab;
-  document.querySelectorAll('#p-mine .tabs .tab').forEach(function(t){t.classList.remove('on');});
+  document.querySelectorAll('#p-mine .subtabs .subtab').forEach(function(t){t.classList.remove('on');});
   if(el)el.classList.add('on');renderMine();
 }
 
