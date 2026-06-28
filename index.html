@@ -145,4 +145,945 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
 <div id="app">
   <div class="top-hdr">
     <div class="top-hdr-left">
-      <button class="sb-collapse" id="sbCollapseBtn" onclick="toggleSidebar()
+      <button class="sb-collapse" id="sbCollapseBtn" onclick="toggleSidebar()"><i class="ti ti-chevrons-left"></i></button>
+      <div class="top-hdr-left-text">CA Practice Manager</div>
+    </div>
+    <div class="top-hdr-center">
+      <div class="top-hdr-logo-wrap"><img class="top-hdr-logo" src="ca-india-logo.png" alt="CA India"></div>
+      <div class="top-hdr-text">
+        <div class="top-hdr-title">CA Atik Bhayani &amp; Associates</div>
+        <div class="top-hdr-sub">Powered by Bhayani Business Solutions</div>
+      </div>
+    </div>
+    <div class="top-hdr-right"></div>
+  </div>
+  <div class="layout">
+    <div class="sidebar" id="sidebar">
+      <div class="sb-nav">
+        <div class="sb-item" data-tab="clients" onclick="switchTab('clients')"><i class="ti ti-users"></i><span class="sb-label">Clients</span></div>
+        <div class="sb-item active" data-tab="pm" onclick="switchTab('pm')"><i class="ti ti-checklist"></i><span class="sb-label">Task Manager</span></div>
+        <div class="sb-item" data-tab="duedates" onclick="switchTab('duedates')"><i class="ti ti-calendar-due"></i><span class="sb-label">Due Dates</span></div>
+        <div class="sb-item" data-tab="billing" onclick="switchTab('billing')"><i class="ti ti-receipt-2"></i><span class="sb-label">Billing</span></div>
+        <div class="sb-item" data-tab="itr" onclick="switchTab('itr')"><i class="ti ti-file-text"></i><span class="sb-label">ITR Tracking</span></div>
+        <div class="sb-item" data-tab="vault" onclick="switchTab('vault')"><i class="ti ti-folder"></i><span class="sb-label">Documents Vault</span></div>
+      </div>
+      <div class="sb-user">
+        <div class="sb-av" id="sbAv">--</div>
+        <div style="overflow:hidden;">
+          <div class="sb-uname" id="sbUname">—</div>
+          <div class="sb-urole" id="sbUrole">—</div>
+        </div>
+        <button class="sb-logout" title="Sign out" onclick="doShellLogout()"><i class="ti ti-logout"></i></button>
+      </div>
+    </div>
+
+    <div class="main">
+
+      <div class="shell-panel" id="panel-clients">
+        <div class="native-wrap">
+          <h2 class="sectitle"><i class="ti ti-users"></i> Clients</h2>
+          <div class="bar">
+            <div class="sbox"><i class="ti ti-search"></i><input type="text" id="cl-search" placeholder="Search name, PAN, group…" oninput="renderClientsTab()"></div>
+            <select class="sel" id="cl-filter-entity" onchange="renderClientsTab()">
+              <option value="">All types</option>
+              <option>Individual</option><option>Private Limited</option><option>LLP</option><option>Proprietorship</option><option>Partnership</option><option>HUF</option>
+            </select>
+            <button class="btn btn-o" onclick="GETALL_CACHE=null;loadClientsTab()"><i class="ti ti-refresh"></i> Refresh</button>
+            <button class="btn btn-p" style="margin-left:auto;" onclick="openClientForm(null)"><i class="ti ti-user-plus"></i> Add Client</button>
+          </div>
+          <div class="card">
+            <table>
+              <thead><tr><th>Client</th><th>Group</th><th>Type</th><th>PAN</th><th>GSTIN</th><th>Mobile</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="cl-body"><tr><td colspan="8"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="shell-panel active" id="panel-pm">
+        <iframe id="frame-pm" src=""></iframe>
+      </div>
+
+      <div class="shell-panel" id="panel-billing">
+        <iframe id="frame-billing" src=""></iframe>
+      </div>
+
+      <div class="shell-panel" id="panel-itr">
+        <div class="inner-tabs">
+          <div class="inner-tab active" data-itab="duedates" onclick="switchInnerTab('duedates')"><i class="ti ti-calendar-due"></i> Clients &amp; Due Dates</div>
+          <div class="inner-tab" data-itab="builder" onclick="switchInnerTab('builder')"><i class="ti ti-file-plus"></i> Create Set</div>
+          <div class="inner-tab" data-itab="history" onclick="switchInnerTab('history')"><i class="ti ti-list"></i> View Records</div>
+        </div>
+        <div class="inner-panels">
+          <div class="inner-panel active" id="ipanel-duedates">
+            <div class="native-wrap">
+              <h2 class="sectitle"><i class="ti ti-calendar-due"></i> ITR Clients &amp; Due Dates</h2>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">
+                <div class="card" style="padding:12px 18px;"><div style="font-size:11px;color:var(--muted);">Total</div><div style="font-size:20px;font-weight:700;color:var(--navy);" id="itrd-total">0</div></div>
+                <div class="card" style="padding:12px 18px;"><div style="font-size:11px;color:var(--muted);">Filed</div><div style="font-size:20px;font-weight:700;color:var(--green);" id="itrd-filed">0</div></div>
+                <div class="card" style="padding:12px 18px;"><div style="font-size:11px;color:var(--muted);">Pending</div><div style="font-size:20px;font-weight:700;color:var(--red);" id="itrd-pending">0</div></div>
+              </div>
+              <div class="bar">
+                <div class="sbox"><i class="ti ti-search"></i><input type="text" id="itrd-search" placeholder="Search client…" oninput="renderItrDueDates()"></div>
+                <select class="sel" id="itrd-filter">
+                  <option value="">All statuses</option><option value="filed">Filed only</option><option value="pending">Pending only</option>
+                </select>
+                <button class="btn btn-o" onclick="GETALL_CACHE=null;loadItrDueDates()"><i class="ti ti-refresh"></i> Refresh</button>
+              </div>
+              <div class="card">
+                <table>
+                  <thead><tr><th>Client</th><th>ITR Type</th><th>Due Date</th><th>Status</th><th>Action</th></tr></thead>
+                  <tbody id="itrd-body"><tr><td colspan="5"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="inner-panel" id="ipanel-builder">
+            <iframe id="frame-itr" src=""></iframe>
+          </div>
+          <div class="inner-panel" id="ipanel-history">
+            <div class="native-wrap">
+              <h2 class="sectitle"><i class="ti ti-list"></i> Previously Generated ITR Packs</h2>
+              <div class="bar">
+                <div class="sbox"><i class="ti ti-search"></i><input type="text" id="ih-search" placeholder="Search client name…" oninput="renderItrHistory()"></div>
+                <button class="btn btn-o" onclick="loadItrHistory()"><i class="ti ti-refresh"></i> Refresh</button>
+              </div>
+              <div class="card">
+                <table>
+                  <thead><tr><th>Client</th><th>PAN</th><th>FY</th><th>AY</th><th>ITR Type</th><th>Created</th><th>Actions</th></tr></thead>
+                  <tbody id="ih-body"><tr><td colspan="7"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="shell-panel" id="panel-duedates">
+        <div class="inner-tabs">
+          <div class="inner-tab active" data-ddtab="GST" onclick="switchDDTab('GST')"><i class="ti ti-receipt-tax"></i> GST</div>
+          <div class="inner-tab" data-ddtab="Income Tax" onclick="switchDDTab('Income Tax')"><i class="ti ti-coin-rupee"></i> Income Tax</div>
+          <div class="inner-tab" data-ddtab="ROC / MCA" onclick="switchDDTab('ROC / MCA')"><i class="ti ti-building"></i> ROC</div>
+          <div class="inner-tab" data-ddtab="Labour" onclick="switchDDTab('Labour')"><i class="ti ti-users-group"></i> Labour</div>
+          <div class="inner-tab" data-ddtab="" onclick="switchDDTab('')"><i class="ti ti-list"></i> All Due Dates</div>
+        </div>
+        <div class="native-wrap">
+          <div class="bar">
+            <select class="sel" id="dd-month" onchange="renderDueDatesTab()">
+              <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+              <option value="4">April</option><option value="5">May</option><option value="6">June</option>
+              <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+              <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+            </select>
+            <select class="sel" id="dd-year" onchange="renderDueDatesTab()"></select>
+            <button class="btn btn-o" onclick="GETALL_CACHE=null;loadDueDatesTab()"><i class="ti ti-refresh"></i> Refresh</button>
+          </div>
+
+          <div id="dd-stat-rows"></div>
+
+          <div class="card">
+            <table>
+              <thead><tr><th>Client</th><th>Category</th><th>Compliance</th><th>Due Date</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody id="dd-body"><tr><td colspan="6"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="shell-panel" id="panel-vault">
+        <div class="inner-tabs">
+          <div class="inner-tab active" data-vtab="upload" onclick="switchVaultTab('upload')"><i class="ti ti-cloud-upload"></i> Upload</div>
+          <div class="inner-tab" data-vtab="records" onclick="switchVaultTab('records')"><i class="ti ti-list"></i> Records</div>
+        </div>
+        <div class="inner-panels">
+
+          <div class="inner-panel active" id="vpanel-upload">
+            <div class="native-wrap">
+              <h2 class="sectitle"><i class="ti ti-cloud-upload"></i> Upload a Document</h2>
+              <div class="card" style="padding:18px;max-width:560px;">
+                <div class="vf-field">
+                  <label>Client</label>
+                  <input type="text" id="dv-client" list="dv-client-list" placeholder="Type to search a client…" oninput="onDocClientPick()" autocomplete="off">
+                  <datalist id="dv-client-list"></datalist>
+                </div>
+                <div class="vf-field">
+                  <label>Category</label>
+                  <select class="sel" id="dv-main-cat" onchange="handleDocMainCategory()" style="width:100%;">
+                    <option value="">Select category…</option>
+                    <option>KYC</option><option>INCOME TAX</option><option>GST</option><option>ROC</option><option>OTHERS</option>
+                  </select>
+                </div>
+                <div class="vf-field" id="dv-subcat-wrap" style="display:none;">
+                  <label>Sub-Category</label>
+                  <select class="sel" id="dv-sub-cat" onchange="handleDocSubCategory()" style="width:100%;"></select>
+                </div>
+                <div class="vf-field" id="dv-other-wrap" style="display:none;">
+                  <label>Specify</label>
+                  <input type="text" id="dv-other-text" placeholder="Type the document type…">
+                </div>
+                <div class="vf-field">
+                  <label>File</label>
+                  <div class="dropzone" id="dv-drop" onclick="document.getElementById('dv-file').click()" style="padding:20px;">
+                    <i class="ti ti-cloud-upload"></i>
+                    <div id="dv-filename">Click to choose a file, or drag &amp; drop it here</div>
+                    <input type="file" id="dv-file" style="display:none" onchange="onDocFilePicked(this.files[0])">
+                  </div>
+                </div>
+                <div class="vf-field">
+                  <label>Note (optional)</label>
+                  <input type="text" id="dv-note" placeholder="Any remarks…">
+                </div>
+                <button class="btn btn-p" style="width:100%;justify-content:center;" onclick="saveDocument()" id="dv-upload-btn"><i class="ti ti-upload"></i> Upload</button>
+                <div id="dv-uploading" style="display:none;margin-top:10px;color:var(--muted);font-size:13px;"><div class="sp"></div> Uploading…</div>
+              </div>
+              <div style="font-size:11px;color:var(--muted);margin-top:10px;">Saved to Google Drive under <strong>Client Documents / &lt;client name&gt;</strong></div>
+            </div>
+          </div>
+
+          <div class="inner-panel" id="vpanel-records">
+            <div class="native-wrap">
+              <h2 class="sectitle"><i class="ti ti-list"></i> Document Records</h2>
+              <div class="bar">
+                <div class="sbox"><i class="ti ti-search"></i><input type="text" id="dv-search" placeholder="Search client or file name…" oninput="renderDocs()"></div>
+                <select class="sel" id="dv-filter-cat" onchange="renderDocs()">
+                  <option value="">All categories</option>
+                  <option>KYC</option><option>INCOME TAX</option><option>GST</option><option>ROC</option><option>OTHERS</option>
+                </select>
+                <button class="btn btn-o" onclick="fetchDocuments()"><i class="ti ti-refresh"></i> Refresh</button>
+              </div>
+              <div class="card">
+                <table>
+                  <thead><tr><th>Client</th><th>File</th><th>Category</th><th>Note</th><th>Uploaded</th><th>Actions</th></tr></thead>
+                  <tbody id="dv-body"><tr><td colspan="6"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="cl-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:10px;width:680px;max-width:94vw;max-height:88vh;overflow-y:auto;">
+    <div style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:15px;font-weight:700;color:var(--navy)" id="cl-modal-title">Add Client</div>
+      <button class="btn btn-o" style="padding:5px 10px;" onclick="closeClientForm()"><i class="ti ti-x"></i></button>
+    </div>
+    <div style="padding:22px;display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <input type="hidden" id="cl-id">
+      <div class="vf-field"><label>Client Name *</label><input type="text" id="cl-name"></div>
+      <div class="vf-field"><label>Group <span style="font-weight:400;color:var(--muted)">(family/business group)</span></label><input type="text" id="cl-group" list="cl-groupList"><datalist id="cl-groupList"></datalist></div>
+      <div class="vf-field"><label>PAN *</label><input type="text" id="cl-pan" maxlength="10" style="text-transform:uppercase"></div>
+      <div class="vf-field"><label>GSTIN</label><input type="text" id="cl-gstin" maxlength="15" style="text-transform:uppercase"></div>
+      <div class="vf-field"><label>Mobile</label><input type="text" id="cl-mobile"></div>
+      <div class="vf-field"><label>Email</label><input type="email" id="cl-email"></div>
+      <div class="vf-field"><label>Entity Type *</label>
+        <select class="sel" id="cl-entity" style="width:100%;" onchange="updCompsTab()">
+          <option value="">Select</option><option>Individual</option><option>Private Limited</option><option>LLP</option><option>Proprietorship</option><option>Partnership</option><option>HUF</option>
+        </select>
+      </div>
+      <div class="vf-field"><label>Tax Filing Status</label>
+        <select class="sel" id="cl-status" style="width:100%;">
+          <option value="">—</option><option>INDIVIDUAL</option><option>44AB</option><option>44AD</option><option>8% BUSINESS</option><option>PARTNER</option><option>DIRECTOR</option><option>OTHER</option><option>HUF</option><option>FIRM</option>
+        </select>
+      </div>
+      <div class="vf-field"><label>GST Type</label>
+        <select class="sel" id="cl-gsttype" style="width:100%;" onchange="updCompsTab()">
+          <option value="none">Not Registered</option><option value="regular">Regular</option><option value="composition">Composition</option>
+        </select>
+      </div>
+      <div class="vf-field"><label>GST Frequency</label>
+        <select class="sel" id="cl-gstfreq" style="width:100%;" onchange="updCompsTab()">
+          <option value="monthly">Monthly</option><option value="quarterly">Quarterly (QRMP)</option>
+        </select>
+      </div>
+      <div class="vf-field"><label>Has Employees (TDS/PF)</label>
+        <select class="sel" id="cl-emp" style="width:100%;" onchange="updCompsTab()"><option value="no">No</option><option value="yes">Yes</option></select>
+      </div>
+      <div class="vf-field"><label>Turnover</label>
+        <select class="sel" id="cl-turnover" style="width:100%;" onchange="updCompsTab()">
+          <option value="below40l">Below 40L</option><option value="above40l">40L to 1 Cr</option><option value="above1cr">Above 1 Cr (Audit)</option>
+        </select>
+      </div>
+      <div class="vf-field"><label>ITR Type</label><input type="text" id="cl-itrtype" placeholder="e.g. ITR-3"></div>
+      <div class="vf-field"><label>Start Date</label><input type="date" id="cl-startdate"></div>
+      <div class="vf-field" style="grid-column:1/-1;"><label>Notes</label><input type="text" id="cl-notes" placeholder="Portal logins, contact details…"></div>
+      <div class="vf-field" style="grid-column:1/-1;display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="cl-archived" style="width:16px;height:16px;"> <label for="cl-archived" style="margin:0;">Archived (inactive client)</label>
+      </div>
+      <div style="grid-column:1/-1;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:14px 16px;">
+        <div style="font-size:12px;font-weight:600;margin-bottom:10px;color:var(--navy);">Applicable Compliances <span class="badge" style="background:#eff6ff;color:#2563a8" id="cl-ccnt">0</span></div>
+        <div id="cl-cpllist" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;"></div>
+      </div>
+    </div>
+    <div style="padding:16px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;">
+      <button class="btn btn-o" onclick="closeClientForm()">Cancel</button>
+      <button class="btn btn-p" id="cl-save-btn" onclick="saveClientTab()">Save Client</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i class="ti ti-check"></i><span id="tmsg"></span></div>
+
+<script>
+var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxoagx4t2EopKubBQs7iEc4RZAo81MDEyqs25J0YMXNOruPXpkKaoiPSy-0QwbW9Qt0/exec';
+var SHELL_USER = null;
+
+window.onload = function(){
+  var saved = sessionStorage.getItem('shellUser');
+  if (saved) { SHELL_USER = JSON.parse(saved); enterApp(); }
+  else document.getElementById('loginId').focus();
+};
+
+function doShellLogin(){
+  var u = document.getElementById('loginId').value.trim();
+  var p = document.getElementById('loginPass').value;
+  var err = document.getElementById('loginErr');
+  var btn = document.getElementById('loginBtn');
+  err.textContent = '';
+  if (!u || !p) { err.textContent = 'Enter username and password'; return; }
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  fetch(WEBAPP_URL + '?action=login&username=' + encodeURIComponent(u) + '&password=' + encodeURIComponent(p))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      btn.disabled = false; btn.textContent = 'Sign in';
+      if (!d.ok) { err.textContent = d.error || 'Login failed'; return; }
+      SHELL_USER = d.user;
+      sessionStorage.setItem('shellUser', JSON.stringify(SHELL_USER));
+      enterApp();
+    })
+    .catch(function(e){ btn.disabled = false; btn.textContent = 'Sign in'; err.textContent = 'Network error: ' + e.message; });
+}
+
+function doShellLogout(){
+  sessionStorage.removeItem('shellUser');
+  SHELL_USER = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginWrap').style.display = 'flex';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('frame-billing').src = '';
+  document.getElementById('frame-pm').src = '';
+  document.getElementById('frame-itr').src = '';
+}
+
+function enterApp(){
+  document.getElementById('loginWrap').style.display = 'none';
+
+  var initials = (SHELL_USER.name || '?').split(' ').map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
+  document.getElementById('sbAv').textContent = initials;
+  document.getElementById('sbUname').textContent = SHELL_USER.name || SHELL_USER.username;
+  document.getElementById('sbUrole').textContent = SHELL_USER.role === 'admin' ? 'Admin' : 'Staff';
+
+  var authQS = '?embedded=1&name=' + encodeURIComponent(SHELL_USER.name||'')
+             + '&role=' + encodeURIComponent(SHELL_USER.role||'')
+             + '&username=' + encodeURIComponent(SHELL_USER.username||'');
+  document.getElementById('frame-billing').src = 'billing.html' + authQS;
+  document.getElementById('frame-pm').src = 'pm.html' + authQS;
+  document.getElementById('frame-itr').src = 'itr_pack.html' + authQS;
+
+  Promise.all([
+    new Promise(function(res){ loadClientsTab(res); }),
+    new Promise(function(res){ loadDueDatesTab(res); }),
+    new Promise(function(res){ loadItrDueDates(res); }),
+    new Promise(function(res){ loadItrHistory(res); }),
+    new Promise(function(res){ loadClientsForVault(res); })
+  ]).then(function(){
+    document.getElementById('app').style.display = 'flex';
+  });
+}
+
+function toggleSidebar(){
+  var sb = document.getElementById('sidebar');
+  sb.classList.toggle('collapsed');
+  var icon = document.querySelector('#sbCollapseBtn i');
+  icon.className = sb.classList.contains('collapsed') ? 'ti ti-chevrons-right' : 'ti ti-chevrons-left';
+}
+
+function switchTab(name){
+  document.querySelectorAll('.sb-item').forEach(function(t){ t.classList.toggle('active', t.dataset.tab===name); });
+  document.querySelectorAll('.shell-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('panel-'+name).classList.add('active');
+  if(name==='itr'){
+    var active=document.querySelector('#panel-itr .inner-tab.active').dataset.itab;
+    if(active==='history') loadItrHistory();
+    if(active==='duedates') loadItrDueDates();
+  }
+  if(name==='vault') loadClientsForVault();
+  if(name==='clients') loadClientsTab();
+  if(name==='duedates') loadDueDatesTab();
+}
+
+function switchInnerTab(name){
+  document.querySelectorAll('#panel-itr .inner-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.itab===name); });
+  document.querySelectorAll('#panel-itr .inner-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('ipanel-'+name).classList.add('active');
+  if(name==='history') loadItrHistory();
+  if(name==='duedates') loadItrDueDates();
+}
+
+function toast(msg,type){
+  var t=document.getElementById('toast');
+  document.getElementById('tmsg').textContent=msg;
+  t.className='toast show'+(type?' '+type:'');
+  clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},3000);
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+var GETALL_CACHE = null;
+var GETALL_INFLIGHT = null;
+function getAllShared(cb, forceRefresh){
+  if (GETALL_CACHE && !forceRefresh) { cb(GETALL_CACHE); return; }
+  if (GETALL_INFLIGHT) { GETALL_INFLIGHT.push(cb); return; }
+  GETALL_INFLIGHT = [cb];
+  api('getAll',{},function(d){
+    if (d.ok) GETALL_CACHE = d;
+    var waiters = GETALL_INFLIGHT; GETALL_INFLIGHT = null;
+    waiters.forEach(function(fn){ fn(d); });
+  });
+}
+
+function api(action,params,cb){
+  var qs=Object.keys(params||{}).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);}).join('&');
+  fetch(WEBAPP_URL+'?action='+action+(qs?'&'+qs:'')).then(function(r){return r.json();}).then(cb).catch(function(e){toast('Network error: '+e.message,'err'); if(cb)cb({ok:false,success:false,error:e.message});});
+}
+function apiPost(body,cb){
+  fetch(WEBAPP_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)})
+    .then(function(r){return r.json();}).then(cb).catch(function(e){toast('Network error: '+e.message,'err'); if(cb)cb({ok:false,success:false,error:e.message});});
+}
+
+/* ===================================================================
+   CLIENTS — unified Add/Edit/Delete
+   =================================================================== */
+var CL_CRULES=[
+  {name:'GSTR-1',        freq:'Monthly',   rule:function(c){return c.gst==='regular'&&c.gstf==='monthly';}},
+  {name:'GSTR-3B',       freq:'Monthly',   rule:function(c){return c.gst==='regular'&&c.gstf==='monthly';}},
+  {name:'GSTR-1 Qtr',    freq:'Quarterly', rule:function(c){return c.gst==='regular'&&c.gstf==='quarterly';}},
+  {name:'GSTR-3B Qtr',   freq:'Quarterly', rule:function(c){return c.gst==='regular'&&c.gstf==='quarterly';}},
+  {name:'PMT-06',        freq:'Monthly',   rule:function(c){return c.gst==='regular'&&c.gstf==='quarterly';}},
+  {name:'CMP-08',        freq:'Quarterly', rule:function(c){return c.gst==='composition';}},
+  {name:'TDS Payment',   freq:'Monthly',   rule:function(c){return c.emp==='yes';}},
+  {name:'PF / ESIC',     freq:'Monthly',   rule:function(c){return c.emp==='yes';}},
+  {name:'TDS Returns',   freq:'Quarterly', rule:function(c){return c.emp==='yes';}},
+  {name:'Advance Tax',   freq:'4 dates',   manual:true, rule:function(){return false;}},
+  {name:'ITR',           freq:'Annual',    rule:function(){return true;}},
+  {name:'Tax Audit',     freq:'Annual',    rule:function(c){return c.tov==='above1cr';}},
+  {name:'ROC AOC-4',     freq:'Annual',    rule:function(c){return c.ent==='Private Limited'||c.ent==='LLP';}},
+  {name:'ROC MGT-7',     freq:'Annual',    rule:function(c){return c.ent==='Private Limited'||c.ent==='LLP';}}
+];
+function updCompsTab(presetComps){
+  var cfg={gst:document.getElementById('cl-gsttype').value,gstf:document.getElementById('cl-gstfreq').value,
+    emp:document.getElementById('cl-emp').value,tov:document.getElementById('cl-turnover').value,ent:document.getElementById('cl-entity').value};
+  var preset = presetComps || null;
+  var on=CL_CRULES.filter(function(r){return r.rule(cfg);});
+  document.getElementById('cl-ccnt').textContent=on.length;
+  document.getElementById('cl-cpllist').innerHTML=CL_CRULES.map(function(r){
+    var ok=r.rule(cfg);var interactive=ok||r.manual;var cid='clchk_'+r.name.replace(/[^a-zA-Z0-9]/g,'_');
+    var checked = preset ? (preset.indexOf(r.name)>-1) : ok;
+    return '<div style="display:flex;align-items:center;gap:6px;'+(interactive?'':'opacity:.4')+'">'+(interactive?'<input type="checkbox" id="'+cid+'"'+(checked?' checked':'')+' style="width:14px;height:14px;cursor:pointer;flex-shrink:0">':'<div style="width:14px;height:14px;background:var(--border);border-radius:3px;flex-shrink:0"></div>')+
+      '<span style="font-size:12px;flex:1">'+r.name+'</span><span style="font-size:10px;color:var(--muted)">'+r.freq+'</span></div>';
+  }).join('');
+}
+function getCheckedCompsTab(){return CL_CRULES.filter(function(r){var el=document.getElementById('clchk_'+r.name.replace(/[^a-zA-Z0-9]/g,'_'));return el&&el.checked;}).map(function(r){return r.name;});}
+
+var ALL_CLIENTS_TAB = [];
+function loadClientsTab(cb){
+  document.getElementById('cl-body').innerHTML = '<tr><td colspan="8"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
+  getAllShared(function(d){
+    if(!d.ok){ document.getElementById('cl-body').innerHTML = '<tr><td colspan="8"><div class="empty">Could not load clients.</div></td></tr>'; if(cb)cb(); return; }
+    ALL_CLIENTS_TAB = d.clients || [];
+    var groups = {}; ALL_CLIENTS_TAB.forEach(function(c){ if(c.group) groups[c.group]=true; });
+    document.getElementById('cl-groupList').innerHTML = Object.keys(groups).map(function(g){ return '<option value="'+esc(g)+'">'; }).join('');
+    renderClientsTab();
+    if(cb)cb();
+  });
+}
+function renderClientsTab(){
+  var q = (document.getElementById('cl-search').value||'').toLowerCase();
+  var entFilter = document.getElementById('cl-filter-entity').value;
+  var list = ALL_CLIENTS_TAB.filter(function(c){
+    if(entFilter && c.entity!==entFilter) return false;
+    if(q){
+      var hay = ((c.name||'')+' '+(c.pan||'')+' '+(c.group||'')).toLowerCase();
+      if(hay.indexOf(q)===-1) return false;
+    }
+    return true;
+  });
+  if(!list.length){ document.getElementById('cl-body').innerHTML = '<tr><td colspan="8"><div class="empty"><i class="ti ti-users"></i>No clients found.</div></td></tr>'; return; }
+  document.getElementById('cl-body').innerHTML = list.map(function(c){
+    var isArchived = String(c.archived).toUpperCase()==='TRUE'||c.archived===true;
+    return '<tr class="row">'
+      +'<td style="font-weight:500">'+esc(c.name)+'</td>'
+      +'<td>'+esc(c.group||'—')+'</td>'
+      +'<td><span class="badge" style="background:#f1f5f9;color:#475569">'+esc(c.entity||'—')+'</span></td>'
+      +'<td style="font-family:monospace;font-size:12px">'+esc(c.pan||'—')+'</td>'
+      +'<td style="font-family:monospace;font-size:12px">'+esc(c.gstin||'—')+'</td>'
+      +'<td>'+esc(c.mobile||'—')+'</td>'
+      +'<td>'+(isArchived?'<span class="badge" style="background:#fef2f2;color:#dc2626">Archived</span>':'<span class="badge" style="background:#dcfce7;color:#16a34a">Active</span>')+'</td>'
+      +'<td><button class="btn btn-o" style="padding:5px 10px;font-size:12px" onclick="openClientForm(\''+c.id+'\')"><i class="ti ti-edit"></i> Edit</button> '
+      +'<button class="btn btn-r" style="padding:5px 10px;font-size:12px" onclick="deleteClientTab(\''+c.id+'\')"><i class="ti ti-trash"></i></button></td>'
+    +'</tr>';
+  }).join('');
+}
+function openClientForm(id){
+  var c = id ? ALL_CLIENTS_TAB.find(function(x){ return x.id===id; }) : null;
+  document.getElementById('cl-modal-title').textContent = c ? 'Edit Client' : 'Add Client';
+  document.getElementById('cl-id').value = c ? c.id : '';
+  document.getElementById('cl-name').value = c ? c.name||'' : '';
+  document.getElementById('cl-group').value = c ? c.group||'' : '';
+  document.getElementById('cl-pan').value = c ? c.pan||'' : '';
+  document.getElementById('cl-gstin').value = c ? c.gstin||'' : '';
+  document.getElementById('cl-mobile').value = c ? c.mobile||'' : '';
+  document.getElementById('cl-email').value = c ? c.email||'' : '';
+  document.getElementById('cl-entity').value = c ? c.entity||'' : '';
+  document.getElementById('cl-status').value = c ? c.status||'' : '';
+  document.getElementById('cl-gsttype').value = c ? c.gst_type||'none' : 'none';
+  document.getElementById('cl-gstfreq').value = c ? c.gst_freq||'monthly' : 'monthly';
+  document.getElementById('cl-emp').value = c ? c.has_employees||'no' : 'no';
+  document.getElementById('cl-turnover').value = c ? c.turnover||'below40l' : 'below40l';
+  document.getElementById('cl-itrtype').value = c ? c.itrType||'' : '';
+  document.getElementById('cl-startdate').value = c ? c.start_date||'' : new Date().toISOString().split('T')[0];
+  document.getElementById('cl-notes').value = c ? c.notes||'' : '';
+  document.getElementById('cl-archived').checked = c ? (String(c.archived).toUpperCase()==='TRUE'||c.archived===true) : false;
+  var existingComps = [];
+  if (c && c.compliances) { try { existingComps = JSON.parse(c.compliances); } catch(e) {} }
+  updCompsTab(c ? existingComps : null);
+  document.getElementById('cl-modal').style.display = 'flex';
+}
+function closeClientForm(){ document.getElementById('cl-modal').style.display = 'none'; }
+function saveClientTab(){
+  var name = document.getElementById('cl-name').value.trim();
+  var pan = document.getElementById('cl-pan').value.trim().toUpperCase();
+  var entity = document.getElementById('cl-entity').value;
+  if(!name || !pan || !entity){ toast('Fill client name, PAN, and entity type','err'); return; }
+  var id = document.getElementById('cl-id').value;
+  var existing = id ? ALL_CLIENTS_TAB.find(function(x){ return x.id===id; }) : null;
+  var payload = {
+    id: id || ('c'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)),
+    name: name, pan: pan, entity: entity,
+    group: document.getElementById('cl-group').value.trim(),
+    gstin: document.getElementById('cl-gstin').value.trim().toUpperCase(),
+    mobile: document.getElementById('cl-mobile').value.trim(),
+    email: document.getElementById('cl-email').value.trim(),
+    status: document.getElementById('cl-status').value,
+    gst_type: document.getElementById('cl-gsttype').value,
+    gst_freq: document.getElementById('cl-gstfreq').value,
+    has_employees: document.getElementById('cl-emp').value,
+    turnover: document.getElementById('cl-turnover').value,
+    itrType: document.getElementById('cl-itrtype').value.trim(),
+    start_date: document.getElementById('cl-startdate').value,
+    notes: document.getElementById('cl-notes').value.trim(),
+    archived: document.getElementById('cl-archived').checked,
+    compliances: JSON.stringify(getCheckedCompsTab())
+  };
+  var btn = document.getElementById('cl-save-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  api('saveClient',payload,function(d){
+    btn.disabled = false; btn.textContent = 'Save Client';
+    if(d.ok){ toast(id?'Client updated ✓':'Client added ✓','ok'); closeClientForm(); GETALL_CACHE=null; loadClientsTab(); }
+    else toast(d.error||'Save failed','err');
+  });
+}
+function deleteClientTab(id){
+  if(!confirm('Remove this client? This does not delete their bills/tasks/documents.')) return;
+  api('delClient',{id:id},function(d){
+    if(d.ok){ toast('Client removed ✓','ok'); GETALL_CACHE=null; loadClientsTab(); }
+    else toast(d.error||'Remove failed','err');
+  });
+}
+
+/* ===================================================================
+   DUE DATES — GST / Income Tax / ROC / Labour
+   =================================================================== */
+var DD_CLIENTS=[], DD_TASKS=[];
+function ddDateStr(y,m,d){return y+'-'+(m<10?'0'+m:m)+'-'+(d<10?'0'+d:d);}
+function genDueDatesShell(dispMonth,dispYear){
+  var dues=[];
+  var pm=dispMonth===1?12:dispMonth-1;
+  var py=dispMonth===1?dispYear-1:dispYear;
+  var isQE=(pm%3===0);
+  function dd(cid,cname,name,due,cat,type){
+    duues.push({ddid:cid+'_'+type+'_'+pm+'_'+py, cid:cid, cname:cname, name:name, due:due, cat:cat, type:type});
+  }
+  var duues = dues; 
+  DD_CLIENTS.forEach(function(c){
+    if(String(c.archived).toUpperCase()==='TRUE') return;
+    var cstart=c.start_date?new Date(c.start_date):new Date('2025-04-01');
+    var periodEnd=new Date(py,pm-1,28);
+    if(cstart>periodEnd) return;
+    var g=c.gst_type||'none', f=c.gst_freq||'monthly', emp=c.has_employees==='yes';
+    var cn=c.short_name||c.name;
+    if(g==='regular'&&f==='monthly'){
+      dd(c.id,cn,'GSTR-1',ddDateStr(dispYear,dispMonth,11),'GST','GSTR-1');
+      dd(c.id,cn,'GSTR-3B',ddDateStr(dispYear,dispMonth,20),'GST','GSTR-3B');
+    }
+    if(g==='regular'&&f==='quarterly'){
+      if(isQE){
+        dd(c.id,cn,'GSTR-1 (Qtr)',ddDateStr(dispYear,dispMonth,13),'GST','GSTR-1Q');
+        dd(c.id,cn,'GSTR-3B (Qtr)',ddDateStr(dispYear,dispMonth,22),'GST','GSTR-3BQ');
+      } else {
+        dd(c.id,cn,'PMT-06',ddDateStr(dispYear,dispMonth,25),'GST','PMT06');
+      }
+    }
+    if(g==='composition'&&isQE) dd(c.id,cn,'CMP-08',ddDateStr(dispYear,dispMonth,18),'GST','CMP08');
+    if(emp){
+      dd(c.id,cn,'TDS Payment',ddDateStr(dispYear,dispMonth,7),'Labour','TDSPAY');
+      dd(c.id,cn,'PF / ESIC',ddDateStr(dispYear,dispMonth,15),'Labour','PFESIC');
+    }
+    if(emp&&(dispMonth===7||dispMonth===10||dispMonth===1||dispMonth===5)){
+      var qmap={7:'Q1',10:'Q2',1:'Q3',5:'Q4'};
+      dd(c.id,cn,'TDS Return '+qmap[dispMonth],ddDateStr(dispYear,dispMonth,31),'Labour','TDSRET'+qmap[dispMonth]);
+    }
+    var audit=c.turnover==='above1cr';
+    var pvt=c.entity==='Private Limited'||c.entity==='LLP';
+    if(dispMonth===9&&audit) dd(c.id,cn,'Tax Audit 3CD',ddDateStr(dispYear,9,30),'Income Tax','TAXAUDIT');
+    if(dispMonth===10&&pvt) dd(c.id,cn,'ROC AOC-4',ddDateStr(dispYear,10,29),'ROC / MCA','AOC4');
+    if(dispMonth===11&&pvt) dd(c.id,cn,'ROC MGT-7',ddDateStr(dispYear,11,29),'ROC / MCA','MGT7');
+    if(dispMonth===6) dd(c.id,cn,'Advance Tax Q1',ddDateStr(dispYear,6,15),'Income Tax','ADVQ1');
+    if(dispMonth===9) dd(c.id,cn,'Advance Tax Q2',ddDateStr(dispYear,9,15),'Income Tax','ADVQ2');
+    if(dispMonth===12) dd(c.id,cn,'Advance Tax Q3',ddDateStr(dispYear,12,15),'Income Tax','ADVQ3');
+    if(dispMonth===3) dd(c.id,cn,'Advance Tax Q4',ddDateStr(dispYear,3,15),'Income Tax','ADVQ4');
+  });
+  dues.sort(function(a,b){ return new Date(a.due)-new Date(b.due); });
+  return dues;
+}
+function ddFindTask(ddid){ return DD_TASKS.find(function(t){ return t.dd_id===ddid; }); }
+function loadDueDatesTab(cb){
+  var ySel=document.getElementById('dd-year');
+  if(!ySel.options.length){
+    var ny=new Date().getFullYear();
+    for(var y=ny-1;y<=ny+1;y++) ySel.innerHTML+='<option value="'+y+'"'+(y===ny?' selected':'')+'>'+y+'</option>';
+    document.getElementById('dd-month').value = new Date().getMonth()+1;
+  }
+  document.getElementById('dd-body').innerHTML='<tr><td colspan="6"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
+  getAllShared(function(d){
+    if(!d.ok){ if(cb)cb(); return; }
+    DD_CLIENTS=d.clients||[]; DD_TASKS=d.tasks||[];
+    renderDueDatesTab();
+    if(cb)cb();
+  });
+}
+var DD_CURRENT_CAT = 'GST';
+function switchDDTab(cat){
+  DD_CURRENT_CAT = cat;
+  document.querySelectorAll('#panel-duedates .inner-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.ddtab===cat); });
+  renderDueDatesTab();
+}
+function renderDueDatesTab(){
+  var month=parseInt(document.getElementById('dd-month').value,10);
+  var year=parseInt(document.getElementById('dd-year').value,10);
+  var catFilter=DD_CURRENT_CAT;
+  var dues=genDueDatesShell(month,year);
+  if(catFilter) dues=dues.filter(function(x){ return x.cat===catFilter; });
+
+  var cats=['GST','Income Tax','ROC / MCA','Labour'];
+  var statsHtml=cats.map(function(cat){
+    var rows=dues.filter(function(x){ return x.cat===cat; });
+    var total=rows.length;
+    var completed=rows.filter(function(x){ var t=ddFindTask(x.ddid); return t&&t.status==='done'; }).length;
+    var pending=total-completed;
+    return '<div class="card" style="padding:12px 16px;"><div style="font-size:11px;color:var(--muted);white-space:nowrap;">'+cat.replace(' / MCA','')+'</div>'
+      +'<div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">'
+      +'<span style="font-size:13px;white-space:nowrap;"><b>'+total+'</b> total</span>'
+      +'<span style="font-size:13px;color:var(--green);white-space:nowrap;"><b>'+completed+'</b> done</span>'
+      +'<span style="font-size:13px;color:var(--red);white-space:nowrap;"><b>'+pending+'</b> pending</span></div></div>';
+  }).join('');
+  document.getElementById('dd-stat-rows').innerHTML='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;">'+statsHtml+'</div>';
+
+  if(!dues.length){ document.getElementById('dd-body').innerHTML='<tr><td colspan="6"><div class="empty"><i class="ti ti-calendar-off"></i>No due dates for this month.</div></td></tr>'; return; }
+  document.getElementById('dd-body').innerHTML=dues.map(function(x){
+    var t=ddFindTask(x.ddid);
+    var done=t&&t.status==='done';
+    var actionCell;
+    if(!t){
+      actionCell='<button class="btn btn-o" style="padding:5px 10px;font-size:12px;margin-right:4px;" onclick="ddAddOpenTask(\''+x.ddid+'\',\''+x.cid+'\',\''+esc(x.name)+'\',\''+x.due+'\',\''+x.cat+'\')"><i class="ti ti-plus"></i> Task</button>'
+        +'<button class="btn btn-p" style="padding:5px 10px;font-size:12px" onclick="ddToggle(\''+x.ddid+'\',\''+x.cid+'\',\''+esc(x.name)+'\',\''+x.due+'\',\''+x.cat+'\',false)">Mark Done</button>';
+    } else {
+      actionCell='<button class="btn '+(done?'btn-o':'btn-p')+'" style="padding:5px 10px;font-size:12px" onclick="ddToggle(\''+x.ddid+'\',\''+x.cid+'\',\''+esc(x.name)+'\',\''+x.due+'\',\''+x.cat+'\','+(done?'true':'false')+')">'+(done?'Mark Pending':'Mark Done')+'</button>';
+    }
+    return '<tr class="row">'
+      +'<td style="font-weight:500">'+esc(x.cname)+'</td>'
+      +'<td><span class="badge" style="background:#f1f5f9;color:#475569">'+esc(x.cat.replace(' / MCA',''))+'</span></td>'
+      +'<td>'+esc(x.name)+'</td>'
+      +'<td>'+new Date(x.due).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})+'</td>'
+      +'<td>'+(t?(done?'<span class="badge" style="background:#dcfce7;color:#16a34a">Done</span>':'<span class="badge" style="background:#fef2f2;color:#dc2626">In Task List</span>'):'<span class="badge" style="background:#f1f5f9;color:#94a3b8">Not started</span>')+'</td>'
+      +'<td>'+actionCell+'</td>'
+    +'</tr>';
+  }).join('');
+}
+function ddAddOpenTask(ddid,cid,name,due,cat){
+  api('saveTask',{client_id:cid, name:name, category:cat, due_date:due, status:'open', dd_id:ddid, priority:'medium'},function(d){
+    if(d.ok){ toast('Added to Task Manager \u2713','ok'); GETALL_CACHE=null; loadDueDatesTab(); }
+    else toast(d.error||'Failed','err');
+  });
+}
+function ddToggle(ddid,cid,name,due,cat,isDone){
+  var existing=ddFindTask(ddid);
+  var payload = existing
+    ? {id:existing.id, status: isDone?'open':'done'}
+    : {client_id:cid, name:name, category:cat, due_date:due, status:'done', dd_id:ddid, priority:'medium'};
+  api('saveTask',payload,function(d){
+    if(d.ok){ toast('Updated ✓','ok'); GETALL_CACHE=null; loadDueDatesTab(); }
+    else toast(d.error||'Update failed','err');
+  });
+}
+
+/* ===================================================================
+   ITR TRACKING — Clients & Due Dates sub-tab
+   =================================================================== */
+var ITRD_ROWS=[];
+function itrComputeDue(c,year){
+  var audit=c.turnover==='above1cr';
+  var itrT=(c.itrType||'').toUpperCase();
+  var is34=itrT.indexOf('3')>-1||itrT.indexOf('4')>-1;
+  if(audit) return year+'-10-31';
+  if(is34) return year+'-08-31';
+  return year+'-07-31';
+}
+function loadItrDueDates(cb){
+  document.getElementById('itrd-body').innerHTML='<tr><td colspan="5"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
+  getAllShared(function(d){
+    if(!d.ok){ if(cb)cb(); return; }
+    var clients=(d.clients||[]).filter(function(c){ return String(c.archived).toUpperCase()!=='TRUE'; });
+    var tasks=d.tasks||[];
+    var ay=new Date().getFullYear();
+    ITRD_ROWS=clients.map(function(c){
+      var ddid=c.id+'_ITR_'+ay;
+      var t=tasks.find(function(x){ return x.dd_id===ddid; });
+      return { cid:c.id, name:c.name, itrType:c.itrType||'—', due:itrComputeDue(c,ay), ddid:ddid, filed: t&&t.status==='done', hasTask: !!t };
+    });
+    renderItrDueDates();
+    if(cb)cb();
+  });
+}
+function renderItrDueDates(){
+  var q=(document.getElementById('itrd-search').value||'').toLowerCase();
+  var f=document.getElementById('itrd-filter').value;
+  var list=ITRD_ROWS.filter(function(r){
+    if(q && r.name.toLowerCase().indexOf(q)===-1) return false;
+    if(f==='filed' && !r.filed) return false;
+    if(f==='pending' && r.filed) return false;
+    return true;
+  });
+  document.getElementById('itrd-total').textContent=ITRD_ROWS.length;
+  document.getElementById('itrd-filed').textContent=ITRD_ROWS.filter(function(r){return r.filed;}).length;
+  document.getElementById('itrd-pending').textContent=ITRD_ROWS.filter(function(r){return !r.filed;}).length;
+  if(!list.length){ document.getElementById('itrd-body').innerHTML='<tr><td colspan="5"><div class="empty"><i class="ti ti-users"></i>No clients found.</div></td></tr>'; return; }
+  document.getElementById('itrd-body').innerHTML=list.map(function(r){
+    var actionCell;
+    if(!r.hasTask){
+      actionCell='<button class="btn btn-o" style="padding:5px 10px;font-size:12px;margin-right:4px;" onclick="itrAddOpenTask(\''+r.ddid+'\',\''+r.cid+'\',\''+esc(r.name)+'\',\''+r.due+'\')"><i class="ti ti-plus"></i> Task</button>'
+        +'<button class="btn btn-p" style="padding:5px 10px;font-size:12px" onclick="itrToggleFiled(\''+r.ddid+'\',\''+r.cid+'\',false)">Mark Filed</button>';
+    } else {
+      actionCell='<button class="btn '+(r.filed?'btn-o':'btn-p')+'" style="padding:5px 10px;font-size:12px" onclick="itrToggleFiled(\''+r.ddid+'\',\''+r.cid+'\','+(r.filed?'true':'false')+')">'+(r.filed?'Mark Pending':'Mark Filed')+'</button>';
+    }
+    return '<tr class="row">'
+      +'<td style="font-weight:500">'+esc(r.name)+'</td>'
+      +'<td>'+esc(r.itrType)+'</td>'
+      +'<td>'+new Date(r.due).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})+'</td>'
+      +'<td>'+(r.filed?'<span class="badge" style="background:#dcfce7;color:#16a34a">Filed</span>':(r.hasTask?'<span class="badge" style="background:#fef2f2;color:#dc2626">In Task List</span>':'<span class="badge" style="background:#f1f5f9;color:#94a3b8">Not started</span>'))+'</td>'
+      +'<td>'+actionCell+'</td>'
+    +'</tr>';
+  }).join('');
+}
+function itrAddOpenTask(ddid,cid,name,due){
+  api('saveTask',{client_id:cid, name:'ITR Filing - '+name, category:'Income Tax', due_date:due, status:'open', dd_id:ddid, priority:'medium'},function(d){
+    if(d.ok){ toast('Added to Task Manager \u2713','ok'); GETALL_CACHE=null; loadItrDueDates(); }
+    else toast(d.error||'Failed','err');
+  });
+}
+function itrToggleFiled(ddid,cid,wasFiled){
+  var row=ITRD_ROWS.find(function(r){ return r.ddid===ddid; });
+  getAllShared(function(d){
+    var existing=(d.tasks||[]).find(function(t){ return t.dd_id===ddid; });
+    var payload = existing
+      ? {id:existing.id, status: wasFiled?'open':'done'}
+      : {client_id:cid, name:'ITR Filing', category:'Income Tax', due_date:row?row.due:'', status:'done', dd_id:ddid, priority:'medium'};
+    api('saveTask',payload,function(r){
+      if(r.ok){ toast('Updated ✓','ok'); GETALL_CACHE=null; loadItrDueDates(); }
+      else toast(r.error||'Update failed','err');
+    });
+  }, true);
+}
+
+var ITR_HISTORY=[];
+function loadItrHistory(cb){
+  document.getElementById('ih-body').innerHTML='<tr><td colspan="7"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
+  api('listItrPacks',{},function(d){
+    if(!d.success){ document.getElementById('ih-body').innerHTML='<tr><td colspan="7"><div class="empty">Could not load history: '+esc(d.error||'')+'</div></td></tr>'; if(cb)cb(); return; }
+    ITR_HISTORY=d.packs||[];
+    renderItrHistory();
+    if(cb)cb();
+  });
+}
+function renderItrHistory(){
+  var q=(document.getElementById('ih-search').value||'').toLowerCase();
+  var list=ITR_HISTORY.filter(function(p){ return !q || (p.clientName||'').toLowerCase().indexOf(q)>-1; });
+  if(!list.length){ document.getElementById('ih-body').innerHTML='<tr><td colspan="7"><div class="empty"><i class="ti ti-file-off"></i>No ITR packs found.</div></td></tr>'; return; }
+  document.getElementById('ih-body').innerHTML=list.map(function(p){
+    var dt=p.createdAt?new Date(p.createdAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—';
+    return '<tr class="row">'
+      +'<td style="font-weight:500">'+esc(p.clientName)+'</td>'
+      +'<td style="font-family:monospace;font-size:12px">'+esc(p.pan||'—')+'</td>'
+      +'<td>'+esc(p.fy||'—')+'</td>'
+      +'<td>'+esc(p.ay||'—')+'</td>'
+      +'<td><span class="badge" style="background:#eff6ff;color:#2563a8">'+esc(p.itrType||'—')+'</span></td>'
+      +'<td style="font-size:12px;color:var(--muted)">'+dt+'</td>'
+      +'<td><a class="btn btn-o" style="padding:5px 10px;font-size:12px" href="'+esc(p.fileUrl)+'" target="_blank"><i class="ti ti-external-link"></i> Open PDF</a>'
+      +' <a class="btn btn-o" style="padding:5px 10px;font-size:12px" href="'+esc(p.folderUrl)+'" target="_blank"><i class="ti ti-folder"></i> Folder</a></td>'
+    +'</tr>';
+  }).join('');
+}
+
+/* ===================================================================
+   DOCUMENTS VAULT — Upload / Records sub-tabs
+   =================================================================== */
+var DOC_CATEGORY_MAP = {
+  'KYC': ['Aadhar Card','PAN Card','Partnership Deed','MOA / AOA','Photo',
+          'Address Proof','Bank Statement / Cancelled Cheque','Other'],
+  'INCOME TAX': ['ITR','P&L Account','Balance Sheet','Audit Report',
+          'Tax Audit Report (3CA-3CD / 3CB-3CD)','Computation of Income',
+          '26AS / AIS / TIS','Challan','Notice / Order','Other'],
+  'GST': ['GST Registration Certificate','GSTR-1','GSTR-3B','GSTR-9 / 9C',
+          'E-Way Bill','Reconciliation','Notice / Order','Other'],
+  'ROC': ['Certificate of Incorporation','MOA','AOA','Annual Return (MGT-7)',
+          'Financial Statements (AOC-4)','DIR-3 KYC','Board Resolution','Other'],
+  'OTHERS': ['Other']
+};
+var VAULT_CLIENTS = [];
+var ALL_DOCUMENTS = [];
+var DOC_PICKED_FILE = null;
+var VAULT_INITED = false;
+
+function switchVaultTab(name){
+  document.querySelectorAll('#panel-vault .inner-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.vtab===name); });
+  document.querySelectorAll('#panel-vault .inner-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('vpanel-'+name).classList.add('active');
+  if(name==='records') fetchDocuments();
+}
+
+function loadClientsForVault(cb){
+  if (VAULT_INITED) { if(cb)cb(); return; }
+  VAULT_INITED = true;
+  api('clientList',{},function(d){
+    if(!d.success){ if(cb)cb(); return; }
+    VAULT_CLIENTS = d.clients || [];
+    populateDocClientList();
+    if(cb)cb();
+  });
+}
+function populateDocClientList(){
+  document.getElementById('dv-client-list').innerHTML = VAULT_CLIENTS.map(function(c){
+    return '<option value="'+esc(c.name)+'" data-id="'+esc(c.id)+'">';
+  }).join('');
+}
+function onDocClientPick(){}
+function resolveDocClient(){
+  var typed = document.getElementById('dv-client').value.trim();
+  var match = VAULT_CLIENTS.find(function(c){ return c.name.toLowerCase() === typed.toLowerCase(); });
+  return match || null;
+}
+
+function handleDocMainCategory(){
+  var main = document.getElementById('dv-main-cat').value;
+  var subWrap = document.getElementById('dv-subcat-wrap');
+  var subSel = document.getElementById('dv-sub-cat');
+  var otherWrap = document.getElementById('dv-other-wrap');
+  otherWrap.style.display = 'none';
+  if (!main || !DOC_CATEGORY_MAP[main]) { subWrap.style.display = 'none'; return; }
+  subSel.innerHTML = '<option value="">Select sub-category…</option>' + DOC_CATEGORY_MAP[main].map(function(s){
+    return '<option>'+esc(s)+'</option>';
+  }).join('');
+  subWrap.style.display = 'block';
+}
+function handleDocSubCategory(){
+  var sub = document.getElementById('dv-sub-cat').value;
+  document.getElementById('dv-other-wrap').style.display = (sub === 'Other') ? 'block' : 'none';
+}
+function onDocFilePicked(file){
+  DOC_PICKED_FILE = file || null;
+  document.getElementById('dv-filename').textContent = file ? file.name : 'Click to choose a file, or drag & drop it here';
+}
+
+function saveDocument(){
+  var client = resolveDocClient();
+  if (!client) { toast('Pick a valid client from the list','err'); return; }
+  var main = document.getElementById('dv-main-cat').value;
+  if (!main) { toast('Select a category','err'); return; }
+  var sub = document.getElementById('dv-sub-cat').value;
+  if (DOC_CATEGORY_MAP[main].length > 1 && !sub) { toast('Select a sub-category','err'); return; }
+  var finalCategory = sub === 'Other'
+    ? main + ' - ' + (document.getElementById('dv-other-text').value.trim() || 'Other')
+    : (sub ? main + ' - ' + sub : main);
+  if (!DOC_PICKED_FILE) { toast('Choose a file to upload','err'); return; }
+
+  var btn = document.getElementById('dv-upload-btn');
+  btn.disabled = true;
+  document.getElementById('dv-uploading').style.display = 'flex';
+  var reader = new FileReader();
+  reader.onload = function(){
+    var base64 = reader.result.split(',')[1];
+    apiPost({
+      clientId: client.id, clientName: client.name, fileName: DOC_PICKED_FILE.name,
+      category: finalCategory, note: document.getElementById('dv-note').value.trim(),
+      mimeType: DOC_PICKED_FILE.type || 'application/octet-stream', fileBase64: base64
+    }, function(d){
+      btn.disabled = false;
+      document.getElementById('dv-uploading').style.display = 'none';
+      if (d.success) {
+        toast('Uploaded ✓','ok');
+        document.getElementById('dv-client').value = '';
+        document.getElementById('dv-main-cat').value = '';
+        document.getElementById('dv-subcat-wrap').style.display = 'none';
+        document.getElementById('dv-other-wrap').style.display = 'none';
+        document.getElementById('dv-note').value = '';
+        document.getElementById('dv-file').value = '';
+        DOC_PICKED_FILE = null;
+        document.getElementById('dv-filename').textContent = 'Click to choose a file, or drag & drop it here';
+      } else toast(d.error || 'Upload failed','err');
+    });
+  };
+  reader.readAsDataURL(DOC_PICKED_FILE);
+}
+
+function fetchDocuments(){
+  document.getElementById('dv-body').innerHTML = '<tr><td colspan="6"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
+  api('listDocuments',{},function(d){
+    if (!d.success) { document.getElementById('dv-body').innerHTML = '<tr><td colspan="6"><div class="empty">Error loading documents.</div></td></tr>'; return; }
+    ALL_DOCUMENTS = d.documents || [];
+    renderDocs();
+  });
+}
+function renderDocs(){
+  var q = (document.getElementById('dv-search').value || '').toLowerCase();
+  var catFilter = document.getElementById('dv-filter-cat').value;
+  var list = ALL_DOCUMENTS.filter(function(doc){
+    if (catFilter && (doc.category||'').indexOf(catFilter) !== 0) return false;
+    if (q && (doc.clientName||'').toLowerCase().indexOf(q) === -1 && (doc.fileName||'').toLowerCase().indexOf(q) === -1) return false;
+    return true;
+  });
+  if (!list.length) { document.getElementById('dv-body').innerHTML = '<tr><td colspan="6"><div class="empty"><i class="ti ti-file-off"></i>No documents found.</div></td></tr>'; return; }
+  document.getElementById('dv-body').innerHTML = list.map(function(doc){
+    var dt = doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+    return '<tr class="row">'
+      +'<td style="font-weight:500">'+esc(doc.clientName)+'</td>'
+      +'<td><i class="ti ti-file-text" style="margin-right:6px;color:var(--muted)"></i>'+esc(doc.fileName)+'</td>'
+      +'<td><span class="badge" style="background:#f1f5f9;color:#475569">'+esc(doc.category||'Other')+'</span></td>'
+      +'<td style="font-size:12px;color:var(--muted)">'+esc(doc.note||'—')+'</td>'
+      +'<td style="font-size:12px;color:var(--muted)">'+dt+'</td>'
+      +'<td><a class="btn btn-o" style="padding:5px 10px;font-size:12px" href="'+esc(doc.fileUrl)+'" target="_blank"><i class="ti ti-external-link"></i> Open</a></td>'
+    +'</tr>';
+  }).join('');
+}
+(function(){
+  var dz=document.getElementById('dv-drop');
+  ['dragover','dragenter'].forEach(function(ev){ dz.addEventListener(ev,function(e){ e.preventDefault(); dz.classList.add('drag'); }); });
+  ['dragleave','drop'].forEach(function(ev){ dz.addEventListener(ev,function(e){ e.preventDefault(); dz.classList.remove('drag'); }); });
+  dz.addEventListener('drop',function(e){ if(e.dataTransfer.files[0]) onDocFilePicked(e.dataTransfer.files[0]); });
+})();
+</script>
+</body>
+</html>
