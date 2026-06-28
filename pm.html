@@ -1,246 +1,843 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Practice Manager</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<meta charset="utf-8" />
+<title>ITR Pack Builder</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#f1f5f9;--s:#fff;--b:#e2e8f0;--t:#0f172a;--t2:#64748b;--t3:#94a3b8;
-  --bl:#2563a8;--bl-b:#eff6ff;--gr:#16a34a;--gr-b:#dcfce7;--am:#b45309;--am-b:#fef3c7;
-  --rd:#dc2626;--rd-b:#fef2f2;--pu:#7c3aed;--pu-b:#f5f3ff;--r:8px;--rs:5px;
-  --navy:#1a3a5c;--accent:#2563a8}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--t);font-size:14px}
-input,select,button,textarea{font-family:inherit;font-size:14px}
-#login{min-height:100vh;display:flex;align-items:center;justify-content:center}
-#app{display:none;min-height:100vh}
-.shell{display:flex;flex-direction:column;min-height:100vh}
-.tabs{display:flex;background:var(--s);border-bottom:1px solid var(--b);overflow-x:auto;}
-.tab{padding:12px 20px;font-size:13px;font-weight:500;color:var(--t2);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;display:flex;align-items:center;gap:6px;user-select:none;}
-.tab i{font-size:16px;}
-.tab:hover{color:var(--t);}
-.tab.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
-.main{flex:1;min-height:0;}
-.tb{position:sticky;top:0;z-index:50;background:var(--s);border-bottom:1px solid var(--b);padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
-.ttl{font-size:16px;font-weight:600}
-.tr{display:flex;align-items:center;gap:8px}
-.syn{font-size:11px;color:var(--t3);display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--b);border-radius:20px}
-.dot{width:6px;height:6px;border-radius:50%;background:var(--gr);flex-shrink:0}
-.dot.sp{background:var(--am);animation:pulse 1s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.pg{padding:24px;display:none}.pg.on{display:block}
-.btn{padding:8px 14px;border-radius:var(--rs);border:1px solid var(--b);font-size:12px;cursor:pointer;background:var(--s);color:var(--t);font-weight:500}
-.btn:hover{background:var(--bg)}.btn:disabled{opacity:.5;cursor:not-allowed}
-.btk{background:var(--navy);color:#fff;border-color:var(--accent)}.btk:hover{opacity:.85}
-.bts{padding:4px 9px;font-size:11px}
-.btr{background:var(--rd-b);color:var(--rd);border-color:#FCA5A5}
-.btg{background:var(--gr-b);color:var(--gr);border-color:#86EFAC}
-.bdg{display:inline-flex;align-items:center;font-size:10px;font-weight:500;padding:3px 8px;border-radius:20px;white-space:nowrap}
-.bb{background:var(--bl-b);color:var(--bl)}.bg{background:var(--gr-b);color:var(--gr)}
-.ba{background:var(--am-b);color:var(--am)}.br{background:var(--rd-b);color:var(--rd)}
-.bp{background:var(--pu-b);color:var(--pu)}.bx{background:#F0EFE9;color:var(--t2)}
-.card{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:18px;margin-bottom:18px}
-.ctit{font-size:13px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
-.stat{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:16px}
-.sl{font-size:11px;color:var(--t2);margin-bottom:6px;font-weight:500}.sv{font-size:26px;font-weight:600}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
-.fr{display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
-.si{padding:8px 12px;border:1px solid var(--b);border-radius:var(--rs);outline:none;background:var(--s)}
-.si:focus{border-color:var(--accent)}
-.tw{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{font-size:11px;font-weight:600;color:var(--t2);padding:10px 12px;text-align:left;border-bottom:2px solid var(--b);background:var(--bg);white-space:nowrap}
-td{padding:9px 12px;border-bottom:1px solid var(--b);vertical-align:middle}
-tr:last-child td{border-bottom:none}
-tr:hover td{background:var(--bg)}
-.trow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--b)}
-.trow:last-child{border-bottom:none}
-.dot2{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.dh{background:#E24B4A}.dm{background:#F59E0B}.dl{background:#22C55E}.dd{background:#D1D5DB}
-.ri{width:100%;padding:5px 8px;border:1px solid var(--b);border-radius:4px;font-size:11px;background:var(--bg);outline:none}
-.ri:focus{border-color:var(--accent);background:var(--s)}
-.tabs{display:flex;gap:2px;margin-bottom:18px;border-bottom:1px solid var(--b)}
-.tab{padding:9px 16px;font-size:13px;cursor:pointer;color:var(--t2);border-bottom:2px solid transparent;margin-bottom:-1px}
-.tab:hover{color:var(--navy)}.tab.on{color:var(--t);border-bottom-color:var(--t);font-weight:500}
-.fi{margin-bottom:14px}
-.fi label{display:block;font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
-.fi input,.fi select,.fi textarea{width:100%;padding:9px 12px;border:1px solid var(--b);border-radius:var(--rs);outline:none;background:var(--s)}
-.fi input:focus,.fi select:focus,.fi textarea:focus{border-color:var(--accent)}
-.fi textarea{resize:vertical;min-height:60px}
-.fg{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center;padding:16px}
-.mo.on{display:flex}
-.md{background:var(--s);border-radius:14px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
-.mh{padding:18px 24px 14px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--s);z-index:1}
-.mt{font-size:16px;font-weight:600}.ms{font-size:12px;color:var(--t2);margin-top:2px}
-.mx{background:none;border:none;font-size:22px;cursor:pointer;color:var(--t2);line-height:1}
-.mb{padding:22px}
-.mf{padding:14px 24px;border-top:1px solid var(--b);display:flex;align-items:center;justify-content:flex-end;gap:8px;background:var(--bg);border-radius:0 0 14px 14px}
-.emp{text-align:center;padding:36px;color:var(--t3);font-size:13px}
-.cpl{background:var(--bg);border:1px solid var(--b);border-radius:var(--r);padding:14px}
-.cpi{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--b);font-size:12px}
-.cpi:last-child{border-bottom:none}
-.dr{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--b);font-size:12px}
-.dr:last-child{border-bottom:none}
-.ddbadge{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:4px 10px;border-radius:20px;font-weight:500}
+  :root{
+    --paper:#f1f5f9;
+    --paper-2:#f1f5f9;
+    --navy:#1a3a5c;
+    --navy-2:#2563a8;
+    --gold:#2563a8;
+    --charcoal:#0f172a;
+    --hairline:#e2e8f0;
+    --ledger-red:#dc2626;
+    --success:#16a34a;
+    --success-bg:#dcfce7;
+    --danger:#dc2626;
+    --danger-bg:#fef2f2;
+    --serif:'Source Serif 4', serif;
+    --sans:'Segoe UI', system-ui, sans-serif;
+    --mono:'IBM Plex Mono', monospace;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    font-family:var(--sans);
+    color:var(--charcoal);
+    background:var(--paper-2);
+  }
+  .app{ max-width:1180px; margin:0 auto; padding:32px 24px 64px; }
+  .app__header{ display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin-bottom:28px; flex-wrap:wrap; }
+  .app__title{ font-family:var(--sans); font-weight:700; font-size:24px; color:var(--navy); margin:0; }
+  .app__tagline{ font-size:13px; color:#5C5447; margin-top:4px; }
+  .app__badge{ font-family:var(--mono); font-size:11px; color:var(--gold); border:1px solid var(--gold); padding:4px 10px; border-radius:2px; white-space:nowrap; }
+
+  .app__main{ display:grid; grid-template-columns: 1fr 380px; gap:24px; align-items:start; }
+  @media (max-width: 880px){ .app__main{ grid-template-columns:1fr; } }
+
+  .panel{ background:var(--paper); border:1px solid var(--hairline); border-radius:8px; padding:24px; }
+  .panel + .panel{ margin-top:0; }
+  .panel__title{ font-family:var(--sans); font-weight:600; font-size:15px; color:var(--navy); margin:0 0 18px; letter-spacing:.01em; }
+
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-size:12px; font-weight:600; color:#5C5447; text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
+  .field input[type=text], .field input[type=date], .field select{
+    width:100%; padding:9px 11px; font-family:var(--mono); font-size:14px;
+    border:1px solid var(--hairline); border-radius:5px; background:#fff; color:var(--charcoal);
+  }
+  .field input[type=text]:focus, .field select:focus{ outline:2px solid var(--navy-2); outline-offset:1px; }
+  .field-row{ display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
+  .combo{ position:relative; }
+  .combo input[type=text]{ width:100%; padding:9px 11px; font-family:var(--sans); font-size:14px; border:1px solid var(--hairline); border-radius:5px; background:#fff; color:var(--charcoal); }
+  .combo input[type=text]:focus{ outline:2px solid var(--navy-2); outline-offset:1px; }
+  .combo__results{ position:absolute; top:100%; left:0; right:0; margin-top:2px; background:#fff; border:1px solid var(--hairline); max-height:230px; overflow-y:auto; z-index:30; border-radius:5px; box-shadow:0 10px 22px -12px rgba(20,20,10,.4); display:none; }
+  .combo__item{ padding:8px 12px; font-size:13px; cursor:pointer; border-bottom:1px solid #F1EAD9; }
+  .combo__item:last-child{ border-bottom:none; }
+  .combo__item:hover, .combo__item.active{ background:#F1E9D8; }
+  .combo__item-pan{ font-family:var(--mono); font-size:11px; color:#8A8174; margin-left:8px; }
+  .combo__empty{ padding:9px 12px; font-size:12px; color:#8A8174; font-style:italic; }
+  .field-row--three{ grid-template-columns: 1fr 1fr 1fr; }
+  .field-row--four{ grid-template-columns: 1fr 1fr 1fr 1fr; }
+  @media (max-width:560px){ .field-row, .field-row--three, .field-row--four{ grid-template-columns:1fr; } }
+  .field__hint{ font-size:11px; color:#8A8174; margin-top:4px; }
+  .field__hint.err{ color:var(--danger); }
+  .field__readout{ font-family:var(--mono); font-size:14px; color:var(--navy); padding:9px 0; }
+
+  .docs{ border-top:1px solid var(--hairline); padding-top:16px; margin-top:6px; }
+  .doc-row{ display:flex; gap:10px; align-items:flex-start; margin-bottom:12px; }
+  .doc-row__label{ flex:1 1 auto; }
+  .doc-row__file{ flex:1.3 1 auto; }
+  .doc-row__firstpage{ flex:0 0 auto; display:flex; align-items:center; gap:5px; font-size:11px; color:#5C5447; white-space:nowrap; padding:0 4px; cursor:pointer; user-select:none; }
+  .doc-row__firstpage input{ cursor:pointer; }
+  .doc-row__remove{ flex:0 0 auto; background:none; border:1px solid var(--hairline); border-radius:2px; color:var(--danger); font-size:12px; padding:9px 10px; cursor:pointer; }
+  .doc-row__remove:hover{ background:var(--danger-bg); }
+  .doc-row input[type=text]{ width:100%; padding:9px 11px; font-family:var(--sans); font-size:13px; border:1px solid var(--hairline); border-radius:5px; background:#fff; }
+  .doc-row input[type=file]{ width:100%; font-size:12px; font-family:var(--sans); }
+  .doc-row__status{ font-family:var(--mono); font-size:11px; color:var(--success); margin-top:3px; }
+
+  .btn-add{ background:none; border:1px dashed var(--hairline); color:var(--navy-2); font-family:var(--sans); font-size:13px; font-weight:600; padding:9px 14px; border-radius:5px; cursor:pointer; width:100%; }
+  .btn-add:hover{ border-color:var(--navy-2); background:#fff; }
+
+  .btn-generate{
+    width:100%; margin-top:20px; padding:13px; font-family:var(--sans); font-weight:700; font-size:14px;
+    background:var(--navy); color:#fff; border:none; border-radius:6px; cursor:pointer; letter-spacing:.02em;
+  }
+  .btn-generate:disabled{ background:#9aa3b3; cursor:not-allowed; }
+  .btn-generate:not(:disabled):hover{ background:var(--navy-2); }
+
+  .btn-secondary{
+    width:100%; margin-top:10px; padding:11px; font-family:var(--sans); font-weight:600; font-size:13px;
+    background:#fff; color:var(--navy); border:1px solid var(--hairline); border-radius:6px; cursor:pointer;
+  }
+  .btn-secondary:hover{ border-color:var(--navy-2); }
+
+  .status-log{ margin-top:16px; font-family:var(--mono); font-size:12px; color:#5C5447; min-height:18px; line-height:1.6; }
+  .status-log .ok{ color:var(--success); }
+  .status-log .err{ color:var(--danger); }
+  .status-log a{ color:var(--navy-2); }
+
+  /* --- Ledger preview card: the signature element --- */
+  .ledger{ position:sticky; top:24px; background:#FFFDF8; border:1px solid var(--hairline); box-shadow:0 1px 0 var(--hairline), 0 8px 18px -12px rgba(20,20,10,.35); position:relative; padding:26px 22px 22px 46px; min-height:520px; }
+  .ledger::before{ content:''; position:absolute; left:30px; top:0; bottom:0; width:1.5px; background:var(--ledger-red); opacity:.55; }
+  .ledger__eyebrow{ font-family:var(--mono); font-size:10px; letter-spacing:.08em; color:var(--gold); text-transform:uppercase; }
+  .ledger__firm{ font-family:var(--serif); font-weight:700; font-size:18px; color:var(--navy); margin:4px 0 2px; }
+  .ledger__firmsub{ font-size:10.5px; color:#5C5447; }
+  .ledger__contact{ font-size:9.5px; color:#8A8174; margin-top:3px; }
+  .ledger__rule{ height:1px; background:var(--gold); margin:12px 0 16px; opacity:.8; }
+  .ledger__h1{ font-family:var(--sans); font-weight:700; font-size:11px; color:var(--gold); letter-spacing:.1em; text-transform:uppercase; }
+  .ledger__clientname{ font-family:var(--serif); font-weight:700; font-size:21px; color:var(--navy); line-height:1.2; margin:5px 0 18px; }
+  .ledger__h2{ font-size:11.5px; color:var(--charcoal); margin-top:0; margin-bottom:18px; }
+  .ledger__row{ display:flex; gap:10px; font-size:12px; margin-bottom:7px; }
+  .ledger__row dt{ font-weight:600; color:#5C5447; width:84px; flex:0 0 auto; }
+  .ledger__row dd{ font-family:var(--mono); color:var(--navy); margin:0; word-break:break-word; }
+  .ledger__hr{ height:1px; background:var(--hairline); margin:16px 0; }
+  .ledger__index-title{ font-size:10.5px; font-weight:700; letter-spacing:.08em; color:var(--navy); text-transform:uppercase; margin-bottom:10px; }
+  .ledger__index-item{ display:flex; align-items:baseline; gap:6px; font-size:12px; margin-bottom:9px; }
+  .ledger__index-num{ font-family:var(--mono); color:var(--gold); flex:0 0 auto; width:14px; }
+  .ledger__index-label{ flex:0 1 auto; }
+  .ledger__index-leader{ flex:1 1 auto; border-bottom:1px dotted var(--hairline); margin:0 4px; transform:translateY(-3px); }
+  .ledger__index-page{ font-family:var(--mono); font-size:11px; color:var(--navy); flex:0 0 auto; }
+  .ledger__index-empty{ font-size:12px; color:#8A8174; font-style:italic; }
+  .ledger__disclaimer{ font-size:11px; font-style:italic; color:#8A8174; line-height:1.45; margin-top:16px; }
+  .ledger__footer-row{ margin-top:auto; padding-top:10px; border-top:1px solid var(--hairline); display:flex; justify-content:space-between; align-items:flex-end; gap:10px; }
+  .ledger__footer{ font-size:10.5px; color:#8A8174; }
+  .ledger__sigline{ margin-top:14px; padding-top:4px; border-top:1px solid var(--hairline); width:120px; font-size:9px; color:#8A8174; }
+  .ledger__footer-right{ font-size:9.5px; color:#8A8174; text-align:right; white-space:nowrap; }
+  .ledger__summary{ display:flex; border:1px solid var(--gold); background:#FBF6EA; border-radius:2px; margin-top:14px; overflow:hidden; }
+  .ledger__summary-col{ flex:1; padding:9px 12px; }
+  .ledger__summary-col + .ledger__summary-col{ border-left:1px solid var(--gold); }
+  .ledger__summary-label{ font-size:9px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--gold); }
+  .ledger__summary-value{ font-family:var(--mono); font-size:15px; font-weight:600; color:var(--navy); margin-top:2px; }
+
 </style>
 </head>
 <body>
 
-<div id="app">
- <div class="shell">
-  <div class="tabs" id="anav" style="display:none">
-   <div class="tab" onclick="go('dash',this)"><i class="ti ti-layout-dashboard"></i>Dashboard</div>
-   <div class="tab" onclick="go('tasks',this)"><i class="ti ti-checklist"></i>Tasks</div>
-   <div class="tab" onclick="go('dates',this)"><i class="ti ti-calendar-due"></i>Due Dates</div>
-   <div class="tab" onclick="go('gst',this)"><i class="ti ti-receipt-tax"></i>GST Compliance</div>
-   <div class="tab" onclick="go('pendoc',this)"><i class="ti ti-folder"></i>Pending Docs</div>
-  </div>
-  <div class="tabs" id="snav" style="display:none">
-   <div class="tab" onclick="go('mine',this)"><i class="ti ti-checklist"></i>My Tasks</div>
-   <div class="tab" onclick="go('pendoc',this)"><i class="ti ti-folder"></i>Pending Docs</div>
-  </div>
+<div class="app" id="appRoot">
 
-  <div class="main">
-   <div class="tb">
-    <div class="ttl" id="ptitle">Dashboard</div>
-    <div class="tr">
-     <div class="syn"><div class="dot" id="sdot"></div><span id="stext">Synced</span></div>
-     <button class="btn" onclick="refresh()" style="color:var(--bl)">&#8635; Refresh</button>
-     <div id="pact"></div>
+  <header class="app__header">
+    <div>
+      <h1 class="app__title">ITR Pack Builder</h1>
+      <div class="app__tagline">Cover page + index, computation, and acknowledgement — merged into one client-ready PDF and filed straight to Drive.</div>
     </div>
-   </div>
+    <div class="app__badge">CA ATIK BHAYANI &amp; ASSOCIATES</div>
+  </header>
 
-   <!-- DASHBOARD -->
-   <div class="pg" id="p-dash">
-    <div class="stats" id="dstats"></div>
-    <div class="g2">
-     <div class="card"><div class="ctit">Pending Tasks <span style="font-size:11px;font-weight:400;color:var(--t2)">by due date</span></div><div id="dtasks"></div></div>
-     <div class="card"><div class="ctit">Upcoming Due Dates <span style="font-size:11px;font-weight:400;color:var(--t2)">this month</span></div><div id="ddates"></div></div>
-    </div>
-    <div class="card"><div class="ctit">Pending Documents <span style="font-size:11px;font-weight:400;color:var(--t2)">awaiting from clients</span></div><div id="dpend"></div></div>
-   </div>
+  <main class="app__main">
+    <section class="panel">
+      <h2 class="panel__title">Client &amp; Filing Details</h2>
 
-   <!-- TASKS -->
-   <div class="pg" id="p-tasks">
-    <div class="tabs">
-     <div class="tab on" onclick="setTTab('active',this)">Pending / In Progress</div>
-     <div class="tab" onclick="setTTab('done',this)">Completed</div>
-    </div>
-    <div class="fr">
-     <input class="si" type="text" id="tsq" placeholder="Search tasks..." oninput="renderTasks()" style="min-width:200px">
-     <select class="btn si" id="tscl" onchange="renderTasks()"><option value="">All clients</option></select>
-     <select class="btn si" id="tsas" onchange="renderTasks()"><option value="">All staff</option><option>Atik Bhayani</option><option>Rushiraj</option><option>Sahil</option></select>
-     <select class="btn si" id="tscat" onchange="renderTasks()"><option value="">All categories</option><option>GST</option><option>TDS</option><option>Income Tax</option><option>ROC / MCA</option><option>PF / ESIC</option><option>Audit</option><option>Other</option></select>
-    </div>
-    <div class="card" style="padding:0"><div class="tw"><table>
-     <thead><tr><th></th><th>Task</th><th>Client</th><th>Category</th><th>Assignee</th><th>Due Date</th><th>Status</th><th style="min-width:160px">Remarks</th><th>Actions</th></tr></thead>
-     <tbody id="ttb"></tbody>
-    </table></div></div>
-   </div>
+      <div class="field" id="clientPickerField">
+        <label for="clientSearchInput">Select Client</label>
+        <div class="combo">
+          <input type="text" id="clientSearchInput" placeholder="Type to search clients…" autocomplete="off" disabled />
+          <div class="combo__results" id="clientSearchResults"></div>
+        </div>
+        <div class="field__hint" id="clientPickerHint">Loading client list…</div>
+      </div>
 
-   <!-- DUE DATES -->
-   <div class="pg" id="p-dates">
-    <div class="fr">
-     <select class="btn si" id="ddmon" onchange="renderDD()">
-      <option value="1">January</option><option value="2">February</option><option value="3">March</option>
-      <option value="4" selected>April</option><option value="5">May</option><option value="6">June</option>
-      <option value="7">July</option><option value="8">August</option><option value="9">September</option>
-      <option value="10">October</option><option value="11">November</option><option value="12">December</option>
-     </select>
-     <select class="btn si" id="ddyr" onchange="renderDD()">
-      <option value="2026">2026</option><option value="2027">2027</option>
-     </select>
-     <select class="btn si" id="ddcli" onchange="renderDD()" style="min-width:180px"><option value="">All clients</option></select>
-     <select class="btn si" id="ddcat" onchange="renderDD()"><option value="">All types</option><option>GST</option><option>TDS</option><option>PF / ESIC</option><option>Income Tax</option><option>ROC / MCA</option></select>
-     <select class="btn si" id="ddst" onchange="renderDD()"><option value="">All status</option><option value="done">Completed</option><option value="pending">Pending</option><option value="none">Not Started</option></select>
-    </div>
-    <div class="card" style="padding:0"><div class="tw"><table>
-     <thead><tr><th>Due Date</th><th>Compliance</th><th>Period</th><th>Client</th><th>Category</th><th>Status</th><th>Action</th></tr></thead>
-     <tbody id="ddtb"></tbody>
-    </table></div></div>
-   </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="clientName">Client Name</label>
+          <input type="text" id="clientName" placeholder="e.g. Ramesh Kumar Thakur" />
+        </div>
+        <div class="field">
+          <label for="pan">PAN</label>
+          <input type="text" id="pan" placeholder="ABCDE1234F" maxlength="10" style="text-transform:uppercase" />
+          <div class="field__hint" id="panHint"></div>
+        </div>
+      </div>
 
-   <!-- GST COMPLIANCE -->
-   <div class="pg" id="p-gst">
-    <div class="fr">
-     <select class="btn" id="gstm"></select>
-     <select class="btn" id="gsty"></select>
-     <button class="btn" onclick="loadGST()">Load</button>
-     <span style="font-size:11px;color:var(--t2);margin-left:8px">Tick = Filed in that month</span>
-    </div>
-    <div class="card" id="gcard"><div class="emp">Select month and click Load</div></div>
-   </div>
+      <div class="field-row field-row--four">
+        <div class="field">
+          <label for="fy">Financial Year</label>
+          <select id="fy"></select>
+        </div>
+        <div class="field">
+          <label>Assessment Year</label>
+          <div class="field__readout" id="ayReadout">—</div>
+        </div>
+        <div class="field">
+          <label for="itrType">ITR Type</label>
+          <select id="itrType">
+            <option value="ITR-1">ITR-1 (Sahaj)</option>
+            <option value="ITR-2">ITR-2</option>
+            <option value="ITR-3" selected>ITR-3</option>
+            <option value="ITR-4">ITR-4 (Sugam)</option>
+            <option value="ITR-5">ITR-5 (Firms/LLP)</option>
+            <option value="ITR-6">ITR-6 (Companies)</option>
+            <option value="ITR-7">ITR-7 (Trusts/AOP)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="packDate">Date</label>
+          <input type="date" id="packDate" />
+        </div>
+      </div>
 
-   <!-- PENDING DOCS -->
-   <div class="pg" id="p-pendoc">
-    <div class="fr">
-     <select class="btn si" id="pdcl" onchange="renderPD()"><option value="">All clients</option></select>
-     <button class="btn btk" onclick="openPDModal()">+ Add Pending</button>
-    </div>
-    <div class="card"><div id="pdlist"></div></div>
-   </div>
+      <h2 class="panel__title" style="margin-top:24px;">Tax Summary <span style="font-weight:400;color:#8A8174;text-transform:none;font-size:12px;">(optional — shown on the cover page if filled in)</span></h2>
+      <div class="field-row field-row--three">
+        <div class="field">
+          <label for="totalIncome">Total Income (₹)</label>
+          <input type="text" id="totalIncome" placeholder="e.g. 1250000" inputmode="numeric" />
+        </div>
+        <div class="field">
+          <label for="resultType">Result</label>
+          <select id="resultType">
+            <option value="">— Not specified —</option>
+            <option value="Refund Due">Refund Due</option>
+            <option value="Tax Payable">Tax Payable</option>
+            <option value="Nil">Nil (Balanced)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="resultAmount">Amount (₹)</label>
+          <input type="text" id="resultAmount" placeholder="e.g. 18500" inputmode="numeric" />
+        </div>
+      </div>
 
-   <!-- MY TASKS (Staff) -->
-   <div class="pg" id="p-mine">
-    <div class="tabs">
-     <div class="tab on" onclick="setMTab('active',this)">Pending / In Progress</div>
-     <div class="tab" onclick="setMTab('done',this)">Completed</div>
-    </div>
-    <div class="fr">
-     <select class="btn si" id="mscl" onchange="renderMine()"><option value="">All clients</option></select>
-    </div>
-    <div class="stats" id="mystats" style="grid-template-columns:repeat(3,1fr)"></div>
-    <div class="card" style="padding:0"><div class="tw"><table>
-     <thead><tr><th></th><th>Task</th><th>Client</th><th>Category</th><th>Due Date</th><th>Status</th><th style="min-width:160px">Remarks</th><th>Actions</th></tr></thead>
-     <tbody id="mtb"></tbody>
-    </table></div></div>
-   </div>
-  </div>
- </div>
+      <h2 class="panel__title" style="margin-top:24px;">Documents to Include</h2>
+      <div class="docs" id="docsContainer"></div>
+      <button class="btn-add" id="addDocBtn" type="button">+ Add another document</button>
+
+      <button class="btn-generate" id="generateBtn" type="button">Generate Pack &amp; Save to Drive</button>
+      <button class="btn-secondary" id="downloadBtn" type="button" style="display:none;">Download local copy of the PDF</button>
+      <div class="status-log" id="statusLog"></div>
+    </section>
+
+    <aside class="ledger" id="ledgerPreview">
+      <div class="ledger__eyebrow">Cover Page Preview</div>
+      <div class="ledger__firm" id="pvFirm">CA Atik Bhayani &amp; Associates</div>
+      <div class="ledger__firmsub" id="pvFirmSub">Chartered Accountants  |  FRN: 159465W</div>
+      <div class="ledger__contact" id="pvLetterheadContact"></div>
+      <div class="ledger__rule"></div>
+
+      <div class="ledger__h1" id="pvEyebrow">INCOME TAX RETURN FOR THE YEAR —</div>
+      <div class="ledger__clientname" id="pvClient">Client Name</div>
+
+      <dl style="margin:0;">
+        <div class="ledger__row"><dt>PAN</dt><dd id="pvPan">—</dd></div>
+      </dl>
+
+      <div id="pvSummaryBox"></div>
+
+      <div class="ledger__hr"></div>
+      <div class="ledger__index-title">Index</div>
+      <div id="pvIndex"><div class="ledger__index-empty">Attach documents to build the index</div></div>
+
+      <div class="ledger__disclaimer" id="pvDisclaimer"></div>
+      <div class="ledger__disclaimer" id="pvPoweredBy" style="margin-top:6px;font-style:normal;font-weight:600;color:var(--navy);"></div>
+      <div class="ledger__footer-row">
+        <div></div>
+        <div class="ledger__footer-right"></div>
+      </div>
+    </aside>
+  </main>
 </div>
 
-<!-- TASK MODAL -->
-<div class="mo" id="mo-task">
- <div class="md">
-  <div class="mh"><div><div class="mt" id="tmtit">Add Task</div></div><button class="mx" onclick="closeMo('mo-task')">&#x2715;</button></div>
-  <div class="mb">
-   <input type="hidden" id="tid">
-   <input type="hidden" id="tddid">
-   <div class="fi"><label>Task Name *</label><input type="text" id="tname"></div>
-   <div class="fi"><label>Client *</label><select id="tcli"><option value="">Select client</option></select></div>
-   <div class="fi"><label>Category</label><select id="tcat"><option>GST</option><option>TDS</option><option>Income Tax</option><option>ROC / MCA</option><option>PF / ESIC</option><option>Audit</option><option>Other</option></select></div>
-   <div class="fi" id="tassdiv"><label>Assign To</label><select id="tass"><option>Atik Bhayani</option><option>Rushiraj</option><option>Sahil</option></select></div>
-   <div class="fi"><label>Due Date *</label><input type="date" id="tdue"></div>
-   <div class="fi"><label>Priority</label><select id="tpri"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select></div>
-   <div class="fi"><label>Status</label><select id="tsts"><option value="pending">Pending</option><option value="inprogress">In Progress</option><option value="done">Done</option></select></div>
-   <div class="fi"><label>Remarks</label><textarea id="trm" placeholder="Notes..."></textarea></div>
-  </div>
-  <div class="mf"><button class="btn" onclick="closeMo('mo-task')">Cancel</button><button class="btn btk" id="tsavebtn" onclick="saveTask()">Save Task</button></div>
- </div>
-</div>
+<script>
+/* ============================================================
+   CONFIG — edit these after you deploy the Apps Script backend
+   ============================================================ */
+const CONFIG = {
+  WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbxoagx4t2EopKubBQs7iEc4RZAo81MDEyqs25J0YMXNOruPXpkKaoiPSy-0QwbW9Qt0/exec',
+  FIRM_NAME: 'CA Atik Bhayani & Associates',
+  FIRM_SUB: 'Chartered Accountants  |  FRN: 159465W',
+  FRN: '159465W',
+  // Shown on the cover-page letterhead, under the firm name. Leave any blank to omit it.
+  ADDRESS: '',
+  PHONE: '+91 7057164441',
+  EMAIL: 'caatikbhayani@gmail.com',
+  WEBSITE: 'caatikbhayani.in',
+};
 
+document.getElementById('pvFirm').textContent = CONFIG.FIRM_NAME;
+document.getElementById('pvFirmSub').textContent = CONFIG.FIRM_SUB;
+document.getElementById('pvLetterheadContact').innerHTML =
+  (CONFIG.ADDRESS ? `${escapeHtml(CONFIG.ADDRESS)}<br>` : '') +
+  [CONFIG.PHONE, CONFIG.EMAIL, CONFIG.WEBSITE].filter(Boolean).map(escapeHtml).join('   ·   ');
 
-<!-- PENDING DOC MODAL -->
-<div class="mo" id="mo-pd">
- <div class="md" style="max-width:480px">
-  <div class="mh"><div><div class="mt">Pending Document</div></div><button class="mx" onclick="closeMo('mo-pd')">&#x2715;</button></div>
-  <div class="mb">
-   <input type="hidden" id="pdid">
-   <div class="fi"><label>Client *</label><select id="pdcli"><option value="">Select</option></select></div>
-   <div class="fi"><label>Document Needed *</label><input type="text" id="pdname" placeholder="e.g. Bank statement April 2026"></div>
-   <div class="fi"><label>Category</label><select id="pdcat"><option>Bank Statement</option><option>Purchase Register</option><option>Sales Register</option><option>TDS Certificate</option><option>Salary Details</option><option>Others</option></select></div>
-   <div class="fi"><label>Needed By</label><input type="date" id="pddue"></div>
-   <div class="fi"><label>Remarks</label><textarea id="pdrm"></textarea></div>
-  </div>
-  <div class="mf"><button class="btn" onclick="closeMo('mo-pd')">Cancel</button><button class="btn btk" id="pdsavebtn" onclick="savePD()">Save</button></div>
- </div>
-</div>
+/* ---------- Client picker (searchable) ---------- */
+let clientsList = [];
+let filteredClients = [];
+let activeIndex = -1;
+const clientSearchInput = document.getElementById('clientSearchInput');
+const clientSearchResults = document.getElementById('clientSearchResults');
+const clientPickerField = document.getElementById('clientPickerField');
+const clientPickerHint = document.getElementById('clientPickerHint');
 
+async function loadClients() {
+  if (!CONFIG.WEB_APP_URL || CONFIG.WEB_APP_URL.indexOf('PASTE_YOUR') === 0) {
+    clientPickerField.style.display = 'none';
+    return;
+  }
+  clientPickerHint.textContent = 'Loading client list…';
+  clientPickerHint.classList.remove('err');
+  try {
+    const resp = await fetch(CONFIG.WEB_APP_URL + '?action=clients');
+    if (!resp.ok) throw new Error(`Server responded with HTTP ${resp.status}`);
+    const data = await resp.json();
+    if (!data.success) throw new Error(data.error || 'Could not load client list.');
+    clientsList = data.clients;
+    clientSearchInput.disabled = false;
+    clientPickerHint.textContent = `${clientsList.length} clients loaded — type a name to search, or just fill in Name/PAN manually below.`;
+  } catch (err) {
+    clientSearchInput.disabled = true;
+    clientPickerHint.textContent = `Could not load client list: ${err.message}`;
+    clientPickerHint.classList.add('err');
+    console.warn('Client list unavailable:', err);
+  }
+}
+loadClients();
 
-<script src="app.js"></script>
+function renderResults(list) {
+  activeIndex = -1;
+  if (list.length === 0) {
+    clientSearchResults.innerHTML = '<div class="combo__empty">No matches</div>';
+  } else {
+    clientSearchResults.innerHTML = list.map((c, i) =>
+      `<div class="combo__item" data-index="${i}">${escapeHtml(c.name)}<span class="combo__item-pan">${escapeHtml(c.pan || '')}</span></div>`
+    ).join('');
+  }
+  clientSearchResults.style.display = 'block';
+}
+function hideResults() {
+  clientSearchResults.style.display = 'none';
+  activeIndex = -1;
+}
+function updateActiveHighlight() {
+  const items = clientSearchResults.querySelectorAll('.combo__item');
+  items.forEach((el, i) => el.classList.toggle('active', i === activeIndex));
+  if (items[activeIndex]) items[activeIndex].scrollIntoView({ block: 'nearest' });
+}
+function selectClient(c) {
+  clientSearchInput.value = c.name;
+  document.getElementById('clientName').value = c.name;
+  document.getElementById('pan').value = c.pan ? c.pan.toUpperCase() : '';
+  if (c.itrType) {
+    const itrSelect = document.getElementById('itrType');
+    if ([...itrSelect.options].some(o => o.value === c.itrType)) itrSelect.value = c.itrType;
+  }
+  hideResults();
+  renderPreview();
+  validateForm();
+}
+
+clientSearchInput.addEventListener('input', () => {
+  const q = clientSearchInput.value.trim().toLowerCase();
+  if (!q) { hideResults(); return; }
+  filteredClients = clientsList.filter(c => c.name.toLowerCase().includes(q)).slice(0, 12);
+  renderResults(filteredClients);
+});
+clientSearchInput.addEventListener('focus', () => {
+  if (clientSearchInput.value.trim() && filteredClients.length) renderResults(filteredClients);
+});
+clientSearchInput.addEventListener('keydown', (e) => {
+  if (clientSearchResults.style.display !== 'block') return;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    activeIndex = Math.min(activeIndex + 1, filteredClients.length - 1);
+    updateActiveHighlight();
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    activeIndex = Math.max(activeIndex - 1, 0);
+    updateActiveHighlight();
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (activeIndex >= 0 && filteredClients[activeIndex]) selectClient(filteredClients[activeIndex]);
+  } else if (e.key === 'Escape') {
+    hideResults();
+  }
+});
+clientSearchResults.addEventListener('click', (e) => {
+  const item = e.target.closest('.combo__item');
+  if (!item) return;
+  const idx = Number(item.dataset.index);
+  if (filteredClients[idx]) selectClient(filteredClients[idx]);
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.combo')) hideResults();
+});
+
+/* ---------- Financial year dropdown ---------- */
+const fySelect = document.getElementById('fy');
+const thisCalendarYear = new Date().getFullYear();
+const fyStartBase = thisCalendarYear - 3;
+let defaultFy = null;
+for (let y = fyStartBase; y <= thisCalendarYear + 1; y++) {
+  const label = `${y}-${String((y + 1) % 100).padStart(2, '0')}`;
+  const opt = document.createElement('option');
+  opt.value = label; opt.textContent = label;
+  fySelect.appendChild(opt);
+  if (y === thisCalendarYear - 1) defaultFy = label; // sensible default: FY ending just before "now"
+}
+fySelect.value = defaultFy;
+
+const packDateInput = document.getElementById('packDate');
+const todayLocal = new Date();
+packDateInput.value = `${todayLocal.getFullYear()}-${String(todayLocal.getMonth() + 1).padStart(2, '0')}-${String(todayLocal.getDate()).padStart(2, '0')}`;
+
+function ayFromFy(fy) {
+  const [start] = fy.split('-').map(Number);
+  const end = start + 1;
+  return `${end}-${String((end + 1) % 100).padStart(2, '0')}`;
+}
+
+/* ---------- Document rows state ---------- */
+let docRowSeq = 0;
+const docsContainer = document.getElementById('docsContainer');
+const documents = []; // {id, label, bytes, pageCount, fileName}
+
+function addDocRow(defaultLabel, required, firstPageOnly) {
+  const id = 'doc' + (docRowSeq++);
+  const row = { id, label: defaultLabel || '', bytes: null, pageCount: 0, fileName: '', firstPageOnly: !!firstPageOnly };
+  documents.push(row);
+
+  const el = document.createElement('div');
+  el.className = 'doc-row';
+  el.dataset.id = id;
+  el.innerHTML = `
+    <div class="doc-row__label">
+      <input type="text" value="${defaultLabel || ''}" placeholder="Document label (e.g. Form 26AS)" />
+    </div>
+    <div class="doc-row__file">
+      <input type="file" accept="application/pdf" />
+      <div class="doc-row__status"></div>
+    </div>
+    <label class="doc-row__firstpage" title="Only the first page of this file is included in the pack">
+      <input type="checkbox" ${firstPageOnly ? 'checked' : ''} /> 1st page only
+    </label>
+    <button class="doc-row__remove" type="button" title="Remove">✕</button>
+  `;
+  docsContainer.appendChild(el);
+
+  const labelInput = el.querySelector('.doc-row__label input');
+  const fileInput = el.querySelector('.doc-row__file input');
+  const statusEl = el.querySelector('.doc-row__status');
+  const firstPageCheckbox = el.querySelector('.doc-row__firstpage input');
+  const removeBtn = el.querySelector('.doc-row__remove');
+
+  labelInput.addEventListener('input', () => { row.label = labelInput.value; renderPreview(); });
+
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+    statusEl.textContent = 'Reading…';
+    try {
+      const buf = await file.arrayBuffer();
+      const pdf = await PDFLib.PDFDocument.load(buf);
+      row.bytes = new Uint8Array(buf);
+      row.pageCount = pdf.getPageCount();
+      row.fileName = file.name;
+      statusEl.textContent = `${row.pageCount} page${row.pageCount > 1 ? 's' : ''} loaded ✓`;
+    } catch (err) {
+      row.bytes = null; row.pageCount = 0;
+      statusEl.textContent = 'Could not read this PDF — try re-saving/exporting it.';
+      statusEl.classList.add('err');
+    }
+    renderPreview();
+    validateForm();
+  });
+
+  firstPageCheckbox.addEventListener('change', () => {
+    row.firstPageOnly = firstPageCheckbox.checked;
+    renderPreview();
+  });
+
+  removeBtn.addEventListener('click', () => {
+    const idx = documents.findIndex(d => d.id === id);
+    if (idx >= 0) documents.splice(idx, 1);
+    el.remove();
+    renderPreview();
+    validateForm();
+  });
+}
+
+document.getElementById('addDocBtn').addEventListener('click', () => addDocRow('', false));
+
+// Default rows every pack needs
+addDocRow('ITR-V Acknowledgement', true);
+addDocRow('Computation of Total Income', true);
+addDocRow('Summary Sheet', false);
+addDocRow('Profit & Loss', false);
+addDocRow('Balance Sheet', false);
+addDocRow('TIS', false, true);
+
+/* ---------- Live preview ---------- */
+function renderPreview() {
+  const clientName = document.getElementById('clientName').value.trim() || '—';
+  const pan = document.getElementById('pan').value.trim().toUpperCase() || '—';
+  const fy = fySelect.value;
+  const ay = ayFromFy(fy);
+  const itrType = document.getElementById('itrType').value;
+
+  document.getElementById('ayReadout').textContent = ay;
+  document.getElementById('pvEyebrow').textContent = `Income Tax Return for the Year ${fy}`.toUpperCase();
+  document.getElementById('pvClient').textContent = clientName;
+  document.getElementById('pvPan').textContent = pan;
+  document.getElementById('pvDisclaimer').textContent =
+    `This return has been prepared and filed on the basis of information, documents, and explanations furnished by ${clientName !== '—' ? clientName : 'the client'}.`;
+  document.getElementById('pvPoweredBy').textContent = 'Powered by Bhayani Business Solutions';
+
+  const totalIncome = document.getElementById('totalIncome').value.trim();
+  const resultType = document.getElementById('resultType').value;
+  const resultAmount = document.getElementById('resultAmount').value.trim();
+  const summaryEl = document.getElementById('pvSummaryBox');
+  if (totalIncome || (resultType && resultType !== 'Nil' && resultAmount) || resultType === 'Nil') {
+    let cols = '';
+    if (totalIncome) {
+      cols += `<div class="ledger__summary-col"><div class="ledger__summary-label">Total Income</div><div class="ledger__summary-value">₹${formatINR(totalIncome)}</div></div>`;
+    }
+    if (resultType) {
+      const amt = resultType === 'Nil' ? '0' : formatINR(resultAmount || '0');
+      cols += `<div class="ledger__summary-col"><div class="ledger__summary-label">${escapeHtml(resultType)}</div><div class="ledger__summary-value">₹${amt}</div></div>`;
+    }
+    summaryEl.innerHTML = cols ? `<div class="ledger__summary">${cols}</div>` : '';
+  } else {
+    summaryEl.innerHTML = '';
+  }
+
+  const valid = documents.filter(d => d.bytes && d.label.trim());
+  const indexEl = document.getElementById('pvIndex');
+  if (valid.length === 0) {
+    indexEl.innerHTML = '<div class="ledger__index-empty">Attach documents to build the index</div>';
+    return;
+  }
+  let cursor = 2; // page 1 is the cover
+  indexEl.innerHTML = valid.map((d, i) => {
+    const effectivePages = d.firstPageOnly ? 1 : d.pageCount;
+    const pageLabel = effectivePages > 1 ? `Pg ${cursor}–${cursor + effectivePages - 1}` : `Pg ${cursor}`;
+    cursor += effectivePages;
+    return `<div class="ledger__index-item">
+        <span class="ledger__index-num">${i + 1}.</span>
+        <span class="ledger__index-label">${escapeHtml(d.label)}</span>
+        <span class="ledger__index-leader"></span>
+        <span class="ledger__index-page">${pageLabel}</span>
+      </div>`;
+  }).join('');
+}
+function formatINR(value) {
+  const n = Number(String(value).replace(/[^0-9.-]/g, ''));
+  if (isNaN(n)) return String(value);
+  return n.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+}
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+document.getElementById('clientName').addEventListener('input', () => { renderPreview(); validateForm(); });
+document.getElementById('pan').addEventListener('input', (e) => {
+  const v = e.target.value.toUpperCase();
+  e.target.value = v;
+  const panHint = document.getElementById('panHint');
+  if (v && !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(v)) {
+    panHint.textContent = 'Format is usually 5 letters, 4 digits, 1 letter — double-check before saving.';
+  } else {
+    panHint.textContent = '';
+  }
+  renderPreview(); validateForm();
+});
+fySelect.addEventListener('change', renderPreview);
+document.getElementById('itrType').addEventListener('change', renderPreview);
+document.getElementById('totalIncome').addEventListener('input', renderPreview);
+document.getElementById('resultType').addEventListener('change', renderPreview);
+document.getElementById('resultAmount').addEventListener('input', renderPreview);
+
+renderPreview();
+
+/* ---------- Form validation ---------- */
+const generateBtn = document.getElementById('generateBtn');
+function validateForm() {
+  const clientName = document.getElementById('clientName').value.trim();
+  const hasAtLeastOneDoc = documents.some(d => d.bytes && d.label.trim());
+  generateBtn.disabled = !(clientName && hasAtLeastOneDoc);
+}
+validateForm();
+
+/* ---------- Build the merged PDF (pdf-lib) ---------- */
+async function buildItrPack({ firmName, firmSub, frn, clientName, pan, fy, ay, itrType, docs, totalIncome, resultType, resultAmount, phone, email, website, address, dateStr }) {
+  const { PDFDocument, StandardFonts, rgb } = PDFLib;
+
+  const loaded = [];
+  for (const d of docs) {
+    const srcDoc = await PDFDocument.load(d.bytes);
+    const fullPageCount = srcDoc.getPageCount();
+    const pageCount = d.firstPageOnly ? 1 : fullPageCount;
+    loaded.push({ label: d.label, srcDoc, pageCount, firstPageOnly: !!d.firstPageOnly });
+  }
+
+  let cursor = 2;
+  const indexRows = loaded.map((d) => {
+    const row = { label: d.label, startPage: cursor, pageCount: d.pageCount };
+    cursor += d.pageCount;
+    return row;
+  });
+  const totalPages = cursor - 1;
+
+  const out = await PDFDocument.create();
+  const serif = await out.embedFont(StandardFonts.TimesRomanBold);
+  const serifItalic = await out.embedFont(StandardFonts.TimesRomanItalic);
+  const mono = await out.embedFont(StandardFonts.Courier);
+  const sans = await out.embedFont(StandardFonts.Helvetica);
+  const sansBold = await out.embedFont(StandardFonts.HelveticaBold);
+
+  const PAGE_W = 595.28, PAGE_H = 841.89;
+  const cover = out.addPage([PAGE_W, PAGE_H]);
+  const navy = rgb(0.082, 0.141, 0.247);
+  const gold = rgb(0.66, 0.50, 0.12);
+  const charcoal = rgb(0.15, 0.13, 0.13);
+  const hairline = rgb(0.80, 0.75, 0.63);
+  const muted = rgb(0.42, 0.40, 0.35);
+  const summaryBg = rgb(0.98, 0.96, 0.91);
+
+  // Note: standard PDF fonts can't encode the ₹ symbol, so the PDF uses "Rs."
+  // while the on-screen preview (plain HTML/CSS) can show ₹ without issue.
+  const drawRight = (text, yPos, size, font, color) => {
+    const w = font.widthOfTextAtSize(text, size);
+    cover.drawText(text, { x: PAGE_W - 50 - w, y: yPos, size, font, color });
+  };
+
+  let y = PAGE_H - 70;
+  cover.drawText(firmName, { x: 50, y, size: 20, font: serif, color: navy });
+  y -= 18;
+  cover.drawText(`${firmSub}`, { x: 50, y, size: 10, font: sans, color: charcoal });
+  y -= 13;
+  if (address) {
+    cover.drawText(address, { x: 50, y, size: 9, font: sans, color: muted });
+    y -= 12;
+  }
+  const contactParts = [phone, email, website].filter(Boolean);
+  if (contactParts.length > 0) {
+    cover.drawText(contactParts.join('   ·   '), { x: 50, y, size: 9, font: sans, color: muted });
+    y -= 12;
+  }
+  y -= 6;
+  cover.drawLine({ start: { x: 50, y }, end: { x: PAGE_W - 50, y }, thickness: 1.2, color: gold });
+  y -= 34;
+
+  cover.drawText(`INCOME TAX RETURN FOR THE YEAR ${fy}`.toUpperCase(), { x: 50, y, size: 10.5, font: sansBold, color: gold });
+  y -= 25;
+  cover.drawText(clientName, { x: 50, y, size: 22, font: serif, color: navy });
+  y -= 34;
+
+  cover.drawText('PAN', { x: 50, y, size: 11, font: sansBold, color: charcoal });
+  cover.drawText(pan, { x: 170, y, size: 11, font: mono, color: navy });
+  y -= 28;
+
+  cover.drawLine({ start: { x: 50, y }, end: { x: PAGE_W - 50, y }, thickness: 0.75, color: hairline });
+  y -= 28;
+
+  // Tax summary box — only drawn if at least one figure was supplied.
+  if (totalIncome || resultType || resultAmount) {
+    const boxW = PAGE_W - 100, boxH = 50;
+    const boxY = y - boxH;
+    cover.drawRectangle({ x: 50, y: boxY, width: boxW, height: boxH, color: summaryBg, borderColor: gold, borderWidth: 1 });
+    if (totalIncome) {
+      cover.drawText('TOTAL INCOME', { x: 64, y: boxY + boxH - 18, size: 8, font: sansBold, color: gold });
+      cover.drawText(`Rs. ${formatINR(totalIncome)}`, { x: 64, y: boxY + 13, size: 15, font: serif, color: navy });
+    }
+    if (resultType) {
+      const rx = 50 + boxW / 2 + 14;
+      cover.drawLine({ start: { x: 50 + boxW / 2, y: boxY + 6 }, end: { x: 50 + boxW / 2, y: boxY + boxH - 6 }, thickness: 0.75, color: gold });
+      cover.drawText(resultType.toUpperCase(), { x: rx, y: boxY + boxH - 18, size: 8, font: sansBold, color: gold });
+      const amt = resultType === 'Nil' ? '0' : formatINR(resultAmount || '0');
+      cover.drawText(`Rs. ${amt}`, { x: rx, y: boxY + 13, size: 15, font: serif, color: navy });
+    }
+    y = boxY - 22;
+  }
+
+  cover.drawText('INDEX', { x: 50, y, size: 12, font: sansBold, color: navy });
+  y -= 22;
+
+  indexRows.forEach((row, i) => {
+    const pageLabel = row.pageCount > 1 ? `Pg ${row.startPage}-${row.startPage + row.pageCount - 1}` : `Pg ${row.startPage}`;
+    cover.drawText(`${i + 1}.`, { x: 50, y, size: 11, font: sans, color: charcoal });
+    cover.drawText(row.label, { x: 75, y, size: 11, font: sans, color: charcoal });
+    cover.drawText(pageLabel, { x: PAGE_W - 130, y, size: 11, font: mono, color: navy });
+    y -= 20;
+  });
+
+  y -= 10;
+  cover.drawLine({ start: { x: 50, y }, end: { x: PAGE_W - 50, y }, thickness: 0.75, color: hairline });
+
+  const footerY = 80;
+  const disclaimerText = `This return has been prepared and filed on the basis of information, documents, and explanations furnished by ${clientName}.`;
+  const disclaimerLines = wrapText(disclaimerText, serifItalic, 9.5, PAGE_W - 100);
+  let dy = footerY + 14 * disclaimerLines.length + 8;
+  disclaimerLines.forEach((line) => {
+    cover.drawText(line, { x: 50, y: dy, size: 9.5, font: serifItalic, color: muted });
+    dy -= 14;
+  });
+  dy -= 2;
+  cover.drawText('Powered by Bhayani Business Solutions', { x: 50, y: dy, size: 8.5, font: sans, color: navy });
+
+  cover.drawText(`Date: ${dateStr}`, { x: 50, y: footerY, size: 9, font: sans, color: charcoal });
+  drawRight(`Total Pages: ${totalPages}`, footerY, 9, sans, charcoal);
+
+  for (const d of loaded) {
+    const indices = d.firstPageOnly ? [0] : d.srcDoc.getPageIndices();
+    const copied = await out.copyPages(d.srcDoc, indices);
+    copied.forEach((p) => out.addPage(p));
+  }
+
+  // Running footer (client + FY + page X of Y) on every page after the cover, so loose
+  // pages stay identifiable and the pack reads as one continuous, professional document.
+  const allPages = out.getPages();
+  allPages.forEach((p, idx) => {
+    if (idx === 0) return; // cover already has its own footer
+    const w = p.getWidth();
+    const label = `${clientName}  ·  FY ${fy}  ·  Page ${idx + 1} of ${allPages.length}`;
+    const tw = sans.widthOfTextAtSize(label, 7);
+    p.drawText(label, { x: (w - tw) / 2, y: 14, size: 7, font: sans, color: muted });
+  });
+
+  return out.save();
+}
+
+/* ---------- Helpers ---------- */
+function wrapText(text, font, size, maxWidth) {
+  const words = text.split(' ');
+  const lines = [];
+  let line = '';
+  for (const word of words) {
+    const test = line ? line + ' ' + word : word;
+    if (line && font.widthOfTextAtSize(test, size) > maxWidth) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = test;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+function bytesToBase64(bytes) {
+  const chunkSize = 0x8000;
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
+}
+function sanitizeFileName(s) {
+  return s.replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function log(msg, cls) {
+  const el = document.getElementById('statusLog');
+  el.innerHTML = `<span class="${cls || ''}">${msg}</span>`;
+}
+
+/* ---------- Generate flow ---------- */
+let lastPdfBytes = null;
+let lastFileName = '';
+
+document.getElementById('generateBtn').addEventListener('click', async () => {
+  generateBtn.disabled = true;
+  document.getElementById('downloadBtn').style.display = 'none';
+  try {
+    log('Assembling cover page &amp; merging documents…');
+    const clientName = document.getElementById('clientName').value.trim();
+    const pan = document.getElementById('pan').value.trim().toUpperCase();
+    const fy = fySelect.value;
+    const ay = ayFromFy(fy);
+    const itrType = document.getElementById('itrType').value;
+    const totalIncome = document.getElementById('totalIncome').value.trim();
+    const resultType = document.getElementById('resultType').value;
+    const resultAmount = document.getElementById('resultAmount').value.trim();
+    const docs = documents
+      .filter(d => d.bytes && d.label.trim())
+      .map(d => ({ label: d.label.trim(), bytes: d.bytes, firstPageOnly: d.firstPageOnly }));
+
+    const packDateValue = packDateInput.value; // YYYY-MM-DD from the date input
+    const dateStr = packDateValue
+      ? new Date(packDateValue + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+      : new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    const pdfBytes = await buildItrPack({
+      firmName: CONFIG.FIRM_NAME, firmSub: CONFIG.FIRM_SUB, frn: CONFIG.FRN,
+      phone: CONFIG.PHONE, email: CONFIG.EMAIL, website: CONFIG.WEBSITE, address: CONFIG.ADDRESS,
+      clientName, pan, fy, ay, itrType, docs,
+      totalIncome, resultType, resultAmount, dateStr,
+    });
+
+    lastPdfBytes = pdfBytes;
+    lastFileName = `${sanitizeFileName(clientName)} - ITR ${fy}.pdf`;
+    document.getElementById('downloadBtn').style.display = 'block';
+
+    if (!CONFIG.WEB_APP_URL || CONFIG.WEB_APP_URL.indexOf('PASTE_YOUR') === 0) {
+      log('PDF ready. Drive saving is not configured yet — use "Download local copy" below, or finish the Apps Script setup (see SETUP-INSTRUCTIONS.md).');
+      generateBtn.disabled = false;
+      return;
+    }
+
+    log('Uploading to Drive…');
+    const base64 = bytesToBase64(pdfBytes);
+    const sourceDocs = documents
+      .filter(d => d.bytes && d.label.trim())
+      .map(d => ({
+        label: d.label.trim(),
+        fileName: d.fileName || `${sanitizeFileName(d.label.trim())}.pdf`,
+        base64: bytesToBase64(d.bytes),
+      }));
+    const resp = await fetch(CONFIG.WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids CORS preflight against Apps Script
+      body: JSON.stringify({
+        clientName, pan, fy, ay, itrType,
+        fileName: lastFileName,
+        pdfBase64: base64,
+        documents: sourceDocs,
+      }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      const archivedNote = sourceDocs.length ? ` (+ ${sourceDocs.length} source document${sourceDocs.length > 1 ? 's' : ''} archived)` : '';
+      log(`Saved ✓${archivedNote} — <a href="${data.fileUrl}" target="_blank">Open file</a> · <a href="${data.folderUrl}" target="_blank">Open folder</a>`, 'ok');
+    } else {
+      throw new Error(data.error || 'Unknown error from Drive backend');
+    }
+  } catch (err) {
+    console.error(err);
+    log(`Could not save to Drive (${err.message}). The merged PDF is still ready — use "Download local copy" below.`, 'err');
+  } finally {
+    generateBtn.disabled = false;
+  }
+});
+
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  if (!lastPdfBytes) return;
+  const blob = new Blob([lastPdfBytes], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = lastFileName || 'ITR Pack.pdf';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+});
+</script>
 </body>
 </html>
