@@ -85,21 +85,19 @@ function silentRefresh(){
 }
 
 function go(pg,el){
-  if(CU&&CU.role==='staff'&&['tasks','dates','gst','clients'].indexOf(pg)>-1){
+  if(CU&&CU.role==='staff'&&['tasks','dates','gst'].indexOf(pg)>-1){
     go('mine',document.querySelector('#snav .ni'));return;
   }
   document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
   document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('on');});
   var p=document.getElementById('p-'+pg);if(p)p.classList.add('on');
   if(el)el.classList.add('on');
-  var titles={dash:'Dashboard',tasks:'Tasks',dates:'Due Dates',gst:'GST Compliance',clients:'Clients',pendoc:'Pending Documents',mine:'My Tasks'};
+  var titles={dash:'Dashboard',tasks:'Tasks',dates:'Due Dates',gst:'GST Compliance',pendoc:'Pending Documents',mine:'My Tasks'};
   document.getElementById('ptitle').textContent=titles[pg]||pg;
   var act=document.getElementById('pact');
   if(act){
     if(pg==='tasks' || pg==='mine'){
       act.innerHTML='<button class="btn btk" onclick="openTaskModal()">+ Add Task</button>';
-    } else if(pg==='clients'&&CU&&CU.role==='admin'){
-      act.innerHTML='<button class="btn btk" onclick="openAddClient()">+ Add Client</button>';
     } else {
       act.innerHTML='';
     }
@@ -123,7 +121,6 @@ function renderPage(pg){
     renderDD();
   }
   if(pg==='gst')initGST();
-  if(pg==='clients')renderClients();
   if(pg==='pendoc'){fillSel('pdcl');renderPD();}
   if(pg==='mine'){fillSel('mscl');renderMine();}
 }
@@ -609,178 +606,26 @@ function tickGST(el){
     .catch(function(e){sync(false);el.disabled=false;alert('Error: '+e.message);el.checked=!val;});
 }
 
-var CRULES=[
-  {name:'GSTR-1',       freq:'Monthly',   rule:function(c){return c.gst==='regular'&&c.gstf==='monthly';}},
-  {name:'GSTR-3B',      freq:'Monthly',   rule:function(c){return c.gst==='regular'&&c.gstf==='monthly';}},
-  {name:'GSTR-1 Qtr',   freq:'Quarterly', rule:function(c){return c.gst==='regular'&&c.gstf==='quarterly';}},
-  {name:'GSTR-3B Qtr',  freq:'Quarterly', rule:function(c){return c.gst==='regular'&&c.gstf==='quarterly';}},
-  {name:'PMT-06',       freq:'Monthly',   rule:function(c){return c.gst==='regular'&&c.gstf==='quarterly';}},
-  {name:'CMP-08',       freq:'Quarterly', rule:function(c){return c.gst==='composition';}},
-  {name:'TDS Payment',  freq:'Monthly',   rule:function(c){return c.emp==='yes';}},
-  {name:'PF / ESIC',    freq:'Monthly',   rule:function(c){return c.emp==='yes';}},
-  {name:'TDS Returns',  freq:'Quarterly', rule:function(c){return c.emp==='yes';}},
-  {name:'Advance Tax',  freq:'4 dates',   manual:true, rule:function(){return false;}},
-  {name:'ITR',          freq:'Annual',    rule:function(){return true;}},
-  {name:'Tax Audit',    freq:'Annual',    rule:function(c){return c.tov==='above1cr';}},
-  {name:'ROC AOC-4',    freq:'Annual',    rule:function(c){return c.ent==='Private Limited'||c.ent==='LLP';}},
-  {name:'ROC MGT-7',    freq:'Annual',    rule:function(c){return c.ent==='Private Limited'||c.ent==='LLP';}}
-];
-
 function renderClients(q){
   if(!q)q='';
   var list=q?CLIENTS.filter(function(c){return c.name.toLowerCase().indexOf(q.toLowerCase())>-1||(c.pan||'').toLowerCase().indexOf(q.toLowerCase())>-1;}):CLIENTS.slice();
   buildCliTable(list);
 }
 function filterEnt(tp){buildCliTable(tp?CLIENTS.filter(function(c){return c.entity===tp;}):CLIENTS);}
-var BULK_SEL = {};
 function buildCliTable(list){
   var body=document.getElementById('ctb');if(!body)return;
   var oc=function(id){return TASKS.filter(function(t){return t.client_id===id&&t.status!=='done';}).length;};
-  if(!list.length){body.innerHTML='<tr><td colspan="8"><div class="emp">No clients</div></td></tr>';return;}
+  if(!list.length){body.innerHTML='<tr><td colspan="6"><div class="emp">No clients</div></td></tr>';return;}
   body.innerHTML=list.map(function(c){
     var freq=c.gst_type==='none'?'<span class="bdg bx">No GST</span>':c.gst_freq==='quarterly'?'<span class="bdg bp">QRMP</span>':c.gst_type==='composition'?'<span class="bdg ba">CMP</span>':'<span class="bdg bb">Monthly</span>';
-    return '<tr><td><input type="checkbox" class="bulkChk" data-id="'+c.id+'" '+(BULK_SEL[c.id]?'checked':'')+' onchange="toggleBulk(\''+c.id+'\',this.checked)"></td>'+
-      '<td style="font-weight:500">'+esc(c.name)+'</td>'+
+    return '<tr><td style="font-weight:500">'+esc(c.name)+'</td>'+
       '<td><span class="bdg bx">'+esc(c.entity||'')+'</span></td>'+
       '<td style="font-family:monospace;font-size:12px">'+esc(c.pan||'-')+'</td>'+
       '<td style="font-family:monospace;font-size:12px">'+esc(c.gstin||'-')+'</td>'+
       '<td>'+freq+'</td>'+
-      '<td>'+(oc(c.id)>0?'<span class="bdg ba">'+oc(c.id)+' open</span>':'<span class="bdg bg">Clear</span>')+'</td>'+
-      '<td style="display:flex;gap:4px"><button class="btn bts" onclick="openEditClient(\''+c.id+'\')">Edit</button><button class="btn bts btr" onclick="delCli(\''+c.id+'\')">Remove</button></td></tr>';
+      '<td>'+(oc(c.id)>0?'<span class="bdg ba">'+oc(c.id)+' open</span>':'<span class="bdg bg">Clear</span>')+'</td></tr>';
   }).join('');
 }
-function toggleBulk(id,checked){
-  if(checked) BULK_SEL[id]=true; else delete BULK_SEL[id];
-  updateBulkBar();
-}
-function toggleAllBulk(checked){
-  document.querySelectorAll('.bulkChk').forEach(function(el){
-    el.checked=checked;
-    if(checked) BULK_SEL[el.dataset.id]=true; else delete BULK_SEL[el.dataset.id];
-  });
-  updateBulkBar();
-}
-function clearBulkSel(){
-  BULK_SEL={};
-  document.querySelectorAll('.bulkChk').forEach(function(el){el.checked=false;});
-  var all=document.getElementById('bulkAll'); if(all) all.checked=false;
-  updateBulkBar();
-}
-function updateBulkBar(){
-  var ids=Object.keys(BULK_SEL);
-  document.getElementById('bulkcnt').textContent=ids.length;
-  document.getElementById('bulkbar').style.display=ids.length?'flex':'none';
-}
-function bulkApplyGST(){
-  var ids=Object.keys(BULK_SEL);
-  var val=document.getElementById('bulkGstSel').value;
-  if(!ids.length){alert('Select at least one client.');return;}
-  if(!val){alert('Pick a GST type to apply.');return;}
-  if(!confirm('Set GST Type to "'+val+'" for '+ids.length+' selected client(s)?'))return;
-  sync(true);
-  api('bulkUpdateClients',{ids:ids,field:'gst_type',value:val}).then(function(r){
-    sync(false);
-    if(r&&r.ok){
-      ids.forEach(function(id){var c=gc(id);if(c)c.gst_type=val;});
-      renderClients();alert('Updated '+ids.length+' client(s).');
-    } else alert((r&&r.error)||'Update failed');
-  }).catch(function(e){sync(false);alert('Error: '+e.message);});
-}
-function bulkSetCompliance(name,add){
-  var ids=Object.keys(BULK_SEL);
-  if(!ids.length){alert('Select at least one client.');return;}
-  if(!confirm((add?'Add':'Remove')+' "'+name+'" for '+ids.length+' selected client(s)?'))return;
-  sync(true);
-  api('bulkUpdateClients',{ids:ids,field:'compliance',compliance:name,add:add}).then(function(r){
-    sync(false);
-    if(r&&r.ok){
-      ids.forEach(function(id){
-        var c=gc(id);if(!c)return;
-        var comps=pArr(c.compliances);
-        if(add){ if(comps.indexOf(name)===-1) comps.push(name); }
-        else { comps=comps.filter(function(x){return x!==name;}); }
-        c.compliances=comps;
-      });
-      renderClients();alert('Updated '+ids.length+' client(s).');
-    } else alert((r&&r.error)||'Update failed');
-  }).catch(function(e){sync(false);alert('Error: '+e.message);});
-}
-function delCli(id){if(!confirm('Remove this client?'))return;sync(true);api('delClient',{id:id}).then(function(){CLIENTS=CLIENTS.filter(function(c){return c.id!==id;});sync(false);renderClients();fillSelects();});}
-
-function updComps(){
-  var cfg={gst:document.getElementById('cgst').value,gstf:document.getElementById('cgstf').value,emp:document.getElementById('cemp').value,tov:document.getElementById('ctov').value,ent:document.getElementById('cent').value};
-  var gn=cfg.gst==='none';
-  document.getElementById('gstidiv').style.display=gn?'none':'block';
-  document.getElementById('gstfdiv').style.display=gn?'none':'block';
-  var on=CRULES.filter(function(r){return r.rule(cfg);});
-  document.getElementById('ccnt').textContent=on.length;
-  document.getElementById('cpllist').innerHTML=CRULES.map(function(r){
-    var ok=r.rule(cfg);var interactive=ok||r.manual;var cid2='chk_'+r.name.replace(/[^a-zA-Z0-9]/g,'_');
-    return '<div class="cpi" style="'+(interactive?'':'opacity:.4')+'">'+(interactive?'<input type="checkbox" id="'+cid2+'"'+(ok?' checked':'')+' style="width:15px;height:15px;cursor:pointer;flex-shrink:0">':'<div style="width:15px;height:15px;background:var(--b);border-radius:3px;flex-shrink:0"></div>')+
-      '<div style="font-size:12px;flex:1">'+r.name+'</div><div style="font-size:10px;color:var(--t3)">'+r.freq+'</div></div>';
-  }).join('');
-}
-function getCheckedComps(){return CRULES.filter(function(r){var el=document.getElementById('chk_'+r.name.replace(/[^a-zA-Z0-9]/g,'_'));return el&&el.checked;}).map(function(r){return r.name;});}
-
-function openAddClient(){
-  document.getElementById('cid').value='';
-  ['cname','cpan','cgstin','cemail','cnotes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('cent').value='';document.getElementById('cgst').value='none';
-  document.getElementById('cgstf').value='monthly';document.getElementById('cemp').value='no';
-  document.getElementById('ctov').value='below40l';
-  document.getElementById('cstart').value=new Date().toISOString().split('T')[0];
-  document.getElementById('cmtit').textContent='Add Client';
-  document.getElementById('csavebtn').textContent='Save Client';
-  updComps();document.getElementById('mo-client').classList.add('on');
-}
-
-function openEditClient(id){
-  var c=gc(id);if(!c)return;
-  document.getElementById('cid').value=c.id;
-  document.getElementById('cname').value=c.name||'';document.getElementById('cpan').value=c.pan||'';
-  document.getElementById('cgstin').value=c.gstin||'';document.getElementById('cemail').value=c.email||'';
-  document.getElementById('cnotes').value=c.notes||'';document.getElementById('cent').value=c.entity||'';
-  document.getElementById('cgst').value=c.gst_type||'regular';document.getElementById('cgstf').value=c.gst_freq||'monthly';
-  document.getElementById('cemp').value=c.has_employees||'no';document.getElementById('ctov').value=c.turnover||'below40l';
-  document.getElementById('cstart').value=c.start_date||'2026-04-01';
-  document.getElementById('cmtit').textContent='Edit Client';document.getElementById('csavebtn').textContent='Update Client';
-  updComps();
-  var existing=pArr(c.compliances);
-  if(existing.length) {
-    CRULES.forEach(function(r){
-      var el=document.getElementById('chk_'+r.name.replace(/[^a-zA-Z0-9]/g,'_'));
-      if(el) el.checked=(existing.indexOf(r.name)>-1);
-    });
-  }
-  document.getElementById('mo-client').classList.add('on');
-}
-
-function saveClient(){
-  var name=document.getElementById('cname').value.trim();
-  var pan=document.getElementById('cpan').value.trim().toUpperCase();
-  var entity=document.getElementById('cent').value;
-  if(!name||!pan||!entity){alert('Fill client name, PAN and entity type.');return;}
-  var comps=getCheckedComps();
-  var short=name.split(' ').filter(function(w){return w.length>2;}).map(function(w){return w[0];}).join('').toUpperCase()||name.slice(0,6);
-  var eid=document.getElementById('cid').value;
-  var payload={id:eid||uid(),name:name,short_name:short,entity:entity,pan:pan,
-    gst_type:document.getElementById('cgst').value,gst_freq:document.getElementById('cgstf').value,
-    gstin:document.getElementById('cgstin').value.trim().toUpperCase(),
-    has_employees:document.getElementById('cemp').value,turnover:document.getElementById('ctov').value,
-    start_date:document.getElementById('cstart').value,
-    email:document.getElementById('cemail').value.trim(),notes:document.getElementById('cnotes').value.trim(),
-    compliances:comps};
-  var btn=document.getElementById('csavebtn');if(btn){btn.disabled=true;btn.textContent='Saving...';}
-  sync(true);
-  api('saveClient',payload).then(function(){
-    if(eid){var i=CLIENTS.findIndex(function(c){return c.id===eid;});if(i>-1)CLIENTS[i]=payload;}else CLIENTS.push(payload);
-    sync(false);closeMo('mo-client');renderClients();fillSelects();
-    var ddpg=document.getElementById('p-dates');
-    if(ddpg&&ddpg.classList.contains('on'))renderDD();
-    alert((eid?'Updated':'Added')+': '+name);
-  }).catch(function(e){alert('Error: '+e.message);}).then(function(){if(btn){btn.disabled=false;btn.textContent=eid?'Update Client':'Save Client';}});
-}
-
 function renderPD(){
   var fc=(document.getElementById('pdcl')||{value:''}).value;
   var list=PENDING.slice();if(fc)list=list.filter(function(d){return d.client_id===fc;});
