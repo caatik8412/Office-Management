@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Practice Manager</title>
+<title>Task Manager</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <style>
@@ -22,6 +22,9 @@ input,select,button,textarea{font-family:inherit;font-size:14px}
 .tab i{font-size:16px;}
 .tab:hover{color:var(--t);}
 .tab.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
+.subtabs{display:flex;gap:6px;margin-bottom:14px;}
+.subtab{padding:7px 14px;font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;border-radius:6px;background:var(--s);border:1px solid var(--b);}
+.subtab.on{background:var(--navy);color:#fff;border-color:var(--navy);}
 .main{flex:1;min-height:0;}
 .tb{position:sticky;top:0;z-index:50;background:var(--s);border-bottom:1px solid var(--b);padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
 .ttl{font-size:16px;font-weight:600}
@@ -95,8 +98,6 @@ tr:hover td{background:var(--bg)}
   <div class="tabs" id="anav" style="display:none">
    <div class="tab" onclick="go('dash',this)"><i class="ti ti-layout-dashboard"></i>Dashboard</div>
    <div class="tab" onclick="go('tasks',this)"><i class="ti ti-checklist"></i>Tasks</div>
-   <div class="tab" onclick="go('dates',this)"><i class="ti ti-calendar-due"></i>Due Dates</div>
-   <div class="tab" onclick="go('gst',this)"><i class="ti ti-receipt-tax"></i>GST Compliance</div>
    <div class="tab" onclick="go('pendoc',this)"><i class="ti ti-folder"></i>Pending Docs</div>
   </div>
   <div class="tabs" id="snav" style="display:none">
@@ -142,39 +143,6 @@ tr:hover td{background:var(--bg)}
     </table></div></div>
    </div>
 
-   <!-- DUE DATES -->
-   <div class="pg" id="p-dates">
-    <div class="fr">
-     <select class="btn si" id="ddmon" onchange="renderDD()">
-      <option value="1">January</option><option value="2">February</option><option value="3">March</option>
-      <option value="4" selected>April</option><option value="5">May</option><option value="6">June</option>
-      <option value="7">July</option><option value="8">August</option><option value="9">September</option>
-      <option value="10">October</option><option value="11">November</option><option value="12">December</option>
-     </select>
-     <select class="btn si" id="ddyr" onchange="renderDD()">
-      <option value="2026">2026</option><option value="2027">2027</option>
-     </select>
-     <select class="btn si" id="ddcli" onchange="renderDD()" style="min-width:180px"><option value="">All clients</option></select>
-     <select class="btn si" id="ddcat" onchange="renderDD()"><option value="">All types</option><option>GST</option><option>TDS</option><option>PF / ESIC</option><option>Income Tax</option><option>ROC / MCA</option></select>
-     <select class="btn si" id="ddst" onchange="renderDD()"><option value="">All status</option><option value="done">Completed</option><option value="pending">Pending</option><option value="none">Not Started</option></select>
-    </div>
-    <div class="card" style="padding:0"><div class="tw"><table>
-     <thead><tr><th>Due Date</th><th>Compliance</th><th>Period</th><th>Client</th><th>Category</th><th>Status</th><th>Action</th></tr></thead>
-     <tbody id="ddtb"></tbody>
-    </table></div></div>
-   </div>
-
-   <!-- GST COMPLIANCE -->
-   <div class="pg" id="p-gst">
-    <div class="fr">
-     <select class="btn" id="gstm"></select>
-     <select class="btn" id="gsty"></select>
-     <button class="btn" onclick="loadGST()">Load</button>
-     <span style="font-size:11px;color:var(--t2);margin-left:8px">Tick = Filed in that month</span>
-    </div>
-    <div class="card" id="gcard"><div class="emp">Select month and click Load</div></div>
-   </div>
-
    <!-- PENDING DOCS -->
    <div class="pg" id="p-pendoc">
     <div class="fr">
@@ -186,9 +154,9 @@ tr:hover td{background:var(--bg)}
 
    <!-- MY TASKS (Staff) -->
    <div class="pg" id="p-mine">
-    <div class="tabs">
-     <div class="tab on" onclick="setMTab('active',this)">Pending / In Progress</div>
-     <div class="tab" onclick="setMTab('done',this)">Completed</div>
+    <div class="subtabs">
+     <div class="subtab on" onclick="setMTab('active',this)">Pending / In Progress</div>
+     <div class="subtab" onclick="setMTab('done',this)">Completed</div>
     </div>
     <div class="fr">
      <select class="btn si" id="mscl" onchange="renderMine()"><option value="">All clients</option></select>
