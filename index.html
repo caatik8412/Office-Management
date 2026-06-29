@@ -440,6 +440,7 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
 <div class="toast" id="toast"><i class="ti ti-check"></i><span id="tmsg"></span></div>
 
 <script>
+console.log('Shell build: duedates-batch-fix-v3');
 var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxoagx4t2EopKubBQs7iEc4RZAo81MDEyqs25J0YMXNOruPXpkKaoiPSy-0QwbW9Qt0/exec';
 var SHELL_USER = null;
 
@@ -741,8 +742,10 @@ function loadDueDatesTab(cb){
   var month=parseInt(document.getElementById('dd-month').value,10);
   var year=parseInt(document.getElementById('dd-year').value,10);
   // Generate (idempotent — only adds rows that don't already exist) then list.
-  api('generateDueDates',{month:month,year:year},function(){
+  api('generateDueDates',{month:month,year:year},function(genResult){
+    console.log('generateDueDates result:', genResult);
     api('listDueDates',{month:month,year:year},function(d){
+      console.log('listDueDates result:', d);
       if(!d.ok){ if(cb)cb(); return; }
       DD_ROWS = d.rows||[];
       renderDueDatesTab();
@@ -806,8 +809,10 @@ var ITRD_ROWS=[];
 function loadItrDueDates(cb){
   document.getElementById('itrd-body').innerHTML='<tr><td colspan="5"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
   var ay=new Date().getFullYear();
-  api('generateItrTracking',{year:ay},function(){
+  api('generateItrTracking',{year:ay},function(genResult){
+    console.log('generateItrTracking result:', genResult);
     api('listItrTracking',{year:ay},function(d){
+      console.log('listItrTracking result:', d);
       if(!d.ok){ if(cb)cb(); return; }
       ITRD_ROWS=d.rows||[];
       renderItrDueDates();
