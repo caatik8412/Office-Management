@@ -496,18 +496,20 @@ function enterApp(){
   document.getElementById('frame-pm').src = 'pm.html' + authQS;
   document.getElementById('frame-itr').src = 'itr_pack.html' + authQS;
 
-  var minWait = new Promise(function(res){ setTimeout(res, 5000); });
-  var dataReady = Promise.all([
-    new Promise(function(res){ loadClientsTab(res); }),
-    new Promise(function(res){ loadDueDatesTab(res); }),
-    new Promise(function(res){ loadItrDueDates(res); }),
-    new Promise(function(res){ loadItrHistory(res); }),
-    new Promise(function(res){ loadClientsForVault(res); })
-  ]);
-  Promise.all([minWait, dataReady]).then(function(){
+  // Kick off preloading in the background — each loader handles its own
+  // errors and renders independently, so one failing never blocks the rest.
+  try { loadClientsTab(); } catch(e) {}
+  try { loadDueDatesTab(); } catch(e) {}
+  try { loadItrDueDates(); } catch(e) {}
+  try { loadItrHistory(); } catch(e) {}
+  try { loadClientsForVault(); } catch(e) {}
+
+  // Splash is a flat 5-second cap, not gated on data success — so a slow or
+  // failed fetch never leaves the user staring at the splash indefinitely.
+  setTimeout(function(){
     document.getElementById('splashWrap').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
-  });
+  }, 5000);
 }
 
 function toggleSidebar(){
@@ -559,17 +561,22 @@ function getAllShared(cb, forceRefresh){
   api('getAll',{},function(d){
     if (d.ok) GETALL_CACHE = d;
     var waiters = GETALL_INFLIGHT; GETALL_INFLIGHT = null;
-    waiters.forEach(function(fn){ fn(d); });
+    if (waiters) waiters.forEach(function(fn){ fn(d); });
   });
 }
 
 function api(action,params,cb){
   var qs=Object.keys(params||{}).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);}).join('&');
-  fetch(WEBAPP_URL+'?action='+action+(qs?'&'+qs:'')).then(function(r){return r.json();}).then(cb).catch(function(e){toast('Network error: '+e.message,'err'); if(cb)cb({ok:false,success:false,error:e.message});});
+  fetch(WEBAPP_URL+'?action='+action+(qs?'&'+qs:''))
+    .then(function(r){return r.json();})
+    .catch(function(e){toast('Network error: '+e.message,'err'); return {ok:false,success:false,error:e.message};})
+    .then(function(d){ if(cb)cb(d); });
 }
 function apiPost(body,cb){
   fetch(WEBAPP_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)})
-    .then(function(r){return r.json();}).then(cb).catch(function(e){toast('Network error: '+e.message,'err'); if(cb)cb({ok:false,success:false,error:e.message});});
+    .then(function(r){return r.json();})
+    .catch(function(e){toast('Network error: '+e.message,'err'); return {ok:false,success:false,error:e.message};})
+    .then(function(d){ if(cb)cb(d); });
 }
 
 /* ===================================================================
