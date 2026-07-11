@@ -19,7 +19,13 @@
   --sb-w:220px;--sb-w-collapsed:60px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;}
+/* overflow:hidden here is deliberate — #app is meant to be the only scroll
+   boundary (each shell-panel's .native-wrap scrolls internally). Without
+   this, if any panel's content is even a pixel taller than 100vh, the whole
+   page ALSO scrolls, producing two independent scrollbars stacked close
+   together (visually looks like one "broken"/segmented bar) and a strip of
+   blank page below the app's real content once you scroll past it. */
+html,body{height:100%;overflow:hidden;}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;}
 
 .login-wrap{position:fixed;inset:0;background:var(--navy);z-index:10000;display:flex;align-items:center;justify-content:center;}
@@ -174,7 +180,7 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
    any single .shell-panel) precisely so it isn't hidden by display:none
    whenever a different tab happens to be active. See openClientDrawer(). */
 .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:600;}.drawer-overlay.open{display:block;}
-.drawer{position:fixed;top:0;right:0;bottom:0;width:420px;max-width:92vw;background:#fff;box-shadow:-8px 0 32px rgba(0,0,0,.18);z-index:601;transform:translateX(100%);transition:transform .22s ease;display:flex;flex-direction:column;}.drawer-overlay.open .drawer{transform:translateX(0);}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:680px;max-width:94vw;background:#fff;box-shadow:-8px 0 32px rgba(0,0,0,.18);z-index:601;transform:translateX(100%);transition:transform .22s ease;display:flex;flex-direction:column;}.drawer-overlay.open .drawer{transform:translateX(0);}
 .drawer-hdr{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;background:var(--navy);color:#fff;}
 .drawer-hdr .dh-name{font-size:16px;font-weight:700;}.drawer-hdr .dh-sub{font-size:12px;color:rgba(255,255,255,.7);margin-top:3px;}
 .drawer-close{background:rgba(255,255,255,.15);border:none;color:#fff;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:16px;flex-shrink:0;}
@@ -1909,6 +1915,7 @@ function cRow(c){
 
 var GST_TYPE_LABELS={'none':'Not Registered','regular':'Regular','composition':'Composition'};
 var TURNOVER_LABELS={'below40l':'Below ₹40L','40l-1cr':'₹40L – ₹1Cr','above1cr':'Above ₹1Cr'};
+var CD_UPLOAD_FILE = null;
 
 function openClientDrawer(id){
   var c=allClients.find(function(x){return x.id===id;});
@@ -1947,19 +1954,237 @@ function openClientDrawer(id){
       +field('Partner In Audited Firm', c.partner_audit_firm==='yes'?'Yes':(c.partner_audit_firm?'No':''))
       +field('Open Tasks', c.openTaskCount!==undefined?String(c.openTaskCount):'')
     +'</div></div>'
-    +(c.notes?('<div class="dsec"><div class="dsec-title">Notes</div><div class="dfield dval" style="white-space:pre-wrap;">'+esc(c.notes)+'</div></div>'):'');
+    +(c.notes?('<div class="dsec"><div class="dsec-title">Notes</div><div class="dfield dval" style="white-space:pre-wrap;">'+esc(c.notes)+'</div></div>'):'')
+    +'<div class="dsec"><div class="dsec-title">Tasks</div>'
+      +'<div id="cd-tasks"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>'
+      +'<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">'
+        +'<input type="text" id="cd-task-name" placeholder="New task…" style="flex:1;min-width:120px;padding:6px 8px;font-size:12px;border:1px solid var(--border);border-radius:5px;">'
+        +'<input type="date" id="cd-task-due" style="padding:6px 8px;font-size:12px;border:1px solid var(--border);border-radius:5px;">'
+        +'<button class="btn btn-p btn-sm" onclick="Billing.cdAddTask(\''+c.id+'\',\''+esc(c.name)+'\')"><i class="ti ti-plus"></i> Add</button>'
+      +'</div></div>'
+    +'<div class="dsec"><div class="dsec-title">Pending Documents</div>'
+      +'<div id="cd-pending"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>'
+      +'<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">'
+        +'<input type="text" id="cd-pd-name" placeholder="Document needed…" style="flex:1;min-width:120px;padding:6px 8px;font-size:12px;border:1px solid var(--border);border-radius:5px;">'
+        +'<input type="date" id="cd-pd-due" style="padding:6px 8px;font-size:12px;border:1px solid var(--border);border-radius:5px;">'
+        +'<button class="btn btn-p btn-sm" onclick="Billing.cdAddPending(\''+c.id+'\',\''+esc(c.name)+'\')"><i class="ti ti-plus"></i> Request</button>'
+      +'</div></div>'
+    +'<div class="dsec"><div class="dsec-title">Compliance Status <span class="db-ctit-sub">this period</span></div>'
+      +'<div id="cd-compliance"><div style="color:var(--muted);font-size:12px;">Loading…</div></div></div>'
+    +'<div class="dsec"><div class="dsec-title">ITR Filing History</div><div id="cd-itr-history"><div style="color:var(--muted);font-size:12px;">Loading…</div></div></div>'
+    +'<div class="dsec"><div class="dsec-title">Documents</div>'
+      +'<div id="cd-documents"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>'
+      +'<div style="display:flex;gap:6px;margin-top:10px;align-items:center;flex-wrap:wrap;">'
+        +'<input type="file" id="cd-upload-file" style="display:none;" onchange="Billing.cdFilePicked(this.files[0])">'
+        +'<button class="btn btn-o btn-sm" onclick="document.getElementById(\'cd-upload-file\').click()"><i class="ti ti-upload"></i> Choose File</button>'
+        +'<span id="cd-upload-filename" style="font-size:12px;color:var(--muted);">No file selected</span>'
+        +'<select id="cd-upload-cat" class="sel" style="padding:6px 8px;font-size:12px;">'
+          +'<option>Bank Statement</option><option>Purchase Register</option><option>Sales Register</option><option>TDS Certificate</option><option>Salary Details</option><option>PAN / GSTIN Copy</option><option>Other</option>'
+        +'</select>'
+        +'<button class="btn btn-p btn-sm" id="cd-upload-btn" onclick="Billing.cdUploadDocument(\''+c.id+'\',\''+esc(c.name)+'\')"><i class="ti ti-device-floppy"></i> Upload</button>'
+      +'</div></div>';
 
   document.getElementById('cd-body').innerHTML=body;
+  CD_UPLOAD_FILE = null;
+
+  // Each of these loads separately (own API call) so the rest of the drawer —
+  // already available from the client cache — shows instantly instead of
+  // waiting on every extra round trip.
+  api({action:'listItrPacks', clientName:c.name},function(d){
+    var el=document.getElementById('cd-itr-history'); if(!el) return;
+    var packs=(d&&d.packs)||[];
+    if(!packs.length){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">No filed ITRs on record</div>'; return; }
+    el.innerHTML=packs.map(function(p){
+      return '<div class="dbal-row"><span>'+esc(p.ay||p.fy||'—')+' &middot; '+esc(p.itrType||'—')+'</span>'
+        +(p.fileUrl?'<a href="'+esc(p.fileUrl)+'" target="_blank" style="font-size:12px;color:var(--accent);">View PDF</a>':'<span style="color:var(--muted);font-size:11px;">No file</span>')
+        +'</div>';
+    }).join('');
+  });
+  cdRenderDocuments(c.id);
+  cdRenderTasks(c.id);
+  cdRenderPending(c.id);
+  cdRenderCompliance(c);
+
+  // NOTE: these open modals that live inside #billing-app / panel-billing,
+  // which is display:none unless the Billing tab is the active one — that's
+  // why clicking them from the drawer (opened from e.g. the Clients tab) used
+  // to do nothing visible. switchTab('billing') makes panel-billing active
+  // first, so the modal renders on top of it as expected.
   document.getElementById('cd-acts').innerHTML=
-    '<button class="btn btn-p btn-sm" onclick="Billing.closeClientDrawer();Billing.openBill(\''+c.id+'\',\''+esc(c.name)+'\')"><i class="ti ti-file-invoice"></i> Add Bill</button>'
-    +'<button class="btn btn-g btn-sm" onclick="Billing.closeClientDrawer();Billing.openRec(\''+c.id+'\',\''+esc(c.name)+'\','+grand+')"><i class="ti ti-receipt"></i> Add Receipt</button>'
-    +'<button class="btn btn-o btn-sm" onclick="Billing.closeClientDrawer();Billing.openLedger(\''+c.id+'\',\''+esc(c.name)+'\')"><i class="ti ti-book"></i> Ledger</button>';
+    '<button class="btn btn-p btn-sm" onclick="Billing.closeClientDrawer();switchTab(\'billing\');Billing.openBill(\''+c.id+'\',\''+esc(c.name)+'\')"><i class="ti ti-file-invoice"></i> Add Bill</button>'
+    +'<button class="btn btn-g btn-sm" onclick="Billing.closeClientDrawer();switchTab(\'billing\');Billing.openRec(\''+c.id+'\',\''+esc(c.name)+'\','+grand+')"><i class="ti ti-receipt"></i> Add Receipt</button>'
+    +'<button class="btn btn-o btn-sm" onclick="Billing.closeClientDrawer();switchTab(\'billing\');Billing.openLedger(\''+c.id+'\',\''+esc(c.name)+'\')"><i class="ti ti-book"></i> Ledger</button>'
+    +'<button class="btn btn-o btn-sm" onclick="Billing.closeClientDrawer();openClientForm(\''+c.id+'\')"><i class="ti ti-edit"></i> Edit Details</button>';
 
   document.getElementById('clientDrawer').classList.add('open');
 }
 function closeClientDrawer(){
   document.getElementById('clientDrawer').classList.remove('open');
 }
+
+/* ===================================================================
+   CLIENT DRAWER — ACTION SECTIONS (Tasks / Pending Docs / Compliance /
+   Documents). These use window.toast(...) explicitly rather than the bare
+   toast(...) — this file's own toast() targets #billing-toast, which lives
+   inside #billing-app / panel-billing and is invisible whenever Billing
+   isn't the active tab. The drawer itself lives at the shell level and can
+   be opened from any tab, so its notifications need the shell's #toast,
+   which is always visible regardless of the active tab.
+   =================================================================== */
+function cdRenderDocuments(clientId){
+  api({action:'listDocuments', clientId:clientId},function(d){
+    var el=document.getElementById('cd-documents'); if(!el) return;
+    var docs=(d&&d.documents)||[];
+    if(!docs.length){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">No documents uploaded</div>'; return; }
+    el.innerHTML=docs.map(function(doc){
+      var dt=doc.uploadedAt?new Date(doc.uploadedAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'';
+      return '<div class="dbal-row"><span>'+esc(doc.fileName||'Untitled')+' <span style="color:var(--muted);font-size:11px;">('+esc(doc.category||'Other')+(dt?' &middot; '+dt:'')+')</span></span>'
+        +(doc.fileUrl?'<a href="'+esc(doc.fileUrl)+'" target="_blank" style="font-size:12px;color:var(--accent);">Open</a>':'')
+        +'</div>';
+    }).join('');
+  });
+}
+function cdFilePicked(file){
+  CD_UPLOAD_FILE = file || null;
+  var el=document.getElementById('cd-upload-filename');
+  if(el) el.textContent = file ? file.name : 'No file selected';
+}
+function cdUploadDocument(clientId, clientName){
+  if(!CD_UPLOAD_FILE){ window.toast('Choose a file first','err'); return; }
+  var category=document.getElementById('cd-upload-cat').value;
+  var btn=document.getElementById('cd-upload-btn');
+  btn.disabled=true;
+  var reader=new FileReader();
+  reader.onload=function(){
+    var base64=reader.result.split(',')[1];
+    apiPost({
+      clientId:clientId, clientName:clientName, fileName:CD_UPLOAD_FILE.name,
+      category:category, mimeType:CD_UPLOAD_FILE.type||'application/octet-stream', fileBase64:base64
+    },function(d){
+      btn.disabled=false;
+      if(d.success){
+        window.toast('Uploaded ✓','ok');
+        CD_UPLOAD_FILE=null;
+        document.getElementById('cd-upload-file').value='';
+        document.getElementById('cd-upload-filename').textContent='No file selected';
+        cdRenderDocuments(clientId);
+      } else window.toast(d.error||'Upload failed','err');
+    });
+  };
+  reader.readAsDataURL(CD_UPLOAD_FILE);
+}
+
+function cdRenderTasks(clientId){
+  getAllShared(function(d){
+    var el=document.getElementById('cd-tasks'); if(!el) return;
+    var tasks=((d&&d.tasks)||[]).filter(function(t){ return t.client_id===clientId && t.status!=='done'; });
+    tasks.sort(function(a,b){ return new Date(a.due_date)-new Date(b.due_date); });
+    if(!tasks.length){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">No open tasks</div>'; return; }
+    el.innerHTML=tasks.map(function(t){
+      return '<div class="dbal-row"><span>'+esc(t.name)+' <span style="color:var(--muted);font-size:11px;">('+esc(t.category||'Other')+')</span></span>'
+        +'<span style="display:flex;align-items:center;gap:8px;">'
+          +'<span style="font-size:11px;color:var(--muted);">'+(t.due_date?new Date(t.due_date).toLocaleDateString('en-IN',{day:'2-digit',month:'short'}):'')+'</span>'
+          +'<button class="btn btn-o btn-sm" style="padding:3px 8px;font-size:11px;" onclick="Billing.cdMarkTaskDone(\''+t.id+'\',\''+clientId+'\')">Done</button>'
+        +'</span></div>';
+    }).join('');
+  });
+}
+function cdAddTask(clientId, clientName){
+  var nameEl=document.getElementById('cd-task-name'), dueEl=document.getElementById('cd-task-due');
+  var name=nameEl.value.trim(), due=dueEl.value;
+  if(!name){ window.toast('Enter a task name','err'); return; }
+  if(!due){ window.toast('Pick a due date','err'); return; }
+  api({action:'saveTask', client_id:clientId, client_name:clientName, name:name, due_date:due, status:'pending', priority:'medium', category:'Other'},function(d){
+    if(!d.ok){ window.toast(d.error||'Failed to add task','err'); return; }
+    window.toast('Task added ✓','ok');
+    nameEl.value=''; dueEl.value='';
+    GETALL_CACHE=null;
+    cdRenderTasks(clientId);
+  });
+}
+function cdMarkTaskDone(taskId, clientId){
+  api({action:'saveTask', id:taskId, status:'done'},function(d){
+    if(!d.ok){ window.toast(d.error||'Failed to update task','err'); return; }
+    window.toast('Task marked done ✓','ok');
+    GETALL_CACHE=null;
+    cdRenderTasks(clientId);
+  });
+}
+
+function cdRenderPending(clientId){
+  getAllShared(function(d){
+    var el=document.getElementById('cd-pending'); if(!el) return;
+    var pend=((d&&d.pending)||[]).filter(function(p){ return p.client_id===clientId && !p.received; });
+    pend.sort(function(a,b){ return new Date(a.needed_by)-new Date(b.needed_by); });
+    if(!pend.length){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">No pending document requests</div>'; return; }
+    el.innerHTML=pend.map(function(p){
+      return '<div class="dbal-row"><span>'+esc(p.name)+'</span>'
+        +'<span style="display:flex;align-items:center;gap:8px;">'
+          +'<span style="font-size:11px;color:var(--muted);">'+(p.needed_by?new Date(p.needed_by).toLocaleDateString('en-IN',{day:'2-digit',month:'short'}):'')+'</span>'
+          +'<button class="btn btn-o btn-sm" style="padding:3px 8px;font-size:11px;" onclick="Billing.cdMarkPendingReceived(\''+p.id+'\',\''+clientId+'\')">Received</button>'
+        +'</span></div>';
+    }).join('');
+  });
+}
+function cdAddPending(clientId, clientName){
+  var nameEl=document.getElementById('cd-pd-name'), dueEl=document.getElementById('cd-pd-due');
+  var name=nameEl.value.trim(), due=dueEl.value;
+  if(!name){ window.toast('Enter what document is needed','err'); return; }
+  api({action:'savePD', client_id:clientId, client_name:clientName, name:name, needed_by:due, received:false},function(d){
+    if(!d.ok){ window.toast(d.error||'Failed to add request','err'); return; }
+    window.toast('Document request added ✓','ok');
+    nameEl.value=''; dueEl.value='';
+    GETALL_CACHE=null;
+    cdRenderPending(clientId);
+  });
+}
+function cdMarkPendingReceived(id, clientId){
+  api({action:'savePD', id:id, received:true},function(d){
+    if(!d.ok){ window.toast(d.error||'Failed to update','err'); return; }
+    window.toast('Marked received ✓','ok');
+    GETALL_CACHE=null;
+    cdRenderPending(clientId);
+  });
+}
+
+// Due Dates / ITR Tracking / Tax Audit — reuses the same DD_ROWS/ITRD_ROWS/
+// TA_ROWS single-flighted loaders the Compliance tabs use, so opening the
+// drawer never fires a duplicate concurrent request against those sheets.
+function cdRenderCompliance(c){
+  var clientId=c.id;
+  var remaining=3;
+  function maybeRender(){ remaining--; if(remaining<=0) render(); }
+  function render(){
+    var el=document.getElementById('cd-compliance'); if(!el) return;
+    var html='';
+    var dd=DD_ROWS.filter(function(x){ return x.client_id===clientId; });
+    dd.sort(function(a,b){ return new Date(a.due_date)-new Date(b.due_date); });
+    html+=dd.map(function(x){
+      var done=x.status==='done';
+      return '<div class="dbal-row"><span>'+esc(x.compliance)+' <span style="color:var(--muted);font-size:11px;">('+esc((x.category||'').replace(' / MCA',''))+' &middot; '+new Date(x.due_date).toLocaleDateString('en-IN',{day:'2-digit',month:'short'})+')</span></span>'
+        +'<button class="btn '+(done?'btn-o':'btn-p')+' btn-sm" style="padding:3px 8px;font-size:11px;" onclick="Billing.cdToggleDD(\''+x.id+'\',\''+clientId+'\')">'+(done?'Pending':'Mark Filed')+'</button></div>';
+    }).join('');
+    var itr=ITRD_ROWS.filter(function(x){ return x.client_id===clientId; });
+    html+=itr.map(function(x){
+      var done=x.status==='done';
+      return '<div class="dbal-row"><span>ITR Filing <span style="color:var(--muted);font-size:11px;">('+esc(x.itr_type||'—')+' &middot; due '+new Date(x.due_date).toLocaleDateString('en-IN',{day:'2-digit',month:'short'})+')</span></span>'
+        +'<button class="btn '+(done?'btn-o':'btn-p')+' btn-sm" style="padding:3px 8px;font-size:11px;" onclick="Billing.cdToggleITR(\''+x.id+'\',\''+clientId+'\')">'+(done?'Pending':'Mark Filed')+'</button></div>';
+    }).join('');
+    var ta=TA_ROWS.filter(function(x){ return x.client_id===clientId; });
+    html+=ta.map(function(x){
+      var done=x.status==='done';
+      return '<div class="dbal-row"><span>Tax Audit <span style="color:var(--muted);font-size:11px;">(due '+new Date(x.due_date).toLocaleDateString('en-IN',{day:'2-digit',month:'short'})+')</span></span>'
+        +'<button class="btn '+(done?'btn-o':'btn-p')+' btn-sm" style="padding:3px 8px;font-size:11px;" onclick="Billing.cdToggleTA(\''+x.id+'\',\''+clientId+'\')">'+(done?'Pending':'Mark Filed')+'</button></div>';
+    }).join('');
+    el.innerHTML = html || '<div style="color:var(--muted);font-size:12px;">No compliance items this period</div>';
+  }
+  loadDueDatesTab(maybeRender);
+  loadItrDueDates(maybeRender);
+  loadTaxAudit(maybeRender);
+}
+function cdToggleDD(id, clientId){ ddToggle(id, function(){ cdRenderCompliance({id:clientId}); }); }
+function cdToggleITR(id, clientId){ itrToggleFiled(id, function(){ cdRenderCompliance({id:clientId}); }); }
+function cdToggleTA(id, clientId){ taToggle(id, function(){ cdRenderCompliance({id:clientId}); }); }
 
 function updSum(clients){
   FIRMS.forEach(function(f){
@@ -2828,6 +3053,19 @@ function numWords(n){
     calcTots:calcTots,
     cancelBillIdx:cancelBillIdx,
     cancelRecIdx:cancelRecIdx,
+    cdAddPending:cdAddPending,
+    cdAddTask:cdAddTask,
+    cdFilePicked:cdFilePicked,
+    cdMarkPendingReceived:cdMarkPendingReceived,
+    cdMarkTaskDone:cdMarkTaskDone,
+    cdRenderCompliance:cdRenderCompliance,
+    cdRenderDocuments:cdRenderDocuments,
+    cdRenderPending:cdRenderPending,
+    cdRenderTasks:cdRenderTasks,
+    cdToggleDD:cdToggleDD,
+    cdToggleITR:cdToggleITR,
+    cdToggleTA:cdToggleTA,
+    cdUploadDocument:cdUploadDocument,
     clearCache:clearCache,
     closeM:closeM,
     closeClientDrawer:closeClientDrawer,
@@ -4359,18 +4597,19 @@ function renderDueDatesTab(){
   }).join('');
 }
 function ddAddOpenTask(cid,name,cat,due){
-  api('saveTask',{client_id:cid, name:name, category:cat, due_date:due, status:'open', priority:'medium'},function(d){
+  api('saveTask',{client_id:cid, name:name, category:cat, due_date:due, status:'pending', priority:'medium'},function(d){
     if(d.ok) toast('Added to Task Manager ✓','ok');
     else toast(d.error||'Failed','err');
   });
 }
-function ddToggle(id){
+function ddToggle(id, cb){
   api('toggleDueDate',{id:id},function(d){
     if(d.ok){
       var row=DD_ROWS.find(function(x){ return x.id===id; });
       if(row) row.status=d.status;
       renderDueDatesTab();
     } else toast(d.error||'Update failed','err');
+    if(cb) cb(d);
   });
 }
 
@@ -4503,7 +4742,11 @@ function renderItrDueDates(){
     var filed=r.status==='done';
     return '<tr class="row">'
       +'<td style="font-weight:500">'+esc(r.client_name)+'</td>'
-      +'<td>'+esc(r.itr_type||'—')+'</td>'
+      +'<td><select class="sel" style="padding:4px 8px;font-size:12px;" onchange="itrTypeChange(\''+r.client_id+'\',this.value)">'
+        +['','ITR-1','ITR-2','ITR-3','ITR-4'].map(function(t){
+          return '<option value="'+t+'"'+((r.itr_type||'')===t?' selected':'')+'>'+(t||'— Select —')+'</option>';
+        }).join('')
+      +'</select></td>'
       +'<td>'+new Date(r.due_date).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})+'</td>'
       +'<td>'+(filed?'<span class="badge" style="background:#dcfce7;color:#16a34a">Filed</span>':'<span class="badge" style="background:#fef2f2;color:#dc2626">Pending</span>')+'</td>'
       +'<td><button class="btn btn-o" style="padding:5px 10px;font-size:12px;margin-right:4px;" onclick="itrAddOpenTask(\''+r.client_id+'\',\''+esc(r.client_name)+'\',\''+r.due_date+'\')"><i class="ti ti-plus"></i> Task</button>'
@@ -4512,18 +4755,31 @@ function renderItrDueDates(){
   }).join('');
 }
 function itrAddOpenTask(cid,name,due){
-  api('saveTask',{client_id:cid, name:'ITR Filing - '+name, category:'Income Tax', due_date:due, status:'open', priority:'medium'},function(d){
+  api('saveTask',{client_id:cid, name:'ITR Filing - '+name, category:'Income Tax', due_date:due, status:'pending', priority:'medium'},function(d){
     if(d.ok) toast('Added to Task Manager ✓','ok');
     else toast(d.error||'Failed','err');
   });
 }
-function itrToggleFiled(id){
+function itrToggleFiled(id, cb){
   api('toggleItrTracking',{id:id},function(d){
     if(d.ok){
       var row=ITRD_ROWS.find(function(r){ return r.id===id; });
       if(row) row.status=d.status;
       renderItrDueDates();
     } else toast(d.error||'Update failed','err');
+    if(cb) cb(d);
+  });
+}
+// Inline ITR Type dropdown — updates the client record directly (not routed
+// through saveClient, which would blank other client fields if only itrType
+// is sent), then reconciles this client's bucket/due date by re-running
+// generateItrTracking so the row jumps to the correct tab immediately.
+function itrTypeChange(clientId, newType){
+  api('updateClientItrType',{id:clientId, itrType:newType},function(d){
+    if(!d.ok){ toast(d.error||'Failed to update ITR type','err'); return; }
+    toast('ITR type updated ✓','ok');
+    GETALL_CACHE=null;
+    loadItrDueDates();
   });
 }
 
@@ -4576,18 +4832,19 @@ function renderTaxAudit(){
   }).join('');
 }
 function taAddOpenTask(cid,name,due){
-  api('saveTask',{client_id:cid, name:'Tax Audit - '+name, category:'Income Tax', due_date:due, status:'open', priority:'medium'},function(d){
+  api('saveTask',{client_id:cid, name:'Tax Audit - '+name, category:'Income Tax', due_date:due, status:'pending', priority:'medium'},function(d){
     if(d.ok) toast('Added to Task Manager ✓','ok');
     else toast(d.error||'Failed','err');
   });
 }
-function taToggle(id){
+function taToggle(id, cb){
   api('toggleTaxAuditTracking',{id:id},function(d){
     if(d.ok){
       var row=TA_ROWS.find(function(r){ return r.id===id; });
       if(row) row.status=d.status;
       renderTaxAudit();
     } else toast(d.error||'Update failed','err');
+    if(cb) cb(d);
   });
 }
 
