@@ -636,7 +636,15 @@ function fillSel(id){
 
 function renderDash(){
   var ov=TASKS.filter(function(t){return t.status!=='done'&&isOD(t.due_date);}).length;
-  var pe=TASKS.filter(function(t){return t.status==='pending'||t.status==='inprogress';}).length;
+  // Was status==='pending'||status==='inprogress' — too narrow. Any task
+  // whose status is some other/blank value (e.g. rows added straight into
+  // the sheet, or old data with a stray value the "open"->"pending" migration
+  // didn't cover) fell through the gap: counted as "open" everywhere else in
+  // the app (shell Dashboard, Overdue, the Due Dates list) but NOT here,
+  // which is exactly what caused Active Tasks to undercount vs every other
+  // "open tasks" number in the app. Matching the same status!=='done' test
+  // used everywhere else fixes it for good instead of chasing specific values.
+  var pe=TASKS.filter(function(t){return t.status!=='done';}).length;
   var dn=TASKS.filter(function(t){return t.status==='done';}).length;
   var dstats = document.getElementById('dstats');
   if(dstats) {
