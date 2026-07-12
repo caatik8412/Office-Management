@@ -4851,14 +4851,17 @@ function itrToggleFiled(id, cb){
 }
 // Inline ITR Type dropdown — updates the client record directly (not routed
 // through saveClient, which would blank other client fields if only itrType
-// is sent), then reconciles this client's bucket/due date by re-running
-// generateItrTracking so the row jumps to the correct tab immediately.
+// is sent). Bucket/due-date reconciliation for this one client now happens
+// server-side inside updateClientItrType itself (a cheap single-row update),
+// so we only need a fast unlocked re-list here — no forced full
+// generateItrTracking re-scan, which is what made a single dropdown change
+// feel as slow as the first load of the whole tab.
 function itrTypeChange(clientId, newType){
   api('updateClientItrType',{id:clientId, itrType:newType},function(d){
     if(!d.ok){ toast(d.error||'Failed to update ITR type','err'); return; }
     toast('ITR type updated ✓','ok');
     GETALL_CACHE=null;
-    loadItrDueDates(null, true); // force: the ITR type just changed server-side, must reconcile now, not use the cached "already generated" skip
+    loadItrDueDates();
   });
 }
 
