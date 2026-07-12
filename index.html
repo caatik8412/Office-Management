@@ -3394,6 +3394,17 @@ function numWords(n){
 <script>
 (function(){
   function itrInit(){
+    // Guard against running twice. itrInit() wires up every event listener in
+    // the ITR Pack Builder AND appends the 6 default document rows via
+    // appendChild (not a re-render), so a second call — e.g. if enterApp()
+    // ever runs more than once for the same page load (saved-session
+    // auto-login racing a manual login submit, bfcache restore, etc.) —
+    // silently doubled every default row and double-bound every button's
+    // click handler instead of erroring. This was invisible before the
+    // ipanel-builder scroll fix because the duplicated rows were simply
+    // never scrollable into view.
+    if (window.__itrInitDone) return;
+    window.__itrInitDone = true;
 
 /* ============================================================
    CONFIG — edit these after you deploy the Apps Script backend
