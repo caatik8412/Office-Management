@@ -4555,15 +4555,21 @@ function renderDashboardAssessments(){
     pending.sort(function(a,b){ return dbDateVal(a.submission_date)-dbDateVal(b.submission_date); });
     if(!pending.length){ el.style.display='none'; el.innerHTML=''; return; }
     el.style.display='block';
+    var shown=pending.slice(0,6);
+    var typeColor=function(t){ return t==='GST' ? {bg:'#eff6ff',fg:'#2563eb'} : {bg:'#f5f3ff',fg:'#7c3aed'}; };
+    var modeColor=function(m){ return (m||'').toLowerCase()==='online' ? {bg:'#ecfdf5',fg:'#059669'} : {bg:'#f9fafb',fg:'#6b7280'}; };
     el.innerHTML='<div class="card" style="border-left:4px solid #dc2626;">'
-      +'<div class="db-ctit"><i class="ti ti-alert-triangle" style="color:#dc2626;"></i> Assessment Reminders <span class="db-ctit-sub">GST / Income Tax submission dates — see the Assessment Reminders tab for the full list</span></div>'
-      +pending.slice(0,6).map(function(r){
+      +'<div class="db-ctit"><i class="ti ti-alert-triangle" style="color:#dc2626;"></i> Assessment Reminders <span class="db-ctit-sub">GST / Income Tax submission dates</span></div>'
+      +shown.map(function(r){
         var cls=dbIsPastDue(r.submission_date)?'od':(dbIsSoon(r.submission_date)?'soon':'ok');
+        var tc=typeColor(r.type), mc=modeColor(r.submission_mode);
         return '<div class="db-row"><div class="db-dot '+cls+'"></div>'
-          +'<div style="flex:1;font-weight:500;">'+esc(r.client_name)+' <span style="color:var(--muted);font-weight:400;">('+esc(r.type)+(r.year?(' · '+esc(r.year)):'')+')</span></div>'
-          +'<div style="color:var(--muted);min-width:70px;">'+esc(r.submission_mode||'')+'</div>'
-          +'<div style="min-width:100px;text-align:right;">'+dbFmtDate(r.submission_date)+'</div></div>';
+          +'<div style="flex:1;font-weight:500;">'+esc(r.client_name)+(r.year?(' <span style="color:var(--muted);font-weight:400;">· '+esc(r.year)+'</span>'):'')+'</div>'
+          +'<span class="badge" style="background:'+tc.bg+';color:'+tc.fg+';min-width:78px;justify-content:center;">'+esc(r.type)+'</span>'
+          +(r.submission_mode?'<span class="badge" style="background:'+mc.bg+';color:'+mc.fg+';min-width:64px;justify-content:center;margin-left:8px;">'+esc(r.submission_mode)+'</span>':'<span style="min-width:72px;"></span>')
+          +'<div style="min-width:90px;text-align:right;margin-left:8px;'+(cls==='od'?'color:var(--red);font-weight:600;':'')+'">'+dbFmtDate(r.submission_date)+'</div></div>';
       }).join('')
+      +(pending.length>shown.length ? '<div style="text-align:center;margin-top:10px;"><a href="javascript:void(0)" onclick="switchTab(\'assessment\')" style="font-size:11px;color:var(--muted);">+'+(pending.length-shown.length)+' more — view all in Assessment Reminders</a></div>' : '')
     +'</div>';
   });
 }
