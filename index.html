@@ -285,8 +285,7 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
         <div class="sb-item" data-tab="billing" onclick="switchTab('billing')"><i class="ti ti-receipt-2"></i><span class="sb-label">Billing</span></div>
         <div class="sb-group-label">Compliance</div>
         <div class="sb-item" data-tab="duedates" onclick="switchTab('duedates')"><i class="ti ti-calendar-due"></i><span class="sb-label">Due Dates</span></div>
-        <div class="sb-item" data-tab="itr" onclick="switchTab('itr')"><i class="ti ti-file-text"></i><span class="sb-label">ITR Tracking</span></div>
-        <div class="sb-item" data-tab="taxaudit" onclick="switchTab('taxaudit')"><i class="ti ti-stamp"></i><span class="sb-label">Tax Audit</span></div>
+        <div class="sb-item" data-tab="itr" onclick="switchTab('itr')"><i class="ti ti-file-text"></i><span class="sb-label">Audit &amp; ITR Tracking</span></div>
         <div class="sb-group-label">Documents</div>
         <div class="sb-item" data-tab="vault" onclick="switchTab('vault')"><i class="ti ti-folder"></i><span class="sb-label">Documents Vault</span></div>
       </div>
@@ -309,6 +308,7 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
             <div style="margin-left:auto;color:var(--muted);font-size:12px;" id="db-asof"></div>
             <button class="btn btn-o" onclick="GETALL_CACHE=null;loadDashboardTab(true)"><i class="ti ti-refresh"></i> Refresh</button>
           </div>
+          <div id="db-assessments" style="display:none;margin-bottom:16px;"></div>
           <div class="db-stats" id="db-stats"></div>
           <div class="db-g2">
             <div class="card">
@@ -3200,6 +3200,8 @@ function numWords(n){
       <div class="shell-panel" id="panel-itr">
         <div class="inner-tabs">
           <div class="inner-tab active" data-itab="duedates" onclick="switchInnerTab('duedates')"><i class="ti ti-calendar-due"></i> Clients &amp; Due Dates</div>
+          <div class="inner-tab" data-itab="taxaudit" onclick="switchInnerTab('taxaudit')"><i class="ti ti-stamp"></i> Tax Audit</div>
+          <div class="inner-tab" data-itab="assessment" onclick="switchInnerTab('assessment')"><i class="ti ti-alert-triangle"></i> Assessment Reminders</div>
           <div class="inner-tab" data-itab="builder" onclick="switchInnerTab('builder')"><i class="ti ti-file-plus"></i> Create Set</div>
           <div class="inner-tab" data-itab="history" onclick="switchInnerTab('history')"><i class="ti ti-list"></i> View Records</div>
         </div>
@@ -3232,6 +3234,71 @@ function numWords(n){
               </div>
             </div>
           </div>
+
+          <div class="inner-panel" id="ipanel-taxaudit">
+            <div class="native-wrap">
+              <h2 class="sectitle"><i class="ti ti-stamp"></i> Tax Audit Tracking</h2>
+              <div style="font-size:12px;color:var(--muted);margin:-8px 0 14px;">Clients with <strong>Audit Applicable</strong> set to Yes on their record. Tax Audit due 30 Sep; their ITR follows at 31 Oct (tracked under Clients &amp; Due Dates → Audit Related).</div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">
+                <div class="card" style="padding:12px 18px;"><div style="font-size:11px;color:var(--muted);">Total</div><div style="font-size:20px;font-weight:700;color:var(--navy);" id="ta-total">0</div></div>
+                <div class="card" style="padding:12px 18px;"><div style="font-size:11px;color:var(--muted);">Filed</div><div style="font-size:20px;font-weight:700;color:var(--green);" id="ta-filed">0</div></div>
+                <div class="card" style="padding:12px 18px;"><div style="font-size:11px;color:var(--muted);">Pending</div><div style="font-size:20px;font-weight:700;color:var(--red);" id="ta-pending">0</div></div>
+              </div>
+              <div class="bar">
+                <div class="sbox"><i class="ti ti-search"></i><input type="text" id="ta-search" placeholder="Search client…" oninput="renderTaxAudit()"></div>
+                <select class="sel" id="ta-filter">
+                  <option value="">All statuses</option><option value="filed">Filed only</option><option value="pending">Pending only</option>
+                </select>
+                <button class="btn btn-o" onclick="loadTaxAudit(null,true)"><i class="ti ti-refresh"></i> Refresh</button>
+              </div>
+              <div class="card">
+                <table>
+                  <thead><tr><th>Client</th><th>Due Date</th><th>Status</th><th>Action</th></tr></thead>
+                  <tbody id="ta-body"><tr><td colspan="4"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="inner-panel" id="ipanel-assessment">
+            <div class="native-wrap">
+              <h2 class="sectitle"><i class="ti ti-alert-triangle"></i> Assessment Reminders</h2>
+              <div style="font-size:12px;color:var(--muted);margin:-8px 0 14px;">One-off GST / Income Tax department assessment or scrutiny submission dates — added manually per case, not auto-generated like routine compliance.</div>
+              <div class="card" style="padding:18px;max-width:720px;margin-bottom:16px;">
+                <input type="hidden" id="ar-id">
+                <div class="fg" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                  <div class="vf-field"><label>Client</label>
+                    <input type="text" id="ar-client" list="ar-client-list" placeholder="Type to search a client…" autocomplete="off">
+                    <datalist id="ar-client-list"></datalist>
+                  </div>
+                  <div class="vf-field"><label>Year</label><input type="text" id="ar-year" placeholder="e.g. 2023-24"></div>
+                  <div class="vf-field"><label>Type</label>
+                    <select class="sel" id="ar-type" style="width:100%;"><option>GST</option><option>Income Tax</option></select>
+                  </div>
+                  <div class="vf-field"><label>Submission Mode</label>
+                    <select class="sel" id="ar-mode" style="width:100%;"><option>Online</option><option>Offline</option></select>
+                  </div>
+                  <div class="vf-field"><label>Assessment Submission Date</label><input type="date" id="ar-date"></div>
+                  <div class="vf-field"><label>Notes (optional)</label><input type="text" id="ar-notes"></div>
+                </div>
+                <button class="btn btn-p" style="margin-top:6px;" onclick="saveAssessmentReminder()" id="ar-save-btn"><i class="ti ti-plus"></i> Add Reminder</button>
+              </div>
+              <div class="bar">
+                <div class="sbox"><i class="ti ti-search"></i><input type="text" id="ar-search" placeholder="Search client…" oninput="renderAssessmentReminders()"></div>
+                <select class="sel" id="ar-filter">
+                  <option value="">All statuses</option><option value="pending">Pending only</option><option value="done">Submitted only</option>
+                </select>
+                <button class="btn btn-o" onclick="loadAssessmentReminders(true)"><i class="ti ti-refresh"></i> Refresh</button>
+              </div>
+              <div class="card">
+                <table>
+                  <thead><tr><th>Client</th><th>Type</th><th>Year</th><th>Submission Date</th><th>Mode</th><th>Status</th><th>Actions</th></tr></thead>
+                  <tbody id="ar-body"><tr><td colspan="7"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
           <div class="inner-panel" id="ipanel-builder">
             <div class="app" id="appRoot">
 
@@ -3958,31 +4025,6 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
         </div>
       </div>
 
-      <div class="shell-panel" id="panel-taxaudit">
-        <div class="native-wrap">
-          <h2 class="sectitle"><i class="ti ti-stamp"></i> Tax Audit Tracking</h2>
-          <div style="font-size:12px;color:var(--muted);margin:-8px 0 14px;">Clients with <strong>Audit Applicable</strong> set to Yes on their record. Tax Audit due 30 Sep; their ITR follows at 31 Oct (tracked under ITR Tracking → Audit Related).</div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">
-            <div class="card" style="padding:12px 18px;"><div style="font-size:11px;color:var(--muted);">Total</div><div style="font-size:20px;font-weight:700;color:var(--navy);" id="ta-total">0</div></div>
-            <div class="card" style="padding:12px 18px;"><div style="font-size:11px;color:var(--muted);">Filed</div><div style="font-size:20px;font-weight:700;color:var(--green);" id="ta-filed">0</div></div>
-            <div class="card" style="padding:12px 18px;"><div style="font-size:11px;color:var(--muted);">Pending</div><div style="font-size:20px;font-weight:700;color:var(--red);" id="ta-pending">0</div></div>
-          </div>
-          <div class="bar">
-            <div class="sbox"><i class="ti ti-search"></i><input type="text" id="ta-search" placeholder="Search client…" oninput="renderTaxAudit()"></div>
-            <select class="sel" id="ta-filter">
-              <option value="">All statuses</option><option value="filed">Filed only</option><option value="pending">Pending only</option>
-            </select>
-            <button class="btn btn-o" onclick="loadTaxAudit(null,true)"><i class="ti ti-refresh"></i> Refresh</button>
-          </div>
-          <div class="card">
-            <table>
-              <thead><tr><th>Client</th><th>Due Date</th><th>Status</th><th>Action</th></tr></thead>
-              <tbody id="ta-body"><tr><td colspan="4"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
       <div class="shell-panel" id="panel-duedates">
         <div class="inner-tabs">
           <div class="inner-tab active" data-ddtab="GST" onclick="switchDDTab('GST')"><i class="ti ti-receipt-tax"></i> GST</div>
@@ -4404,11 +4446,12 @@ function switchTab(name){
     var active=document.querySelector('#panel-itr .inner-tab.active').dataset.itab;
     if(active==='history') loadItrHistory();
     if(active==='duedates') loadItrDueDates();
+    if(active==='taxaudit') loadTaxAudit();
+    if(active==='assessment'){ loadClientsForVault(); populateArClientList(); loadAssessmentReminders(); }
   }
   if(name==='vault') loadClientsForVault();
   if(name==='clients') loadClientsTab();
   if(name==='duedates') loadDueDatesTab();
-  if(name==='taxaudit') loadTaxAudit();
   if(name==='credentials'){
     loadClientsForVault(); // reuses the Vault's lightweight {id,name} client list — same datalist pattern
     populateCredClientList();
@@ -4445,6 +4488,8 @@ function switchInnerTab(name){
   document.getElementById('ipanel-'+name).classList.add('active');
   if(name==='history') loadItrHistory();
   if(name==='duedates') loadItrDueDates();
+  if(name==='taxaudit') loadTaxAudit();
+  if(name==='assessment'){ loadClientsForVault(); populateArClientList(); loadAssessmentReminders(); }
 }
 
 function toast(msg,type){
@@ -4494,7 +4539,34 @@ function loadDashboardTab(forceRefresh){
     renderDashboardPending(d);
     renderDashboardReceived(d);
     loadDashboardDues();
+    renderDashboardAssessments();
   }, forceRefresh);
+}
+
+// Pending assessment/scrutiny submission dates, shown as a banner at the very
+// top of the Dashboard (above the stat cards) — these carry real penalty risk
+// if missed, so they get the most prominent spot on the page, not buried in
+// a card at the bottom like the other reminder widgets. Hidden entirely when
+// there's nothing pending, so it never eats space for no reason.
+function renderDashboardAssessments(){
+  var el=document.getElementById('db-assessments'); if(!el) return;
+  api('listAssessmentReminders',{},function(d){
+    if(!d.ok) return;
+    var pending=(d.rows||[]).filter(function(r){ return r.status!=='done'; });
+    pending.sort(function(a,b){ return dbDateVal(a.submission_date)-dbDateVal(b.submission_date); });
+    if(!pending.length){ el.style.display='none'; el.innerHTML=''; return; }
+    el.style.display='block';
+    el.innerHTML='<div class="card" style="border-left:4px solid #dc2626;">'
+      +'<div class="db-ctit"><i class="ti ti-alert-triangle" style="color:#dc2626;"></i> Assessment Reminders <span class="db-ctit-sub">GST / Income Tax submission dates — see Audit &amp; ITR Tracking &gt; Assessment Reminders</span></div>'
+      +pending.slice(0,6).map(function(r){
+        var cls=dbIsPastDue(r.submission_date)?'od':(dbIsSoon(r.submission_date)?'soon':'ok');
+        return '<div class="db-row"><div class="db-dot '+cls+'"></div>'
+          +'<div style="flex:1;font-weight:500;">'+esc(r.client_name)+' <span style="color:var(--muted);font-weight:400;">('+esc(r.type)+(r.year?(' · '+esc(r.year)):'')+')</span></div>'
+          +'<div style="color:var(--muted);min-width:70px;">'+esc(r.submission_mode||'')+'</div>'
+          +'<div style="min-width:100px;text-align:right;">'+dbFmtDate(r.submission_date)+'</div></div>';
+      }).join('')
+    +'</div>';
+  });
 }
 
 function renderDashboardStats(d){
@@ -5142,6 +5214,105 @@ function taToggle(id, cb){
       renderTaxAudit();
     } else toast(d.error||'Update failed','err');
     if(cb) cb(d);
+  });
+}
+
+/* ===================================================================
+   ASSESSMENT REMINDERS — one-off GST/Income Tax department assessment or
+   scrutiny submission dates, added manually per case. Reuses VAULT_CLIENTS
+   (same lightweight {id,name} list as Documents Vault/Credentials/Work Desk)
+   for the client picker. Also surfaced at the top of the Dashboard — see
+   renderDashboardAssessments().
+=================================================================== */
+var AR_ROWS=[];
+function populateArClientList(){
+  var el=document.getElementById('ar-client-list'); if(!el) return;
+  el.innerHTML = VAULT_CLIENTS.map(function(c){ return '<option value="'+esc(c.name)+'" data-id="'+esc(c.id)+'">'; }).join('');
+}
+function resolveArClient(){
+  var typed=document.getElementById('ar-client').value.trim();
+  var match=VAULT_CLIENTS.find(function(c){ return c.name.toLowerCase()===typed.toLowerCase(); });
+  return match||null;
+}
+function loadAssessmentReminders(forceRefresh){
+  var body=document.getElementById('ar-body');
+  if(body) body.innerHTML='<tr><td colspan="7"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
+  api('listAssessmentReminders',{},function(d){
+    if(!d.ok){ toast(d.error||'Failed to load','err'); return; }
+    AR_ROWS=d.rows||[];
+    renderAssessmentReminders();
+  });
+}
+function renderAssessmentReminders(){
+  var body=document.getElementById('ar-body'); if(!body) return;
+  var q=(document.getElementById('ar-search').value||'').toLowerCase();
+  var f=document.getElementById('ar-filter').value;
+  var list=AR_ROWS.filter(function(r){
+    if(q && (r.client_name||'').toLowerCase().indexOf(q)===-1) return false;
+    if(f==='pending' && r.status==='done') return false;
+    if(f==='done' && r.status!=='done') return false;
+    return true;
+  });
+  list.sort(function(a,b){ return dbDateVal(a.submission_date)-dbDateVal(b.submission_date); });
+  if(!list.length){ body.innerHTML='<tr><td colspan="7"><div class="empty"><i class="ti ti-alert-triangle"></i>No assessment reminders yet</div></td></tr>'; return; }
+  body.innerHTML=list.map(function(r){
+    var done=r.status==='done';
+    var cls=done?'background:#f1f5f9;color:#475569':(dbIsPastDue(r.submission_date)?'background:#fef2f2;color:#dc2626':(dbIsSoon(r.submission_date)?'background:#fef3c7;color:#b45309':'background:#eff6ff;color:#2563a8'));
+    return '<tr class="row">'
+      +'<td style="font-weight:500">'+esc(r.client_name)+'</td>'
+      +'<td><span class="badge" style="background:#f1f5f9;color:#475569">'+esc(r.type)+'</span></td>'
+      +'<td>'+esc(r.year||'—')+'</td>'
+      +'<td><span class="badge" style="'+cls+'">'+dbFmtDate(r.submission_date)+'</span></td>'
+      +'<td>'+esc(r.submission_mode||'—')+'</td>'
+      +'<td>'+(done?'<span class="badge" style="background:#dcfce7;color:#16a34a">Submitted</span>':'<span class="badge" style="background:#fef2f2;color:#dc2626">Pending</span>')+'</td>'
+      +'<td>'
+        +'<button class="btn '+(done?'btn-o':'btn-p')+' btn-sm" style="padding:4px 9px;font-size:11px;margin-right:4px;" onclick="toggleAssessmentReminder(\''+r.id+'\')">'+(done?'Mark Pending':'Mark Submitted')+'</button>'
+        +'<button class="btn btn-o btn-sm" style="padding:4px 9px;font-size:11px;" onclick="delAssessmentReminder(\''+r.id+'\')"><i class="ti ti-trash"></i></button>'
+      +'</td>'
+    +'</tr>';
+  }).join('');
+}
+function saveAssessmentReminder(){
+  var c=resolveArClient();
+  if(!c){ toast('Pick a valid client from the list','err'); return; }
+  var date=document.getElementById('ar-date').value;
+  if(!date){ toast('Pick a submission date','err'); return; }
+  var payload={
+    client_id:c.id, client_name:c.name,
+    type:document.getElementById('ar-type').value,
+    year:document.getElementById('ar-year').value.trim(),
+    submission_mode:document.getElementById('ar-mode').value,
+    submission_date:date,
+    notes:document.getElementById('ar-notes').value.trim(),
+    created_by:(SHELL_USER&&SHELL_USER.name)||''
+  };
+  var btn=document.getElementById('ar-save-btn'); btn.disabled=true;
+  api('saveAssessmentReminder',payload,function(d){
+    btn.disabled=false;
+    if(!d.ok){ toast(d.error||'Failed to save','err'); return; }
+    toast('Assessment reminder added ✓','ok');
+    document.getElementById('ar-client').value='';
+    document.getElementById('ar-year').value='';
+    document.getElementById('ar-date').value='';
+    document.getElementById('ar-notes').value='';
+    loadAssessmentReminders(true);
+    GETALL_CACHE=null; // dashboard's assessment widget reads this same list fresh via its own call, no cache to bust there, but keep client cache in sync
+  });
+}
+function toggleAssessmentReminder(id){
+  api('toggleAssessmentReminder',{id:id},function(d){
+    if(!d.ok){ toast(d.error||'Update failed','err'); return; }
+    var row=AR_ROWS.find(function(r){ return r.id===id; });
+    if(row) row.status=d.status;
+    renderAssessmentReminders();
+  });
+}
+function delAssessmentReminder(id){
+  if(!confirm('Delete this reminder?')) return;
+  api('delAssessmentReminder',{id:id},function(d){
+    if(!d.ok){ toast(d.error||'Delete failed','err'); return; }
+    AR_ROWS=AR_ROWS.filter(function(r){ return r.id!==id; });
+    renderAssessmentReminders();
   });
 }
 
