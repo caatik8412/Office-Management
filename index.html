@@ -275,6 +275,7 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
     <div class="sidebar" id="sidebar">
       <div class="sb-nav">
         <div class="sb-item active" data-tab="dashboard" onclick="switchTab('dashboard')"><i class="ti ti-layout-dashboard"></i><span class="sb-label">Dashboard</span></div>
+        <div class="sb-item" data-tab="workspace" onclick="switchTab('workspace')"><i class="ti ti-file-pencil"></i><span class="sb-label">Work Desk</span></div>
         <div class="sb-group-label">Clients</div>
         <div class="sb-item" data-tab="clients" onclick="switchTab('clients')"><i class="ti ti-users"></i><span class="sb-label">Clients</span></div>
         <div class="sb-item" data-tab="credentials" onclick="switchTab('credentials')"><i class="ti ti-key"></i><span class="sb-label">Credentials</span></div>
@@ -288,7 +289,6 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
         <div class="sb-item" data-tab="taxaudit" onclick="switchTab('taxaudit')"><i class="ti ti-stamp"></i><span class="sb-label">Tax Audit</span></div>
         <div class="sb-group-label">Documents</div>
         <div class="sb-item" data-tab="vault" onclick="switchTab('vault')"><i class="ti ti-folder"></i><span class="sb-label">Documents Vault</span></div>
-        <div class="sb-item" data-tab="workspace" onclick="switchTab('workspace')"><i class="ti ti-file-pencil"></i><span class="sb-label">Workspace</span></div>
       </div>
       <div class="sb-user">
         <div class="sb-av" id="sbAv">--</div>
@@ -1992,7 +1992,7 @@ function openClientDrawer(id){
       +'<div id="cd-compliance"><div style="color:var(--muted);font-size:12px;">Loading…</div></div></div>'
     +'<div class="dsec"><div class="dsec-title">Portal Credentials <button class="btn btn-o btn-sm" style="padding:2px 8px;font-size:11px;" onclick="openCredentialsFor(\''+c.id+'\',\''+esc(c.name)+'\')"><i class="ti ti-edit"></i> Edit</button></div>'
       +'<div id="cd-credentials"><div style="color:var(--muted);font-size:12px;">Loading…</div></div></div>'
-    +'<div class="dsec"><div class="dsec-title">Workspace Documents <button class="btn btn-o btn-sm" style="padding:2px 8px;font-size:11px;" onclick="openWorkspaceFor(\''+c.id+'\',\''+esc(c.name)+'\')"><i class="ti ti-plus"></i> New</button></div>'
+    +'<div class="dsec"><div class="dsec-title">Work Desk Documents <button class="btn btn-o btn-sm" style="padding:2px 8px;font-size:11px;" onclick="openWorkspaceFor(\''+c.id+'\',\''+esc(c.name)+'\')"><i class="ti ti-plus"></i> New</button></div>'
       +'<div id="cd-workspace"><div style="color:var(--muted);font-size:12px;">Loading…</div></div></div>'
     +'<div class="dsec"><div class="dsec-title">ITR Filing History</div><div id="cd-itr-history"><div style="color:var(--muted);font-size:12px;">Loading…</div></div></div>'
     +'<div class="dsec"><div class="dsec-title">Documents</div>'
@@ -4155,7 +4155,7 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
           <!-- ===== Create/Open sub-tab ===== -->
           <div class="inner-panel active" id="wspanel-create">
             <div class="native-wrap">
-              <h2 class="sectitle"><i class="ti ti-file-pencil"></i> Workspace</h2>
+              <h2 class="sectitle"><i class="ti ti-file-pencil"></i> Work Desk</h2>
               <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Free-form Word documents and spreadsheets, per client — no fixed templates. Pick a client, name it, start typing. Saved straight to that client's Drive folder, and you can come back and reopen it anytime.</div>
               <div class="card" style="padding:18px;max-width:640px;">
                 <div class="vf-field">
@@ -4176,13 +4176,15 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
                 </div>
               </div>
 
-              <div id="ws-frame-wrap" style="display:none;margin-top:16px;">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                  <div style="font-size:13px;font-weight:600;" id="ws-frame-title"></div>
-                  <a id="ws-frame-newtab" href="#" target="_blank" style="font-size:12px;color:var(--accent);"><i class="ti ti-external-link"></i> Open in new tab</a>
+              <div id="ws-frame-wrap" style="display:none;position:fixed;inset:0;background:#fff;z-index:400;flex-direction:column;">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-bottom:1px solid var(--border);flex-shrink:0;">
+                  <div style="font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;"><i class="ti ti-file-pencil"></i><span id="ws-frame-title"></span></div>
+                  <div style="display:flex;align-items:center;gap:14px;">
+                    <a id="ws-frame-newtab" href="#" target="_blank" style="font-size:12px;color:var(--accent);"><i class="ti ti-external-link"></i> Open in new tab</a>
+                    <button class="btn btn-p" style="padding:6px 14px;font-size:13px;" onclick="closeWsDoc()"><i class="ti ti-x"></i> Close</button>
+                  </div>
                 </div>
-                <iframe id="ws-frame" style="width:100%;height:70vh;border:1px solid var(--border);border-radius:8px;" src="about:blank"></iframe>
-                <div style="font-size:11px;color:var(--muted);margin-top:6px;">If this doesn't load below (some networks block embedded Google editors), use "Open in new tab" — your document is saved either way.</div>
+                <iframe id="ws-frame" style="width:100%;flex:1;border:none;" src="about:blank"></iframe>
               </div>
             </div>
           </div>
@@ -4190,7 +4192,7 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
           <!-- ===== Records sub-tab ===== -->
           <div class="inner-panel" id="wspanel-records">
             <div class="native-wrap">
-              <h2 class="sectitle"><i class="ti ti-list"></i> All Workspace Documents</h2>
+              <h2 class="sectitle"><i class="ti ti-list"></i> All Work Desk Documents</h2>
               <div class="bar">
                 <div class="sbox"><i class="ti ti-search"></i><input type="text" id="ws-search" placeholder="Search client or document name…" oninput="renderWorkspaceRecords()"></div>
                 <select class="sel" id="ws-filter-type" onchange="renderWorkspaceRecords()">
@@ -5381,12 +5383,20 @@ function createWsDoc(type){
     openWsDoc(d.data.url, d.data.name);
   });
 }
+// Opens the doc as a full-page takeover (fixed overlay covering the whole
+// app, sidebar included) — editing needs the screen space, not a shrunk
+// iframe squeezed under the client picker. Only way back out is Close.
 function openWsDoc(url, name){
-  document.getElementById('ws-frame-wrap').style.display='block';
+  document.getElementById('ws-frame-wrap').style.display='flex';
   document.getElementById('ws-frame-title').textContent=name;
   document.getElementById('ws-frame-newtab').href=url;
   document.getElementById('ws-frame').src=url;
-  document.getElementById('ws-frame-wrap').scrollIntoView({behavior:'smooth', block:'start'});
+}
+// Resets the iframe to about:blank (not just hiding it) so the doc's editor
+// actually stops running in the background instead of sitting there loaded.
+function closeWsDoc(){
+  document.getElementById('ws-frame-wrap').style.display='none';
+  document.getElementById('ws-frame').src='about:blank';
 }
 var WS_RECORDS_CACHE=null;
 function renderWorkspaceRecords(forceRefresh){
