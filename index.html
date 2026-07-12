@@ -96,6 +96,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 
 .native-wrap{padding:20px;max-width:1200px;margin:0 auto;height:100%;overflow-y:auto;}
 
+/* Billing (#billing-app) and the ITR Pack Builder (#ipanel-builder/#appRoot) are
+   not wrapped in .native-wrap like the other panels, so they had no scroll
+   boundary of their own — their content just overflowed the flex shell
+   silently instead of scrolling. Give each its own height:100%+overflow-y:auto
+   so they scroll internally exactly like every .native-wrap panel does. */
+#billing-app{height:100%;overflow-y:auto;}
+#ipanel-builder{overflow-y:auto;}
+
 .bar{display:flex;align-items:center;gap:8px;padding:0 0 16px;flex-wrap:wrap;}
 .sbox{position:relative;flex:1;min-width:160px;max-width:280px;}
 .sbox i{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;}
@@ -4227,6 +4235,9 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
                 <input type="text" id="ar-client" list="ar-client-list" placeholder="Type to search a client…" autocomplete="off">
                 <datalist id="ar-client-list"></datalist>
               </div>
+              <div class="vf-field"><label>Assigned To</label>
+                <select class="sel" id="ar-assigned" style="width:100%;"><option value="">Unassigned</option><option>Atik Bhayani</option><option>Rushiraj</option><option>Sahil</option></select>
+              </div>
               <div class="vf-field"><label>Year</label><input type="text" id="ar-year" placeholder="e.g. 2023-24"></div>
               <div class="vf-field"><label>Type</label>
                 <select class="sel" id="ar-type" style="width:100%;"><option>GST</option><option>Income Tax</option></select>
@@ -4235,9 +4246,13 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
                 <select class="sel" id="ar-mode" style="width:100%;"><option>Online</option><option>Offline</option></select>
               </div>
               <div class="vf-field"><label>Assessment Submission Date</label><input type="date" id="ar-date"></div>
-              <div class="vf-field"><label>Notes (optional)</label><input type="text" id="ar-notes"></div>
+              <div class="vf-field" style="grid-column:span 2;"><label>Notes (optional)</label><input type="text" id="ar-notes"></div>
             </div>
-            <button class="btn btn-p" style="margin-top:6px;" onclick="saveAssessmentReminder()" id="ar-save-btn"><i class="ti ti-plus"></i> Add Reminder</button>
+            <div style="display:flex;gap:8px;margin-top:6px;align-items:center;">
+              <button class="btn btn-p" onclick="saveAssessmentReminder()" id="ar-save-btn"><i class="ti ti-plus"></i> Add Reminder</button>
+              <button class="btn btn-o" onclick="cancelArEdit()" id="ar-cancel-btn" style="display:none;">Cancel</button>
+              <span id="ar-edit-tag" style="display:none;font-size:11px;color:var(--muted);"><i class="ti ti-pencil"></i> Editing existing reminder</span>
+            </div>
           </div>
           <div class="bar">
             <div class="sbox"><i class="ti ti-search"></i><input type="text" id="ar-search" placeholder="Search client…" oninput="renderAssessmentReminders()"></div>
@@ -4248,8 +4263,8 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
           </div>
           <div class="card">
             <table>
-              <thead><tr><th>Client</th><th>Type</th><th>Year</th><th>Submission Date</th><th>Mode</th><th>Status</th><th>Actions</th></tr></thead>
-              <tbody id="ar-body"><tr><td colspan="7"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr></tbody>
+              <thead><tr><th>Client</th><th>Type</th><th>Year</th><th>Submission Date</th><th>Mode</th><th>Assigned To</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="ar-body"><tr><td colspan="8"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr></tbody>
             </table>
           </div>
         </div>
@@ -4525,6 +4540,18 @@ function dbDateVal(d){ if(!d) return Infinity; var t=new Date(d).getTime(); retu
 function dbIsPastDue(d){ if(!d) return false; var dt=new Date(d); if(isNaN(dt.getTime())) return false; return dt < new Date(new Date().toDateString()); }
 function dbIsSoon(d){ if(!d) return false; var dt=new Date(d); if(isNaN(dt.getTime())) return false; var days=(dt-new Date(new Date().toDateString()))/86400000; return days>=0&&days<=7; }
 function dbFmtDate(d){ if(!d) return '-'; var dt=new Date(d); if(isNaN(dt.getTime())) return '-'; return dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}); }
+// Converts whatever a sheet-backed date value comes back as (ISO datetime
+// string, plain "YYYY-MM-DD" string, Date) into the exact "YYYY-MM-DD" a
+// <input type="date"> requires, using LOCAL calendar fields (not a UTC
+// slice) so a date that round-tripped through Sheets/Apps Script's JSON
+// serialization doesn't shift a day off in edit forms.
+function toDateInputVal(d){
+  if(!d) return '';
+  var dt=new Date(d);
+  if(isNaN(dt.getTime())) return String(d).slice(0,10);
+  var y=dt.getFullYear(), m=('0'+(dt.getMonth()+1)).slice(-2), day=('0'+dt.getDate()).slice(-2);
+  return y+'-'+m+'-'+day;
+}
 
 function loadDashboardTab(forceRefresh){
   getAllShared(function(d){
@@ -4558,7 +4585,7 @@ function renderDashboardAssessments(){
     var shown=pending.slice(0,6);
     var typeColor=function(t){ return t==='GST' ? {bg:'#eff6ff',fg:'#2563eb'} : {bg:'#f5f3ff',fg:'#7c3aed'}; };
     var modeColor=function(m){ return (m||'').toLowerCase()==='online' ? {bg:'#ecfdf5',fg:'#059669'} : {bg:'#f9fafb',fg:'#6b7280'}; };
-    el.innerHTML='<div class="card" style="border-left:4px solid #dc2626;">'
+    el.innerHTML='<div class="card" style="border-left:4px solid #dc2626;padding:18px;">'
       +'<div class="db-ctit"><i class="ti ti-alert-triangle" style="color:#dc2626;"></i> Assessment Reminders <span class="db-ctit-sub">GST / Income Tax submission dates</span></div>'
       +shown.map(function(r){
         var cls=dbIsPastDue(r.submission_date)?'od':(dbIsSoon(r.submission_date)?'soon':'ok');
@@ -5241,7 +5268,7 @@ function resolveArClient(){
 }
 function loadAssessmentReminders(forceRefresh){
   var body=document.getElementById('ar-body');
-  if(body) body.innerHTML='<tr><td colspan="7"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
+  if(body) body.innerHTML='<tr><td colspan="8"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
   api('listAssessmentReminders',{},function(d){
     if(!d.ok){ toast(d.error||'Failed to load','err'); return; }
     AR_ROWS=d.rows||[];
@@ -5259,7 +5286,7 @@ function renderAssessmentReminders(){
     return true;
   });
   list.sort(function(a,b){ return dbDateVal(a.submission_date)-dbDateVal(b.submission_date); });
-  if(!list.length){ body.innerHTML='<tr><td colspan="7"><div class="empty"><i class="ti ti-alert-triangle"></i>No assessment reminders yet</div></td></tr>'; return; }
+  if(!list.length){ body.innerHTML='<tr><td colspan="8"><div class="empty"><i class="ti ti-alert-triangle"></i>No assessment reminders yet</div></td></tr>'; return; }
   body.innerHTML=list.map(function(r){
     var done=r.status==='done';
     var cls=done?'background:#f1f5f9;color:#475569':(dbIsPastDue(r.submission_date)?'background:#fef2f2;color:#dc2626':(dbIsSoon(r.submission_date)?'background:#fef3c7;color:#b45309':'background:#eff6ff;color:#2563a8'));
@@ -5269,8 +5296,10 @@ function renderAssessmentReminders(){
       +'<td>'+esc(r.year||'—')+'</td>'
       +'<td><span class="badge" style="'+cls+'">'+dbFmtDate(r.submission_date)+'</span></td>'
       +'<td>'+esc(r.submission_mode||'—')+'</td>'
+      +'<td>'+(r.assigned_to?esc(r.assigned_to):'<span style="color:var(--muted);font-size:12px;">Unassigned</span>')+'</td>'
       +'<td>'+(done?'<span class="badge" style="background:#dcfce7;color:#16a34a">Submitted</span>':'<span class="badge" style="background:#fef2f2;color:#dc2626">Pending</span>')+'</td>'
       +'<td>'
+        +'<button class="btn btn-o btn-sm" style="padding:4px 9px;font-size:11px;margin-right:4px;" onclick="editAssessmentReminder(\''+r.id+'\')"><i class="ti ti-pencil"></i></button>'
         +'<button class="btn '+(done?'btn-o':'btn-p')+' btn-sm" style="padding:4px 9px;font-size:11px;margin-right:4px;" onclick="toggleAssessmentReminder(\''+r.id+'\')">'+(done?'Mark Pending':'Mark Submitted')+'</button>'
         +'<button class="btn btn-o btn-sm" style="padding:4px 9px;font-size:11px;" onclick="delAssessmentReminder(\''+r.id+'\')"><i class="ti ti-trash"></i></button>'
       +'</td>'
@@ -5282,27 +5311,59 @@ function saveAssessmentReminder(){
   if(!c){ toast('Pick a valid client from the list','err'); return; }
   var date=document.getElementById('ar-date').value;
   if(!date){ toast('Pick a submission date','err'); return; }
+  var idVal=document.getElementById('ar-id').value.trim();
+  var isEdit=!!idVal;
   var payload={
     client_id:c.id, client_name:c.name,
     type:document.getElementById('ar-type').value,
     year:document.getElementById('ar-year').value.trim(),
     submission_mode:document.getElementById('ar-mode').value,
     submission_date:date,
+    assigned_to:document.getElementById('ar-assigned').value,
     notes:document.getElementById('ar-notes').value.trim(),
     created_by:(SHELL_USER&&SHELL_USER.name)||''
   };
+  if(isEdit) payload.id=idVal;
   var btn=document.getElementById('ar-save-btn'); btn.disabled=true;
   api('saveAssessmentReminder',payload,function(d){
     btn.disabled=false;
     if(!d.ok){ toast(d.error||'Failed to save','err'); return; }
-    toast('Assessment reminder added ✓','ok');
-    document.getElementById('ar-client').value='';
-    document.getElementById('ar-year').value='';
-    document.getElementById('ar-date').value='';
-    document.getElementById('ar-notes').value='';
+    toast(isEdit?'Assessment reminder updated ✓':'Assessment reminder added ✓','ok');
+    cancelArEdit();
     loadAssessmentReminders(true);
     GETALL_CACHE=null; // dashboard's assessment widget reads this same list fresh via its own call, no cache to bust there, but keep client cache in sync
   });
+}
+// Populates the form above from an existing row so it can be edited in place —
+// saveAssessmentReminder() upserts by id (same pattern as saveTask/savePD), so
+// once ar-id is populated the next save updates this row instead of creating
+// a new one.
+function editAssessmentReminder(id){
+  var row=AR_ROWS.find(function(r){ return r.id===id; });
+  if(!row) return;
+  document.getElementById('ar-id').value=row.id;
+  document.getElementById('ar-client').value=row.client_name||'';
+  document.getElementById('ar-assigned').value=row.assigned_to||'';
+  document.getElementById('ar-year').value=row.year||'';
+  document.getElementById('ar-type').value=row.type||'GST';
+  document.getElementById('ar-mode').value=row.submission_mode||'Online';
+  document.getElementById('ar-date').value=toDateInputVal(row.submission_date);
+  document.getElementById('ar-notes').value=row.notes||'';
+  document.getElementById('ar-save-btn').innerHTML='<i class="ti ti-device-floppy"></i> Update Reminder';
+  document.getElementById('ar-cancel-btn').style.display='inline-flex';
+  document.getElementById('ar-edit-tag').style.display='inline-flex';
+  document.getElementById('ar-id').scrollIntoView({behavior:'smooth',block:'center'});
+}
+function cancelArEdit(){
+  document.getElementById('ar-id').value='';
+  document.getElementById('ar-client').value='';
+  document.getElementById('ar-assigned').value='';
+  document.getElementById('ar-year').value='';
+  document.getElementById('ar-date').value='';
+  document.getElementById('ar-notes').value='';
+  document.getElementById('ar-save-btn').innerHTML='<i class="ti ti-plus"></i> Add Reminder';
+  document.getElementById('ar-cancel-btn').style.display='none';
+  document.getElementById('ar-edit-tag').style.display='none';
 }
 function toggleAssessmentReminder(id){
   api('toggleAssessmentReminder',{id:id},function(d){
