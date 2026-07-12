@@ -276,6 +276,7 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
       <div class="sb-nav">
         <div class="sb-item active" data-tab="dashboard" onclick="switchTab('dashboard')"><i class="ti ti-layout-dashboard"></i><span class="sb-label">Dashboard</span></div>
         <div class="sb-item" data-tab="workspace" onclick="switchTab('workspace')"><i class="ti ti-file-pencil"></i><span class="sb-label">Work Desk</span></div>
+        <div class="sb-item" data-tab="assessment" onclick="switchTab('assessment')"><i class="ti ti-alert-triangle"></i><span class="sb-label">Assessment Reminders</span></div>
         <div class="sb-group-label">Clients</div>
         <div class="sb-item" data-tab="clients" onclick="switchTab('clients')"><i class="ti ti-users"></i><span class="sb-label">Clients</span></div>
         <div class="sb-item" data-tab="credentials" onclick="switchTab('credentials')"><i class="ti ti-key"></i><span class="sb-label">Credentials</span></div>
@@ -3201,7 +3202,6 @@ function numWords(n){
         <div class="inner-tabs">
           <div class="inner-tab active" data-itab="duedates" onclick="switchInnerTab('duedates')"><i class="ti ti-calendar-due"></i> Clients &amp; Due Dates</div>
           <div class="inner-tab" data-itab="taxaudit" onclick="switchInnerTab('taxaudit')"><i class="ti ti-stamp"></i> Tax Audit</div>
-          <div class="inner-tab" data-itab="assessment" onclick="switchInnerTab('assessment')"><i class="ti ti-alert-triangle"></i> Assessment Reminders</div>
           <div class="inner-tab" data-itab="builder" onclick="switchInnerTab('builder')"><i class="ti ti-file-plus"></i> Create Set</div>
           <div class="inner-tab" data-itab="history" onclick="switchInnerTab('history')"><i class="ti ti-list"></i> View Records</div>
         </div>
@@ -3255,45 +3255,6 @@ function numWords(n){
                 <table>
                   <thead><tr><th>Client</th><th>Due Date</th><th>Status</th><th>Action</th></tr></thead>
                   <tbody id="ta-body"><tr><td colspan="4"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr></tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          <div class="inner-panel" id="ipanel-assessment">
-            <div class="native-wrap">
-              <h2 class="sectitle"><i class="ti ti-alert-triangle"></i> Assessment Reminders</h2>
-              <div style="font-size:12px;color:var(--muted);margin:-8px 0 14px;">One-off GST / Income Tax department assessment or scrutiny submission dates — added manually per case, not auto-generated like routine compliance.</div>
-              <div class="card" style="padding:18px;max-width:720px;margin-bottom:16px;">
-                <input type="hidden" id="ar-id">
-                <div class="fg" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                  <div class="vf-field"><label>Client</label>
-                    <input type="text" id="ar-client" list="ar-client-list" placeholder="Type to search a client…" autocomplete="off">
-                    <datalist id="ar-client-list"></datalist>
-                  </div>
-                  <div class="vf-field"><label>Year</label><input type="text" id="ar-year" placeholder="e.g. 2023-24"></div>
-                  <div class="vf-field"><label>Type</label>
-                    <select class="sel" id="ar-type" style="width:100%;"><option>GST</option><option>Income Tax</option></select>
-                  </div>
-                  <div class="vf-field"><label>Submission Mode</label>
-                    <select class="sel" id="ar-mode" style="width:100%;"><option>Online</option><option>Offline</option></select>
-                  </div>
-                  <div class="vf-field"><label>Assessment Submission Date</label><input type="date" id="ar-date"></div>
-                  <div class="vf-field"><label>Notes (optional)</label><input type="text" id="ar-notes"></div>
-                </div>
-                <button class="btn btn-p" style="margin-top:6px;" onclick="saveAssessmentReminder()" id="ar-save-btn"><i class="ti ti-plus"></i> Add Reminder</button>
-              </div>
-              <div class="bar">
-                <div class="sbox"><i class="ti ti-search"></i><input type="text" id="ar-search" placeholder="Search client…" oninput="renderAssessmentReminders()"></div>
-                <select class="sel" id="ar-filter">
-                  <option value="">All statuses</option><option value="pending">Pending only</option><option value="done">Submitted only</option>
-                </select>
-                <button class="btn btn-o" onclick="loadAssessmentReminders(true)"><i class="ti ti-refresh"></i> Refresh</button>
-              </div>
-              <div class="card">
-                <table>
-                  <thead><tr><th>Client</th><th>Type</th><th>Year</th><th>Submission Date</th><th>Mode</th><th>Status</th><th>Actions</th></tr></thead>
-                  <tbody id="ar-body"><tr><td colspan="7"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr></tbody>
                 </table>
               </div>
             </div>
@@ -4255,6 +4216,45 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
         </div>
       </div>
 
+      <div class="shell-panel" id="panel-assessment">
+        <div class="native-wrap">
+          <h2 class="sectitle"><i class="ti ti-alert-triangle"></i> Assessment Reminders</h2>
+          <div style="font-size:12px;color:var(--muted);margin:-8px 0 14px;">One-off GST / Income Tax department assessment or scrutiny submission dates — added manually per case, not auto-generated like routine compliance.</div>
+          <div class="card" style="padding:18px;max-width:720px;margin-bottom:16px;">
+            <input type="hidden" id="ar-id">
+            <div class="fg" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div class="vf-field"><label>Client</label>
+                <input type="text" id="ar-client" list="ar-client-list" placeholder="Type to search a client…" autocomplete="off">
+                <datalist id="ar-client-list"></datalist>
+              </div>
+              <div class="vf-field"><label>Year</label><input type="text" id="ar-year" placeholder="e.g. 2023-24"></div>
+              <div class="vf-field"><label>Type</label>
+                <select class="sel" id="ar-type" style="width:100%;"><option>GST</option><option>Income Tax</option></select>
+              </div>
+              <div class="vf-field"><label>Submission Mode</label>
+                <select class="sel" id="ar-mode" style="width:100%;"><option>Online</option><option>Offline</option></select>
+              </div>
+              <div class="vf-field"><label>Assessment Submission Date</label><input type="date" id="ar-date"></div>
+              <div class="vf-field"><label>Notes (optional)</label><input type="text" id="ar-notes"></div>
+            </div>
+            <button class="btn btn-p" style="margin-top:6px;" onclick="saveAssessmentReminder()" id="ar-save-btn"><i class="ti ti-plus"></i> Add Reminder</button>
+          </div>
+          <div class="bar">
+            <div class="sbox"><i class="ti ti-search"></i><input type="text" id="ar-search" placeholder="Search client…" oninput="renderAssessmentReminders()"></div>
+            <select class="sel" id="ar-filter">
+              <option value="">All statuses</option><option value="pending">Pending only</option><option value="done">Submitted only</option>
+            </select>
+            <button class="btn btn-o" onclick="loadAssessmentReminders(true)"><i class="ti ti-refresh"></i> Refresh</button>
+          </div>
+          <div class="card">
+            <table>
+              <thead><tr><th>Client</th><th>Type</th><th>Year</th><th>Submission Date</th><th>Mode</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="ar-body"><tr><td colspan="7"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -4447,8 +4447,8 @@ function switchTab(name){
     if(active==='history') loadItrHistory();
     if(active==='duedates') loadItrDueDates();
     if(active==='taxaudit') loadTaxAudit();
-    if(active==='assessment'){ loadClientsForVault(); populateArClientList(); loadAssessmentReminders(); }
   }
+  if(name==='assessment'){ loadClientsForVault(); populateArClientList(); loadAssessmentReminders(); }
   if(name==='vault') loadClientsForVault();
   if(name==='clients') loadClientsTab();
   if(name==='duedates') loadDueDatesTab();
@@ -4489,7 +4489,6 @@ function switchInnerTab(name){
   if(name==='history') loadItrHistory();
   if(name==='duedates') loadItrDueDates();
   if(name==='taxaudit') loadTaxAudit();
-  if(name==='assessment'){ loadClientsForVault(); populateArClientList(); loadAssessmentReminders(); }
 }
 
 function toast(msg,type){
@@ -4557,7 +4556,7 @@ function renderDashboardAssessments(){
     if(!pending.length){ el.style.display='none'; el.innerHTML=''; return; }
     el.style.display='block';
     el.innerHTML='<div class="card" style="border-left:4px solid #dc2626;">'
-      +'<div class="db-ctit"><i class="ti ti-alert-triangle" style="color:#dc2626;"></i> Assessment Reminders <span class="db-ctit-sub">GST / Income Tax submission dates — see Audit &amp; ITR Tracking &gt; Assessment Reminders</span></div>'
+      +'<div class="db-ctit"><i class="ti ti-alert-triangle" style="color:#dc2626;"></i> Assessment Reminders <span class="db-ctit-sub">GST / Income Tax submission dates — see the Assessment Reminders tab for the full list</span></div>'
       +pending.slice(0,6).map(function(r){
         var cls=dbIsPastDue(r.submission_date)?'od':(dbIsSoon(r.submission_date)?'soon':'ok');
         return '<div class="db-row"><div class="db-dot '+cls+'"></div>'
