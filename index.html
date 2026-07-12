@@ -4169,8 +4169,8 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
 
       <div class="shell-panel" id="panel-workspace">
         <div class="inner-tabs">
-          <div class="inner-tab active" data-wstab="create" onclick="switchWsTab('create')"><i class="ti ti-file-pencil"></i> Create / Open</div>
-          <div class="inner-tab" data-wstab="records" onclick="switchWsTab('records')"><i class="ti ti-list"></i> All Documents</div>
+          <div class="inner-tab active" data-wstab="create" onclick="switchWsTab('create')"><i class="ti ti-file-pencil"></i> New &amp; Templates</div>
+          <div class="inner-tab" data-wstab="records" onclick="switchWsTab('records')"><i class="ti ti-list"></i> Work on Existing</div>
         </div>
         <div class="inner-panels">
 
@@ -4197,6 +4197,12 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
                 </div>
               </div>
 
+              <div class="card" style="padding:18px;max-width:640px;margin-top:16px;">
+                <div class="set-title" style="margin-bottom:12px;"><i class="ti ti-file-plus"></i> Generate from Template</div>
+                <div style="font-size:12px;color:var(--muted);margin:-6px 0 14px;">Pick a client above, then use a template below to start from a ready-made document instead of a blank one. Anyone can save their own documents as personal templates from the "Work on Existing" tab — Admin-saved ones are shared with everyone.</div>
+                <div id="ws-templates"><div style="color:var(--muted);font-size:12px;">Loading templates…</div></div>
+              </div>
+
               <div id="ws-frame-wrap" style="display:none;position:fixed;inset:0;background:#fff;z-index:700;flex-direction:column;">
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-bottom:1px solid var(--border);flex-shrink:0;">
                   <div style="font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;"><i class="ti ti-file-pencil"></i><span id="ws-frame-title"></span></div>
@@ -4213,7 +4219,7 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
           <!-- ===== Records sub-tab ===== -->
           <div class="inner-panel" id="wspanel-records">
             <div class="native-wrap">
-              <h2 class="sectitle"><i class="ti ti-list"></i> All Work Desk Documents</h2>
+              <h2 class="sectitle"><i class="ti ti-list"></i> Work on Existing</h2>
               <div class="bar">
                 <div class="sbox"><i class="ti ti-search"></i><input type="text" id="ws-search" placeholder="Search client or document name…" oninput="renderWorkspaceRecords()"></div>
                 <select class="sel" id="ws-filter-type" onchange="renderWorkspaceRecords()">
@@ -4487,6 +4493,7 @@ function switchTab(name){
   if(name==='workspace'){
     loadClientsForVault();
     populateWsClientList();
+    loadWsTemplates();
     var wsActive=document.querySelector('#panel-workspace .inner-tab.active');
     if(wsActive && wsActive.dataset.wstab==='records') renderWorkspaceRecords();
   }
@@ -5666,7 +5673,8 @@ function renderWorkspaceRecords(forceRefresh){
         +'<td>'+dbFmtDate(r.created_at)+'</td>'
         +'<td>'
           +'<button class="btn btn-o btn-sm" style="padding:4px 9px;font-size:11px;margin-right:4px;" onclick="switchWsTab(\'create\');openWsDoc(\''+esc(r.url)+'\',\''+esc(r.name)+'\')">Open</button>'
-          +'<a href="'+esc(r.url)+'" target="_blank" class="btn btn-o btn-sm" style="padding:4px 9px;font-size:11px;"><i class="ti ti-external-link"></i></a>'
+          +'<a href="'+esc(r.url)+'" target="_blank" class="btn btn-o btn-sm" style="padding:4px 9px;font-size:11px;margin-right:4px;"><i class="ti ti-external-link"></i></a>'
+          +'<button class="btn btn-o btn-sm" style="padding:4px 9px;font-size:11px;" title="Save a copy of this as a reusable template" onclick="saveAsTemplate(\''+esc(r.fileId)+'\',\''+esc(r.name)+'\',\''+r.type+'\')"><i class="ti ti-copy"></i> Save as Template</button>'
         +'</td>'
       +'</tr>';
     }).join('');
@@ -5677,6 +5685,87 @@ function renderWorkspaceRecords(forceRefresh){
     if(!d.ok){ toast(d.error||'Failed to load','err'); return; }
     WS_RECORDS_CACHE=d.rows||[];
     doRender(WS_RECORDS_CACHE);
+  });
+}
+
+/* ===================================================================
+   WORK DESK TEMPLATES — plain-copy reusable starting points. "Shared
+   Templates" is the admin-curated library everyone sees; "My Templates" is
+   personal to whoever created it. Both come back from one listWorkDeskTemplates
+   call, already filtered server-side to what this user is allowed to see.
+=================================================================== */
+var WS_TEMPLATES_CACHE=null;
+function loadWsTemplates(forceRefresh){
+  var el=document.getElementById('ws-templates'); if(!el) return;
+  function isShared(r){ return r.is_shared===true || String(r.is_shared).toUpperCase()==='TRUE'; }
+  function doRender(rows){
+    var mine=(SHELL_USER&&SHELL_USER.name)||'';
+    var isAdmin=(SHELL_USER&&SHELL_USER.role==='admin');
+    var shared=rows.filter(isShared);
+    var personal=rows.filter(function(r){ return !isShared(r) && r.created_by===mine; });
+    function rowHtml(r, canDelete){
+      return '<div class="dbal-row"><span><i class="ti '+(r.type==='sheet'?'ti-table':'ti-file-text')+'" style="color:var(--muted);margin-right:6px;"></i>'+esc(r.name)+'</span>'
+        +'<span style="display:flex;gap:4px;">'
+          +'<button class="btn btn-p btn-sm" style="padding:3px 8px;font-size:11px;" onclick="useWsTemplate(\''+r.id+'\')">Use</button>'
+          +(canDelete?'<button class="btn btn-o btn-sm" style="padding:3px 8px;font-size:11px;" onclick="deleteWsTemplate(\''+r.id+'\')"><i class="ti ti-trash"></i></button>':'')
+        +'</span></div>';
+    }
+    var html='<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;">Shared Templates</div>';
+    html += shared.length ? shared.map(function(r){ return rowHtml(r, isAdmin); }).join('') : '<div style="color:var(--muted);font-size:12px;margin-bottom:10px;">No shared templates yet</div>';
+    html += '<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:12px 0 6px;">My Templates</div>';
+    html += personal.length ? personal.map(function(r){ return rowHtml(r, true); }).join('') : '<div style="color:var(--muted);font-size:12px;">No personal templates yet</div>';
+    el.innerHTML=html;
+  }
+  if(WS_TEMPLATES_CACHE && !forceRefresh){ doRender(WS_TEMPLATES_CACHE); return; }
+  el.innerHTML='<div style="color:var(--muted);font-size:12px;">Loading templates…</div>';
+  api('listWorkDeskTemplates',{user:(SHELL_USER&&SHELL_USER.name)||''},function(d){
+    if(!d.ok) return;
+    WS_TEMPLATES_CACHE=d.rows||[];
+    doRender(WS_TEMPLATES_CACHE);
+  });
+}
+// Called from the "Work on Existing" table — copies that document's Drive
+// file into the templates folder and records it, shared if the current user
+// is Admin, personal-only otherwise.
+function saveAsTemplate(fileId, suggestedName, type){
+  if(!fileId){ toast('Missing source file','err'); return; }
+  var name=prompt('Name this template:', suggestedName||'');
+  if(!name || !name.trim()) return;
+  api('saveWorkDeskTemplate',{
+    source_file_id:fileId, name:name.trim(), type:type,
+    is_shared:!!(SHELL_USER&&SHELL_USER.role==='admin'),
+    created_by:(SHELL_USER&&SHELL_USER.name)||''
+  },function(d){
+    if(!d.ok){ toast(d.error||'Failed to save template','err'); return; }
+    toast('Saved as template ✓','ok');
+    WS_TEMPLATES_CACHE=null;
+    loadWsTemplates(true);
+  });
+}
+// Copies the chosen template into the currently-picked client's folder under
+// a new name, then opens it exactly like a freshly created document.
+function useWsTemplate(templateId){
+  if(!WS_CURRENT_CLIENT){ toast('Pick a client above first','err'); return; }
+  var name=prompt('Name this document:','');
+  if(!name || !name.trim()) return;
+  api('createWsDocFromTemplate',{
+    template_id:templateId, client_id:WS_CURRENT_CLIENT.id, name:name.trim(),
+    created_by:(SHELL_USER&&SHELL_USER.name)||''
+  },function(d){
+    if(!d.ok){ toast(d.error||'Failed to create from template','err'); return; }
+    toast('Document created from template ✓','ok');
+    renderWsClientRecent(WS_CURRENT_CLIENT.id);
+    WS_RECORDS_CACHE=null;
+    openWsDoc(d.data.url, d.data.name);
+  });
+}
+function deleteWsTemplate(id){
+  if(!confirm('Delete this template? This cannot be undone.')) return;
+  api('deleteWorkDeskTemplate',{id:id},function(d){
+    if(!d.ok){ toast(d.error||'Failed to delete','err'); return; }
+    toast('Template deleted','ok');
+    WS_TEMPLATES_CACHE=null;
+    loadWsTemplates(true);
   });
 }
 
