@@ -277,6 +277,7 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
         <div class="sb-item active" data-tab="dashboard" onclick="switchTab('dashboard')"><i class="ti ti-layout-dashboard"></i><span class="sb-label">Dashboard</span></div>
         <div class="sb-group-label">Clients</div>
         <div class="sb-item" data-tab="clients" onclick="switchTab('clients')"><i class="ti ti-users"></i><span class="sb-label">Clients</span></div>
+        <div class="sb-item" data-tab="credentials" onclick="switchTab('credentials')"><i class="ti ti-key"></i><span class="sb-label">Credentials</span></div>
         <div class="sb-group-label">Work</div>
         <div class="sb-item" data-tab="pm" onclick="switchTab('pm')"><i class="ti ti-checklist"></i><span class="sb-label">Task Manager</span></div>
         <div class="sb-group-label">Finance</div>
@@ -287,6 +288,7 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
         <div class="sb-item" data-tab="taxaudit" onclick="switchTab('taxaudit')"><i class="ti ti-stamp"></i><span class="sb-label">Tax Audit</span></div>
         <div class="sb-group-label">Documents</div>
         <div class="sb-item" data-tab="vault" onclick="switchTab('vault')"><i class="ti ti-folder"></i><span class="sb-label">Documents Vault</span></div>
+        <div class="sb-item" data-tab="workspace" onclick="switchTab('workspace')"><i class="ti ti-file-pencil"></i><span class="sb-label">Workspace</span></div>
       </div>
       <div class="sb-user">
         <div class="sb-av" id="sbAv">--</div>
@@ -1988,6 +1990,10 @@ function openClientDrawer(id){
       +'</div></div>'
     +'<div class="dsec"><div class="dsec-title">Compliance Status <span class="db-ctit-sub">this period</span></div>'
       +'<div id="cd-compliance"><div style="color:var(--muted);font-size:12px;">Loading…</div></div></div>'
+    +'<div class="dsec"><div class="dsec-title">Portal Credentials <button class="btn btn-o btn-sm" style="padding:2px 8px;font-size:11px;" onclick="openCredentialsFor(\''+c.id+'\',\''+esc(c.name)+'\')"><i class="ti ti-edit"></i> Edit</button></div>'
+      +'<div id="cd-credentials"><div style="color:var(--muted);font-size:12px;">Loading…</div></div></div>'
+    +'<div class="dsec"><div class="dsec-title">Workspace Documents <button class="btn btn-o btn-sm" style="padding:2px 8px;font-size:11px;" onclick="openWorkspaceFor(\''+c.id+'\',\''+esc(c.name)+'\')"><i class="ti ti-plus"></i> New</button></div>'
+      +'<div id="cd-workspace"><div style="color:var(--muted);font-size:12px;">Loading…</div></div></div>'
     +'<div class="dsec"><div class="dsec-title">ITR Filing History</div><div id="cd-itr-history"><div style="color:var(--muted);font-size:12px;">Loading…</div></div></div>'
     +'<div class="dsec"><div class="dsec-title">Documents</div>'
       +'<div id="cd-documents"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>'
@@ -2021,6 +2027,8 @@ function openClientDrawer(id){
   cdRenderTasks(c.id);
   cdRenderPending(c.id);
   cdRenderCompliance(c);
+  cdRenderCredentials(c.id);
+  cdRenderWorkspace(c.id);
 
   // NOTE: these open modals that live inside #billing-app / panel-billing,
   // which is display:none unless the Billing tab is the active one — that's
@@ -2212,6 +2220,50 @@ function cdRenderCompliance(c){
 function cdToggleDD(id, clientId){ ddToggle(id, function(){ cdRenderCompliance({id:clientId}); }); }
 function cdToggleITR(id, clientId){ itrToggleFiled(id, function(){ cdRenderCompliance({id:clientId}); }); }
 function cdToggleTA(id, clientId){ taToggle(id, function(){ cdRenderCompliance({id:clientId}); }); }
+
+// GST / Income Tax / TDS logins + DSC expiry, read-only here — editing
+// happens on the dedicated Credentials page (via the "Edit" button above),
+// same single-source-of-truth pattern as the compliance mark-filed buttons
+// deferring to their own tabs. Passwords are masked by default; click to reveal.
+function cdRenderCredentials(clientId){
+  api({action:'getClientCredentials', client_id:clientId},function(d){
+    var el=document.getElementById('cd-credentials'); if(!el) return;
+    var c=(d&&d.data)||null;
+    if(!c){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">No credentials saved yet</div>'; return; }
+    function row(label, user, pass){
+      if(!user && !pass) return '';
+      return '<div class="dbal-row"><span>'+esc(label)+'</span>'
+        +'<span style="display:flex;align-items:center;gap:6px;font-size:12px;">'
+          +(user?esc(user):'<span style="color:var(--muted);">—</span>')
+          +(pass?(' &middot; <span class="cd-pw-mask" data-pw="'+esc(pass)+'" onclick="Billing.cdTogglePw(this)" style="cursor:pointer;color:var(--accent);" title="Click to reveal">••••••</span>'):'')
+        +'</span></div>';
+    }
+    var html = row('GST', c.gst_username, c.gst_password) + row('Income Tax', c.it_username, c.it_password) + row('TDS', c.tds_username, c.tds_password);
+    if(c.dsc_expiry){
+      var style=dbIsPastDue(c.dsc_expiry)?'background:#fef2f2;color:#dc2626':(dbIsSoon(c.dsc_expiry)?'background:#fef3c7;color:#b45309':'background:#f1f5f9;color:#475569');
+      html+='<div class="dbal-row"><span>DSC Expiry</span><span class="badge" style="'+style+'">'+dbFmtDate(c.dsc_expiry)+'</span></div>';
+    }
+    el.innerHTML = html || '<div style="color:var(--muted);font-size:12px;">No credentials saved yet</div>';
+  });
+}
+function cdTogglePw(el){
+  if(el.dataset.revealed==='1'){ el.textContent='••••••'; el.dataset.revealed=''; }
+  else { el.textContent=el.dataset.pw||''; el.dataset.revealed='1'; }
+}
+// Free-form Workspace docs/sheets for this client — opens in the same
+// Workspace tab (via switchTab + openWsDoc), consistent with how Compliance
+// items defer to their own tabs and Credentials defers to its own page.
+function cdRenderWorkspace(clientId){
+  api({action:'listClientDocs', client_id:clientId},function(d){
+    var el=document.getElementById('cd-workspace'); if(!el) return;
+    var rows=((d&&d.rows)||[]).slice().sort(function(a,b){ return new Date(b.created_at)-new Date(a.created_at); });
+    if(!rows.length){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">No documents yet — click New to create one</div>'; return; }
+    el.innerHTML=rows.map(function(r){
+      return '<div class="dbal-row"><span><i class="ti '+(r.type==='sheet'?'ti-table':'ti-file-text')+'" style="color:var(--muted);margin-right:6px;"></i>'+esc(r.name)+'</span>'
+        +'<button class="btn btn-o btn-sm" style="padding:3px 8px;font-size:11px;" onclick="switchTab(\'workspace\');openWsDoc(\''+esc(r.url)+'\',\''+esc(r.name)+'\')">Open</button></div>';
+    }).join('');
+  });
+}
 
 function updSum(clients){
   FIRMS.forEach(function(f){
@@ -3092,6 +3144,7 @@ function numWords(n){
     cdToggleDD:cdToggleDD,
     cdToggleITR:cdToggleITR,
     cdToggleTA:cdToggleTA,
+    cdTogglePw:cdTogglePw,
     cdUploadDocument:cdUploadDocument,
     clearCache:clearCache,
     closeM:closeM,
@@ -4038,6 +4091,127 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
         </div>
       </div>
 
+      <div class="shell-panel" id="panel-credentials">
+        <div class="inner-tabs">
+          <div class="inner-tab active" data-credtab="edit" onclick="switchCredTab('edit')"><i class="ti ti-key"></i> Add / Edit</div>
+          <div class="inner-tab" data-credtab="records" onclick="switchCredTab('records')"><i class="ti ti-list"></i> Records</div>
+        </div>
+        <div class="inner-panels">
+
+          <!-- ===== Add/Edit sub-tab ===== -->
+          <div class="inner-panel active" id="cpanel-edit">
+            <div class="native-wrap">
+              <h2 class="sectitle"><i class="ti ti-key"></i> Client Credentials</h2>
+              <div class="card" style="padding:18px;max-width:560px;">
+                <div class="vf-field">
+                  <label>Client</label>
+                  <input type="text" id="cred-client" list="cred-client-list" placeholder="Type to search a client…" oninput="onCredClientPick()" autocomplete="off">
+                  <datalist id="cred-client-list"></datalist>
+                </div>
+                <div id="cred-form" style="display:none;">
+                  <div class="vf-field"><label>GST Username</label><input type="text" id="cred-gst-user"></div>
+                  <div class="vf-field"><label>GST Password</label><input type="text" id="cred-gst-pass" autocomplete="off"></div>
+                  <div class="vf-field"><label>Income Tax Username <span style="color:var(--muted);font-weight:400;">(usually the PAN)</span></label><input type="text" id="cred-it-user"></div>
+                  <div class="vf-field"><label>Income Tax Password</label><input type="text" id="cred-it-pass" autocomplete="off"></div>
+                  <div class="vf-field"><label>TDS (TRACES) Username <span style="color:var(--muted);font-weight:400;">(usually the TAN)</span></label><input type="text" id="cred-tds-user"></div>
+                  <div class="vf-field"><label>TDS (TRACES) Password</label><input type="text" id="cred-tds-pass" autocomplete="off"></div>
+                  <div class="vf-field"><label>DSC Expiry Date</label><input type="date" id="cred-dsc-expiry"></div>
+                  <div class="vf-field"><label>Notes</label><textarea id="cred-notes" rows="2" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;"></textarea></div>
+                  <button class="btn btn-p" style="width:100%;justify-content:center;" onclick="saveClientCredentialsForm()" id="cred-save-btn"><i class="ti ti-device-floppy"></i> Save</button>
+                </div>
+                <div id="cred-loading" style="display:none;color:var(--muted);font-size:13px;"><div class="sp"></div> Loading…</div>
+              </div>
+              <div style="font-size:11px;color:var(--muted);margin-top:10px;">Stored in your own Google Sheet — visible to anyone with edit access to it, so don't share that sheet loosely.</div>
+            </div>
+          </div>
+
+          <!-- ===== Records sub-tab ===== -->
+          <div class="inner-panel" id="cpanel-records">
+            <div class="native-wrap">
+              <h2 class="sectitle"><i class="ti ti-list"></i> Credentials on File</h2>
+              <div class="bar">
+                <div class="sbox"><i class="ti ti-search"></i><input type="text" id="cred-search" placeholder="Search client…" oninput="renderCredentialsRecords()"></div>
+                <button class="btn btn-o" onclick="renderCredentialsRecords(true)"><i class="ti ti-refresh"></i> Refresh</button>
+              </div>
+              <div class="card">
+                <table>
+                  <thead><tr><th>Client</th><th>GST User</th><th>Income Tax User</th><th>TDS User</th><th>DSC Expiry</th><th>Actions</th></tr></thead>
+                  <tbody id="cred-body"><tr><td colspan="6"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="shell-panel" id="panel-workspace">
+        <div class="inner-tabs">
+          <div class="inner-tab active" data-wstab="create" onclick="switchWsTab('create')"><i class="ti ti-file-pencil"></i> Create / Open</div>
+          <div class="inner-tab" data-wstab="records" onclick="switchWsTab('records')"><i class="ti ti-list"></i> All Documents</div>
+        </div>
+        <div class="inner-panels">
+
+          <!-- ===== Create/Open sub-tab ===== -->
+          <div class="inner-panel active" id="wspanel-create">
+            <div class="native-wrap">
+              <h2 class="sectitle"><i class="ti ti-file-pencil"></i> Workspace</h2>
+              <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Free-form Word documents and spreadsheets, per client — no fixed templates. Pick a client, name it, start typing. Saved straight to that client's Drive folder, and you can come back and reopen it anytime.</div>
+              <div class="card" style="padding:18px;max-width:640px;">
+                <div class="vf-field">
+                  <label>Client</label>
+                  <input type="text" id="ws-client" list="ws-client-list" placeholder="Type to search a client…" oninput="onWsClientPick()" autocomplete="off">
+                  <datalist id="ws-client-list"></datalist>
+                </div>
+                <div id="ws-new" style="display:none;">
+                  <div class="vf-field">
+                    <label>Document Name</label>
+                    <input type="text" id="ws-name" placeholder="e.g. GST Notice Reply - March 2026">
+                  </div>
+                  <div style="display:flex;gap:8px;margin-bottom:6px;">
+                    <button class="btn btn-p" style="flex:1;justify-content:center;" onclick="createWsDoc('doc')" id="ws-create-doc-btn"><i class="ti ti-file-text"></i> New Word Document</button>
+                    <button class="btn btn-p" style="flex:1;justify-content:center;" onclick="createWsDoc('sheet')" id="ws-create-sheet-btn"><i class="ti ti-table"></i> New Spreadsheet</button>
+                  </div>
+                  <div id="ws-client-recent" style="margin-top:14px;"></div>
+                </div>
+              </div>
+
+              <div id="ws-frame-wrap" style="display:none;margin-top:16px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                  <div style="font-size:13px;font-weight:600;" id="ws-frame-title"></div>
+                  <a id="ws-frame-newtab" href="#" target="_blank" style="font-size:12px;color:var(--accent);"><i class="ti ti-external-link"></i> Open in new tab</a>
+                </div>
+                <iframe id="ws-frame" style="width:100%;height:70vh;border:1px solid var(--border);border-radius:8px;" src="about:blank"></iframe>
+                <div style="font-size:11px;color:var(--muted);margin-top:6px;">If this doesn't load below (some networks block embedded Google editors), use "Open in new tab" — your document is saved either way.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ===== Records sub-tab ===== -->
+          <div class="inner-panel" id="wspanel-records">
+            <div class="native-wrap">
+              <h2 class="sectitle"><i class="ti ti-list"></i> All Workspace Documents</h2>
+              <div class="bar">
+                <div class="sbox"><i class="ti ti-search"></i><input type="text" id="ws-search" placeholder="Search client or document name…" oninput="renderWorkspaceRecords()"></div>
+                <select class="sel" id="ws-filter-type" onchange="renderWorkspaceRecords()">
+                  <option value="">All types</option>
+                  <option value="doc">Word Documents</option>
+                  <option value="sheet">Spreadsheets</option>
+                </select>
+                <button class="btn btn-o" onclick="renderWorkspaceRecords(true)"><i class="ti ti-refresh"></i> Refresh</button>
+              </div>
+              <div class="card">
+                <table>
+                  <thead><tr><th>Name</th><th>Type</th><th>Client</th><th>Created</th><th>Actions</th></tr></thead>
+                  <tbody id="ws-body"><tr><td colspan="5"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -4234,6 +4408,34 @@ function switchTab(name){
   if(name==='clients') loadClientsTab();
   if(name==='duedates') loadDueDatesTab();
   if(name==='taxaudit') loadTaxAudit();
+  if(name==='credentials'){
+    loadClientsForVault(); // reuses the Vault's lightweight {id,name} client list — same datalist pattern
+    populateCredClientList();
+    var active=document.querySelector('#panel-credentials .inner-tab.active');
+    if(active && active.dataset.credtab==='records') renderCredentialsRecords();
+  }
+  if(name==='workspace'){
+    loadClientsForVault();
+    populateWsClientList();
+    var wsActive=document.querySelector('#panel-workspace .inner-tab.active');
+    if(wsActive && wsActive.dataset.wstab==='records') renderWorkspaceRecords();
+  }
+}
+// Jumps to Workspace with one client preselected — used by the client
+// drawer's "+ New" button so you don't have to re-search the client.
+function openWorkspaceFor(clientId, clientName){
+  switchTab('workspace');
+  switchWsTab('create');
+  document.getElementById('ws-client').value = clientName;
+  onWsClientPick();
+}
+// Jumps straight to Credentials > Add/Edit for one client — used by the
+// client drawer's "Edit Credentials" button so you don't have to re-search.
+function openCredentialsFor(clientId, clientName){
+  switchTab('credentials');
+  switchCredTab('edit');
+  document.getElementById('cred-client').value = clientName;
+  loadClientCredentialsForm(clientId);
 }
 
 function switchInnerTab(name){
@@ -5020,6 +5222,205 @@ function resolveDocClient(){
   var typed = document.getElementById('dv-client').value.trim();
   var match = VAULT_CLIENTS.find(function(c){ return c.name.toLowerCase() === typed.toLowerCase(); });
   return match || null;
+}
+
+/* ===================================================================
+   CLIENT CREDENTIALS — GST / Income Tax / TDS portal logins + DSC expiry,
+   one row per client. Reuses VAULT_CLIENTS (the same lightweight {id,name}
+   list the Documents Vault's client picker uses) instead of fetching its
+   own — no reason to ask the backend for the same client list twice.
+=================================================================== */
+function switchCredTab(name){
+  document.querySelectorAll('#panel-credentials .inner-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.credtab===name); });
+  document.querySelectorAll('#panel-credentials .inner-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('cpanel-'+name).classList.add('active');
+  if(name==='records') renderCredentialsRecords();
+}
+function populateCredClientList(){
+  var el=document.getElementById('cred-client-list'); if(!el) return;
+  el.innerHTML = VAULT_CLIENTS.map(function(c){ return '<option value="'+esc(c.name)+'" data-id="'+esc(c.id)+'">'; }).join('');
+}
+function resolveCredClient(){
+  var typed=document.getElementById('cred-client').value.trim();
+  var match=VAULT_CLIENTS.find(function(c){ return c.name.toLowerCase()===typed.toLowerCase(); });
+  return match||null;
+}
+function onCredClientPick(){
+  var c=resolveCredClient();
+  if(!c){ document.getElementById('cred-form').style.display='none'; return; }
+  loadClientCredentialsForm(c.id);
+}
+var CRED_CURRENT_CLIENT_ID = null;
+function loadClientCredentialsForm(clientId){
+  CRED_CURRENT_CLIENT_ID = clientId;
+  document.getElementById('cred-form').style.display='none';
+  document.getElementById('cred-loading').style.display='flex';
+  api('getClientCredentials',{client_id:clientId},function(d){
+    document.getElementById('cred-loading').style.display='none';
+    document.getElementById('cred-form').style.display='block';
+    var c=d.data||{};
+    document.getElementById('cred-gst-user').value=c.gst_username||'';
+    document.getElementById('cred-gst-pass').value=c.gst_password||'';
+    // Income Tax / TDS logins are normally the client's PAN / TAN — prefill
+    // with PAN when nothing's saved yet, but never override an existing value.
+    document.getElementById('cred-it-user').value=c.it_username||(d.client&&d.client.pan)||'';
+    document.getElementById('cred-it-pass').value=c.it_password||'';
+    document.getElementById('cred-tds-user').value=c.tds_username||'';
+    document.getElementById('cred-tds-pass').value=c.tds_password||'';
+    document.getElementById('cred-dsc-expiry').value=c.dsc_expiry||'';
+    document.getElementById('cred-notes').value=c.notes||'';
+  });
+}
+function saveClientCredentialsForm(){
+  if(!CRED_CURRENT_CLIENT_ID){ toast('Pick a client first','err'); return; }
+  var c=VAULT_CLIENTS.find(function(x){ return x.id===CRED_CURRENT_CLIENT_ID; });
+  var payload={
+    client_id:CRED_CURRENT_CLIENT_ID, client_name:c?c.name:'',
+    gst_username:document.getElementById('cred-gst-user').value.trim(),
+    gst_password:document.getElementById('cred-gst-pass').value,
+    it_username:document.getElementById('cred-it-user').value.trim(),
+    it_password:document.getElementById('cred-it-pass').value,
+    tds_username:document.getElementById('cred-tds-user').value.trim(),
+    tds_password:document.getElementById('cred-tds-pass').value,
+    dsc_expiry:document.getElementById('cred-dsc-expiry').value,
+    notes:document.getElementById('cred-notes').value.trim(),
+    updated_by:(SHELL_USER&&SHELL_USER.name)||''
+  };
+  var btn=document.getElementById('cred-save-btn'); btn.disabled=true; btn.textContent='Saving...';
+  api('saveClientCredentials',payload,function(d){
+    btn.disabled=false; btn.innerHTML='<i class="ti ti-device-floppy"></i> Save';
+    if(!d.ok){ toast(d.error||'Failed to save','err'); return; }
+    toast('Credentials saved ✓','ok');
+    CRED_RECORDS_CACHE=null;
+  });
+}
+var CRED_RECORDS_CACHE=null;
+function renderCredentialsRecords(forceRefresh){
+  var body=document.getElementById('cred-body'); if(!body) return;
+  function doRender(rows){
+    var q=(document.getElementById('cred-search').value||'').toLowerCase();
+    var list=rows.filter(function(r){ return !q || (r.client_name||'').toLowerCase().indexOf(q)>-1; });
+    list.sort(function(a,b){ return dbDateVal(a.dsc_expiry)-dbDateVal(b.dsc_expiry); });
+    if(!list.length){ body.innerHTML='<tr><td colspan="6"><div class="empty"><i class="ti ti-key"></i>No credentials saved yet</div></td></tr>'; return; }
+    body.innerHTML=list.map(function(r){
+      var style=dbIsPastDue(r.dsc_expiry)?'background:#fef2f2;color:#dc2626':(dbIsSoon(r.dsc_expiry)?'background:#fef3c7;color:#b45309':'background:#f1f5f9;color:#475569');
+      var dscLabel=r.dsc_expiry?('<span class="badge" style="'+style+'">'+dbFmtDate(r.dsc_expiry)+'</span>'):'<span style="color:var(--muted);font-size:12px;">—</span>';
+      return '<tr class="row">'
+        +'<td style="font-weight:500">'+esc(r.client_name)+'</td>'
+        +'<td>'+esc(r.gst_username||'—')+'</td>'
+        +'<td>'+esc(r.it_username||'—')+'</td>'
+        +'<td>'+esc(r.tds_username||'—')+'</td>'
+        +'<td>'+dscLabel+'</td>'
+        +'<td><button class="btn btn-o" style="padding:5px 10px;font-size:12px;" onclick="openCredentialsFor(\''+r.client_id+'\',\''+esc(r.client_name)+'\')"><i class="ti ti-edit"></i> Edit</button></td>'
+      +'</tr>';
+    }).join('');
+  }
+  if(CRED_RECORDS_CACHE && !forceRefresh){ doRender(CRED_RECORDS_CACHE); return; }
+  body.innerHTML='<tr><td colspan="6"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
+  api('listClientCredentials',{},function(d){
+    if(!d.ok){ toast(d.error||'Failed to load','err'); return; }
+    CRED_RECORDS_CACHE=d.rows||[];
+    doRender(CRED_RECORDS_CACHE);
+  });
+}
+
+/* ===================================================================
+   WORKSPACE — free-form Word docs / spreadsheets per client, no fixed
+   templates. Reuses VAULT_CLIENTS (same lightweight {id,name} list as
+   Documents Vault / Credentials) for the client picker.
+=================================================================== */
+function switchWsTab(name){
+  document.querySelectorAll('#panel-workspace .inner-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.wstab===name); });
+  document.querySelectorAll('#panel-workspace .inner-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('wspanel-'+name).classList.add('active');
+  if(name==='records') renderWorkspaceRecords();
+}
+function populateWsClientList(){
+  var el=document.getElementById('ws-client-list'); if(!el) return;
+  el.innerHTML = VAULT_CLIENTS.map(function(c){ return '<option value="'+esc(c.name)+'" data-id="'+esc(c.id)+'">'; }).join('');
+}
+function resolveWsClient(){
+  var typed=document.getElementById('ws-client').value.trim();
+  var match=VAULT_CLIENTS.find(function(c){ return c.name.toLowerCase()===typed.toLowerCase(); });
+  return match||null;
+}
+var WS_CURRENT_CLIENT=null;
+function onWsClientPick(){
+  var c=resolveWsClient();
+  document.getElementById('ws-new').style.display = c ? 'block' : 'none';
+  WS_CURRENT_CLIENT = c || null;
+  if(c) renderWsClientRecent(c.id);
+}
+function renderWsClientRecent(clientId){
+  var el=document.getElementById('ws-client-recent'); if(!el) return;
+  el.innerHTML='<div style="color:var(--muted);font-size:12px;">Loading recent documents…</div>';
+  api('listClientDocs',{client_id:clientId},function(d){
+    if(!d.ok){ el.innerHTML=''; return; }
+    var rows=(d.rows||[]).slice().sort(function(a,b){ return new Date(b.created_at)-new Date(a.created_at); });
+    if(!rows.length){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">No documents yet for this client</div>'; return; }
+    el.innerHTML='<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;">Recent for this client</div>'
+      + rows.map(function(r){
+        return '<div class="dbal-row"><span><i class="ti '+(r.type==='sheet'?'ti-table':'ti-file-text')+'" style="color:var(--muted);margin-right:6px;"></i>'+esc(r.name)+'</span>'
+          +'<button class="btn btn-o btn-sm" style="padding:3px 8px;font-size:11px;" onclick="openWsDoc(\''+esc(r.url)+'\',\''+esc(r.name)+'\')">Open</button></div>';
+      }).join('');
+  });
+}
+function createWsDoc(type){
+  if(!WS_CURRENT_CLIENT){ toast('Pick a client first','err'); return; }
+  var name=document.getElementById('ws-name').value.trim();
+  if(!name){ toast('Name the document first','err'); return; }
+  var btn=document.getElementById(type==='doc'?'ws-create-doc-btn':'ws-create-sheet-btn');
+  btn.disabled=true;
+  api('createClientDoc',{client_id:WS_CURRENT_CLIENT.id, type:type, name:name, created_by:(SHELL_USER&&SHELL_USER.name)||''},function(d){
+    btn.disabled=false;
+    if(!d.ok){ toast(d.error||'Failed to create document','err'); return; }
+    toast((type==='doc'?'Document':'Spreadsheet')+' created ✓','ok');
+    document.getElementById('ws-name').value='';
+    renderWsClientRecent(WS_CURRENT_CLIENT.id);
+    WS_RECORDS_CACHE=null;
+    openWsDoc(d.data.url, d.data.name);
+  });
+}
+function openWsDoc(url, name){
+  document.getElementById('ws-frame-wrap').style.display='block';
+  document.getElementById('ws-frame-title').textContent=name;
+  document.getElementById('ws-frame-newtab').href=url;
+  document.getElementById('ws-frame').src=url;
+  document.getElementById('ws-frame-wrap').scrollIntoView({behavior:'smooth', block:'start'});
+}
+var WS_RECORDS_CACHE=null;
+function renderWorkspaceRecords(forceRefresh){
+  var body=document.getElementById('ws-body'); if(!body) return;
+  function doRender(rows){
+    var q=(document.getElementById('ws-search').value||'').toLowerCase();
+    var ft=document.getElementById('ws-filter-type').value;
+    var list=rows.filter(function(r){
+      if(ft && r.type!==ft) return false;
+      if(q && (r.name||'').toLowerCase().indexOf(q)===-1 && (r.client_name||'').toLowerCase().indexOf(q)===-1) return false;
+      return true;
+    });
+    list.sort(function(a,b){ return new Date(b.created_at)-new Date(a.created_at); });
+    if(!list.length){ body.innerHTML='<tr><td colspan="5"><div class="empty"><i class="ti ti-file-pencil"></i>No documents created yet</div></td></tr>'; return; }
+    body.innerHTML=list.map(function(r){
+      return '<tr class="row">'
+        +'<td style="font-weight:500">'+esc(r.name)+'</td>'
+        +'<td><span class="badge" style="background:#eff6ff;color:#2563a8"><i class="ti '+(r.type==='sheet'?'ti-table':'ti-file-text')+'"></i> '+(r.type==='sheet'?'Spreadsheet':'Word')+'</span></td>'
+        +'<td>'+esc(r.client_name)+'</td>'
+        +'<td>'+dbFmtDate(r.created_at)+'</td>'
+        +'<td>'
+          +'<button class="btn btn-o btn-sm" style="padding:4px 9px;font-size:11px;margin-right:4px;" onclick="switchWsTab(\'create\');openWsDoc(\''+esc(r.url)+'\',\''+esc(r.name)+'\')">Open</button>'
+          +'<a href="'+esc(r.url)+'" target="_blank" class="btn btn-o btn-sm" style="padding:4px 9px;font-size:11px;"><i class="ti ti-external-link"></i></a>'
+        +'</td>'
+      +'</tr>';
+    }).join('');
+  }
+  if(WS_RECORDS_CACHE && !forceRefresh){ doRender(WS_RECORDS_CACHE); return; }
+  body.innerHTML='<tr><td colspan="5"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
+  api('listClientDocs',{},function(d){
+    if(!d.ok){ toast(d.error||'Failed to load','err'); return; }
+    WS_RECORDS_CACHE=d.rows||[];
+    doRender(WS_RECORDS_CACHE);
+  });
 }
 
 function handleDocMainCategory(){
