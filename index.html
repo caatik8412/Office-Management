@@ -3169,7 +3169,7 @@ function numWords(n){
                 <select class="sel" id="itrd-filter">
                   <option value="">All statuses</option><option value="filed">Filed only</option><option value="pending">Pending only</option>
                 </select>
-                <button class="btn btn-o" onclick="loadItrDueDates()"><i class="ti ti-refresh"></i> Refresh</button>
+                <button class="btn btn-o" onclick="loadItrDueDates(null,true)"><i class="ti ti-refresh"></i> Refresh</button>
               </div>
               <div class="card">
                 <table>
@@ -3919,7 +3919,7 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
             <select class="sel" id="ta-filter">
               <option value="">All statuses</option><option value="filed">Filed only</option><option value="pending">Pending only</option>
             </select>
-            <button class="btn btn-o" onclick="loadTaxAudit()"><i class="ti ti-refresh"></i> Refresh</button>
+            <button class="btn btn-o" onclick="loadTaxAudit(null,true)"><i class="ti ti-refresh"></i> Refresh</button>
           </div>
           <div class="card">
             <table>
@@ -3948,7 +3948,7 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
             </select>
             <select class="sel" id="dd-year" onchange="loadDueDatesTab()"></select>
             <select class="sel" id="dd-client" onchange="renderDueDatesTab()"><option value="">All Clients</option></select>
-            <button class="btn btn-o" onclick="loadDueDatesTab()"><i class="ti ti-refresh"></i> Refresh</button>
+            <button class="btn btn-o" onclick="loadDueDatesTab(null,true)"><i class="ti ti-refresh"></i> Refresh</button>
             <button class="btn" id="dd-wa-btn" style="background:#25D366;color:#fff;" onclick="sendMonthWhatsApp()"><i class="ti ti-brand-whatsapp"></i> WhatsApp Month's Dues</button>
           </div>
 
@@ -4585,7 +4585,17 @@ function switchDDTab(cat){
 // same DueDates sheet — the loser sometimes comes back empty/stale, which is
 // exactly the "shows empty until you switch tabs" symptom. Whichever caller
 // arrives first now does the actual fetch; everyone else just waits on it.
-function loadDueDatesTab(cb){
+// Tracks which month/year combos we've already run generateDueDates for
+// THIS session — generate is a locked, whole-sheet-scanning write, list is a
+// plain unlocked read. Re-running generate every single time you revisit the
+// tab (which switchTab() does on every click) was making every repeat visit
+// pay the same lock-wait+full-scan cost as the very first load, which is
+// what made navigating between tabs feel sluggish even after the queuing
+// bug was fixed. Now generate only runs once per period per session (or
+// when explicitly forced via Refresh / changing month-year) — after that,
+// switching back to this tab is just a fast unlocked list call.
+var DD_GENERATED = {};
+function loadDueDatesTab(cb, forceGenerate){
   var ySel=document.getElementById('dd-year');
   if(!ySel.options.length){
     var ny=new Date().getFullYear();
@@ -4597,15 +4607,21 @@ function loadDueDatesTab(cb){
   document.getElementById('dd-body').innerHTML='<tr><td colspan="6"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
   var month=parseInt(document.getElementById('dd-month').value,10);
   var year=parseInt(document.getElementById('dd-year').value,10);
-  // Generate (idempotent — only adds rows that don't already exist) then list.
-  api('generateDueDates',{month:month,year:year},function(genResult){
-    console.log('generateDueDates result:', genResult);
+  var key=year+'-'+month;
+  function doList(){
     api('listDueDates',{month:month,year:year},function(d){
       console.log('listDueDates result:', d);
       if(d.ok){ DD_ROWS = d.rows||[]; populateDDClientFilter(); renderDueDatesTab(); }
       var waiters = DD_INFLIGHT; DD_INFLIGHT = null;
       if (waiters) waiters.forEach(function(fn){ if(fn) fn(); });
     });
+  }
+  if (!forceGenerate && DD_GENERATED[key]) { doList(); return; }
+  // Generate (idempotent — only adds rows that don't already exist) then list.
+  api('generateDueDates',{month:month,year:year},function(genResult){
+    console.log('generateDueDates result:', genResult);
+    DD_GENERATED[key] = true;
+    doList();
   });
 }
 function populateDDClientFilter(){
@@ -4766,19 +4782,25 @@ function itrBucketOf(row){
   return 'itr12';
 }
 var ITRD_INFLIGHT = null; // same single-flight guard as DD_INFLIGHT — see loadDueDatesTab
-function loadItrDueDates(cb){
+var ITRD_GENERATED = {}; // same once-per-session-per-year cache as DD_GENERATED — see loadDueDatesTab
+function loadItrDueDates(cb, forceGenerate){
   if (ITRD_INFLIGHT) { ITRD_INFLIGHT.push(cb); return; }
   ITRD_INFLIGHT = [cb];
   document.getElementById('itrd-body').innerHTML='<tr><td colspan="5"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
   var ay=new Date().getFullYear();
-  api('generateItrTracking',{year:ay},function(genResult){
-    console.log('generateItrTracking result:', genResult);
+  function doList(){
     api('listItrTracking',{year:ay},function(d){
       console.log('listItrTracking result:', d);
       if(d.ok){ ITRD_ROWS=d.rows||[]; renderItrDueDates(); }
       var waiters = ITRD_INFLIGHT; ITRD_INFLIGHT = null;
       if (waiters) waiters.forEach(function(fn){ if(fn) fn(); });
     });
+  }
+  if (!forceGenerate && ITRD_GENERATED[ay]) { doList(); return; }
+  api('generateItrTracking',{year:ay},function(genResult){
+    console.log('generateItrTracking result:', genResult);
+    ITRD_GENERATED[ay] = true;
+    doList();
   });
 }
 function renderItrDueDates(){
@@ -4836,7 +4858,7 @@ function itrTypeChange(clientId, newType){
     if(!d.ok){ toast(d.error||'Failed to update ITR type','err'); return; }
     toast('ITR type updated ✓','ok');
     GETALL_CACHE=null;
-    loadItrDueDates();
+    loadItrDueDates(null, true); // force: the ITR type just changed server-side, must reconcile now, not use the cached "already generated" skip
   });
 }
 
@@ -4849,19 +4871,25 @@ function itrTypeChange(clientId, newType){
    =================================================================== */
 var TA_ROWS=[];
 var TA_INFLIGHT = null; // same single-flight guard as DD_INFLIGHT/ITRD_INFLIGHT
-function loadTaxAudit(cb){
+var TA_GENERATED = {}; // same once-per-session-per-year cache as DD_GENERATED — see loadDueDatesTab
+function loadTaxAudit(cb, forceGenerate){
   if (TA_INFLIGHT) { TA_INFLIGHT.push(cb); return; }
   TA_INFLIGHT = [cb];
   document.getElementById('ta-body').innerHTML='<tr><td colspan="4"><div class="empty"><i class="ti ti-loader-2"></i>Loading…</div></td></tr>';
   var ay=new Date().getFullYear();
-  api('generateTaxAuditTracking',{year:ay},function(genResult){
-    console.log('generateTaxAuditTracking result:', genResult);
+  function doList(){
     api('listTaxAuditTracking',{year:ay},function(d){
       console.log('listTaxAuditTracking result:', d);
       if(d.ok){ TA_ROWS=d.rows||[]; renderTaxAudit(); }
       var waiters = TA_INFLIGHT; TA_INFLIGHT = null;
       if (waiters) waiters.forEach(function(fn){ if(fn) fn(); });
     });
+  }
+  if (!forceGenerate && TA_GENERATED[ay]) { doList(); return; }
+  api('generateTaxAuditTracking',{year:ay},function(genResult){
+    console.log('generateTaxAuditTracking result:', genResult);
+    TA_GENERATED[ay] = true;
+    doList();
   });
 }
 function renderTaxAudit(){
