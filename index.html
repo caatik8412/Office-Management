@@ -1240,6 +1240,7 @@ function pmInit(){
     <button class="btn btn-o" onclick="Billing.loadAll()"><i class="ti ti-refresh"></i> Refresh</button>
     <button class="btn btn-p" onclick="Billing.populateGroupList();openM('mAddClient')"><i class="ti ti-user-plus"></i> Add Client</button>
     <button class="btn btn-o btn-sm" onclick="Billing.exportCSV()"><i class="ti ti-download"></i> Export</button>
+    <button class="btn btn-o btn-sm" onclick="Billing.printGroupView()"><i class="ti ti-printer"></i> Print View</button>
   </div>
   <div class="twrap"><div class="tbox">
     <table><thead id="chead"></thead><tbody id="cbody">
@@ -1904,7 +1905,8 @@ function renderClients(){
       return v>0?'<span style="background:rgba(255,255,255,.15);color:#fff;padding:1px 8px;border-radius:8px;font-size:10px;font-weight:600;margin-left:6px;">'+esc(f)+' ₹'+fmt(v)+'</span>':'';
     }).join('');
     var gTotStr=gTot>0?'<span style="float:right;font-weight:700;font-size:12px;margin-right:8px;">₹'+fmt(gTot)+'</span>':'';
-    rows+='<tr class="grp"><td colspan="6"><i class="ti ti-folder" style="margin-right:5px;opacity:.75;vertical-align:-2px;"></i><strong>'+esc(glabel[g])+'</strong>'+gFirmStr+gTotStr+'</td></tr>';
+    var gPrintBtn='<button class="icn" data-gkey="'+esc(g)+'" onclick="Billing.printGroup(this.dataset.gkey)" title="Print this group\'s statement" style="float:right;width:22px;height:22px;border:1px solid rgba(255,255,255,.4);background:transparent;color:#fff;margin-right:6px;"><i class="ti ti-printer" style="font-size:12px;"></i></button>';
+    rows+='<tr class="grp"><td colspan="6"><i class="ti ti-folder" style="margin-right:5px;opacity:.75;vertical-align:-2px;"></i><strong>'+esc(glabel[g])+'</strong>'+gFirmStr+gTotStr+gPrintBtn+'</td></tr>';
     groups[g].forEach(function(c){rows+=cRow(c);});
   });
   if(nogrp.length){
@@ -1938,6 +1940,123 @@ function cRow(c){
       +'<button class="icn" title="Archive Client" style="color:#94a3b8;" onclick="Billing.doArchive(\''+c.id+'\',\''+esc(c.name)+'\')"><i class="ti ti-archive"></i></button>'
     +'</div></td>'
   +'</tr>';
+}
+
+// Prints exactly what's currently visible in the Clients table (respecting
+// whatever search/Outstanding-only filter is active) as one document, all
+// groups together — same "print what you see" idea as CM Doshi & Co's tool.
+function printGroupView(){
+  var rows=document.querySelectorAll('#cbody tr');
+  var tableRows='';
+  rows.forEach(function(tr){
+    if(tr.classList.contains('grp')){
+      var label=tr.querySelector('strong')?tr.querySelector('strong').textContent:tr.innerText.trim();
+      tableRows+='<tr><td colspan="'+(3+FIRMS.length)+'" style="background:#1a3a5c;color:#fff;padding:6px 10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;">'+esc(label)+'</td></tr>';
+    } else if(tr.classList.contains('row')){
+      var tds=tr.querySelectorAll('td');
+      var html='<tr style="border-bottom:1px solid #e2e8f0;">';
+      for(var i=0;i<tds.length-1;i++){ // skip Actions column
+        var align=i>1?'text-align:right;':'';
+        html+='<td style="padding:6px 8px;font-size:11px;'+align+'">'+esc(tds[i].innerText.trim())+'</td>';
+      }
+      html+='</tr>';
+      tableRows+=html;
+    }
+  });
+  var today=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  var w=window.open('','_blank');
+  if(!w){ toast('Please allow popups for this site to print','err'); return; }
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Outstanding Report</title>'
+    +'<style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:12px;color:#000;}'
+    +'.doc{padding:10mm 12mm;}.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6mm;padding-bottom:3mm;border-bottom:2px solid #1a3a5c;}'
+    +'.title{font-size:16px;font-weight:bold;color:#1a3a5c;}.sub{font-size:11px;color:#64748b;margin-top:3px;}'
+    +'table{width:100%;border-collapse:collapse;}th{border-bottom:1px solid #e2e8f0;}'
+    +'@media print{.no-print{display:none!important;}}</style></head><body>');
+  w.document.write('<div class="no-print" style="background:#1a3a5c;padding:10px 16px;display:flex;gap:10px;align-items:center;">');
+  w.document.write('<span style="color:#fff;font-weight:600;font-size:13px;">Outstanding Report</span>');
+  w.document.write('<button onclick="window.print()" style="margin-left:auto;padding:6px 18px;background:#fff;color:#1a3a5c;border:none;border-radius:5px;font-weight:600;cursor:pointer;">&#128424; Print</button>');
+  w.document.write('<button onclick="window.close()" style="padding:6px 14px;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:5px;cursor:pointer;">Close</button>');
+  w.document.write('</div><div class="doc">');
+  w.document.write('<div class="hdr"><div><div class="title">Atik Bhayani &amp; Associates</div><div class="sub">Outstanding Report</div></div>'
+    +'<div style="text-align:right;"><div style="font-size:11px;color:#64748b;">As on '+today+'</div>'
+    +'<div style="font-size:10px;color:#aaa;margin-top:3px;">Powered by Bhayani Business Solutions</div></div></div>');
+  w.document.write('<table><thead><tr>'
+    +'<th style="padding:5px 8px;font-size:10px;background:#f8fafc;font-weight:700;text-transform:uppercase;color:#64748b;">Client</th>'
+    +'<th style="padding:5px 8px;font-size:10px;background:#f8fafc;font-weight:700;text-transform:uppercase;color:#64748b;">Status</th>'
+    +FIRMS.map(function(f){return '<th style="text-align:right;padding:5px 8px;font-size:10px;background:#f8fafc;font-weight:700;text-transform:uppercase;color:'+(FIRM_DETAILS[f]?FIRM_DETAILS[f].color:'#64748b')+'">'+esc(f)+'</th>';}).join('')
+    +'<th style="text-align:right;padding:5px 8px;font-size:10px;background:#f8fafc;font-weight:700;text-transform:uppercase;color:#1a3a5c;">Total</th>'
+    +'</tr></thead><tbody>'+tableRows+'</tbody></table>');
+  w.document.write('</div></body></html>');
+  w.document.close();
+}
+
+// Prints a statement for ONE group only, using the cached group data
+// renderClients() already built (window._grpData/_grpLabel) — no need to
+// re-query the DOM or hit the backend again.
+function printGroup(key){
+  var clients=window._grpData&&window._grpData[key];
+  var label=window._grpLabel&&window._grpLabel[key];
+  if(!clients||!clients.length){ toast('Group data not found — try refreshing','err'); return; }
+  var gTot=0;
+  var trows=clients.map(function(c){
+    var rowTot=0;
+    var fCols=FIRMS.map(function(f){
+      var v=c.byFirm[f]||0; rowTot+=v;
+      return '<td style="text-align:right;padding:6px 8px;font-size:11px;'+(v>0?'color:'+(FIRM_DETAILS[f]?FIRM_DETAILS[f].color:'#000'):'color:#cbd5e1')+'">'+(v>0?'₹'+fmt(v):'—')+'</td>';
+    }).join('');
+    gTot+=rowTot;
+    return '<tr style="border-bottom:1px solid #e2e8f0;">'
+      +'<td style="padding:6px 8px;font-size:11px;font-weight:500;">'+esc(c.name)+'</td>'
+      +'<td style="padding:6px 8px;font-size:11px;">'+esc(c.status||'—')+'</td>'
+      +fCols
+      +'<td style="text-align:right;padding:6px 8px;font-size:11px;font-weight:700;">'+(rowTot>0?'₹'+fmt(rowTot):'—')+'</td>'
+    +'</tr>';
+  }).join('');
+  var fTotCols=FIRMS.map(function(f){
+    var v=clients.reduce(function(s,c){return s+(c.byFirm[f]||0);},0);
+    return '<td style="text-align:right;padding:7px 8px;font-size:11px;font-weight:700;border-top:1.5px solid #1a3a5c;">'+(v>0?'₹'+fmt(v):'—')+'</td>';
+  }).join('');
+  trows+='<tr style="background:#f8fafc;">'
+    +'<td colspan="2" style="padding:7px 8px;font-size:11px;font-weight:700;border-top:1.5px solid #1a3a5c;">Total</td>'
+    +fTotCols
+    +'<td style="text-align:right;padding:7px 8px;font-size:12px;font-weight:700;color:#1a3a5c;border-top:1.5px solid #1a3a5c;">₹'+fmt(gTot)+'</td>'
+  +'</tr>';
+  var fHdrs=FIRMS.map(function(f){
+    return '<th style="text-align:right;padding:6px 8px;font-size:10px;font-weight:700;text-transform:uppercase;background:#1a3a5c;color:'+(FIRM_DETAILS[f]?FIRM_DETAILS[f].color:'#fff')+';">'+esc(f)+'</th>';
+  }).join('');
+  var today=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  var w=window.open('','_blank');
+  if(!w){ toast('Please allow popups for this site to print','err'); return; }
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+esc(label)+' — Outstanding</title>'
+    +'<style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:12px;color:#000;}'
+    +'.doc{padding:10mm 12mm;max-width:210mm;margin:0 auto;}'
+    +'.phdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5mm;padding-bottom:3mm;border-bottom:2px solid #1a3a5c;}'
+    +'.pfirm{font-size:15px;font-weight:bold;color:#1a3a5c;}.psub{font-size:11px;color:#64748b;margin-top:3px;}'
+    +'.grp-title{font-size:13px;font-weight:700;color:#1a3a5c;margin-bottom:4mm;text-transform:uppercase;letter-spacing:.5px;}'
+    +'table{width:100%;border-collapse:collapse;}'
+    +'th{padding:6px 8px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;background:#1a3a5c;color:#fff;}'
+    +'.pfooter{display:flex;justify-content:space-between;margin-top:8mm;padding-top:3mm;border-top:1px solid #ccc;}'
+    +'.ppow{font-size:9px;color:#444;font-weight:600;}'
+    +'@media print{.no-print{display:none!important;}}</style></head><body>');
+  w.document.write('<div class="no-print" style="background:#1a3a5c;padding:10px 16px;display:flex;gap:10px;align-items:center;">');
+  w.document.write('<span style="color:#fff;font-weight:600;font-size:13px;">'+esc(label)+' — Outstanding Statement</span>');
+  w.document.write('<button onclick="window.print()" style="margin-left:auto;padding:6px 18px;background:#fff;color:#1a3a5c;border:none;border-radius:5px;font-weight:600;cursor:pointer;">&#128424; Print</button>');
+  w.document.write('<button onclick="window.close()" style="padding:6px 14px;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:5px;cursor:pointer;">Close</button>');
+  w.document.write('</div>');
+  w.document.write('<div class="doc">');
+  w.document.write('<div class="phdr"><div><div class="pfirm">Atik Bhayani &amp; Associates</div><div class="psub">Outstanding Statement</div></div>'
+    +'<div style="text-align:right;"><div style="font-size:11px;color:#64748b;">As on '+today+'</div></div></div>');
+  w.document.write('<div class="grp-title">'+esc(label)+'</div>');
+  w.document.write('<table><thead><tr>'
+    +'<th style="width:38%;">Name</th>'
+    +'<th style="width:10%;">Status</th>'
+    +fHdrs
+    +'<th style="text-align:right;padding:6px 8px;font-size:10px;font-weight:700;text-transform:uppercase;background:#1a3a5c;color:#fff;">Total</th>'
+    +'</tr></thead><tbody>'+trows+'</tbody></table>');
+  w.document.write('<div class="pfooter"><div class="ppow">Powered by Bhayani Business Solutions</div>'
+    +'<div style="font-size:9px;color:#aaa;">Atik Bhayani &amp; Associates</div></div>');
+  w.document.write('</div></body></html>');
+  w.document.close();
 }
 
 var GST_TYPE_LABELS={'none':'Not Registered','regular':'Regular','composition':'Composition'};
@@ -3166,6 +3285,8 @@ function numWords(n){
     doPrint:doPrint,
     exportCSV:exportCSV,
     exportGSTR1UI:exportGSTR1UI,
+    printGroupView:printGroupView,
+    printGroup:printGroup,
     fetchBills:fetchBills,
     fetchCancelledBills:fetchCancelledBills,
     fetchCancelledReceipts:fetchCancelledReceipts,
