@@ -4419,6 +4419,24 @@ function doShellLogout(){
   document.getElementById('loginPass').value = '';
 }
 
+// Staff only ever get Task Manager from the shell — everything else
+// (Billing, Credentials, Clients, Due Dates, Documents Vault, Work Desk,
+// Assessment Reminders) is admin-only at the sidebar level. This is a UI-
+// level restriction on the client — it hides/redirects navigation, it does
+// NOT stop someone from calling the Apps Script Web App's routes directly
+// with a staff login (the backend doesn't check role on those routes today).
+// Treat this as "staff won't stumble into things they shouldn't," not as a
+// real security boundary against a staff member deliberately trying to read
+// data they're not supposed to — that would need role checks added
+// server-side in Code.gs too.
+function applyRolePermissions(){
+  if (SHELL_USER && SHELL_USER.role === 'admin') return;
+  document.querySelectorAll('.sb-item').forEach(function(el){
+    if (el.dataset.tab !== 'pm') el.style.display = 'none';
+  });
+  document.querySelectorAll('.sb-group-label').forEach(function(el){ el.style.display = 'none'; });
+}
+
 function enterApp(){
   document.getElementById('loginWrap').style.display = 'none';
   document.getElementById('splashWrap').style.display = 'flex';
@@ -4427,6 +4445,7 @@ function enterApp(){
   document.getElementById('sbAv').textContent = initials;
   document.getElementById('sbUname').textContent = SHELL_USER.name || SHELL_USER.username;
   document.getElementById('sbUrole').textContent = SHELL_USER.role === 'admin' ? 'Admin' : 'Staff';
+  applyRolePermissions();
 
   // Modules used to be separate iframes (pm.html/billing.html/itr_pack.html)
   // loaded with identity passed via query string. They're merged inline now --
@@ -4435,24 +4454,31 @@ function enterApp(){
   try { Billing.init(); } catch(e) { console.error('Billing.init failed', e); }
   try { ITR.init(); } catch(e) { console.error('ITR.init failed', e); }
 
-  // Kick off preloading in the background — each loader handles its own
-  // errors and renders independently, so one failing never blocks the rest.
-  //
-  // NOTE: generateDueDates/generateItrTracking/generateTaxAuditTracking all
-  // share ONE LockService.getScriptLock() on the backend (needed to prevent
-  // duplicate rows — see withLock_ in Code.gs), which means they run one at
-  // a time, not in parallel. Eagerly firing all three here at login queued
-  // them up behind each other and made login feel "stuck" until whichever
-  // one the user's next click happened to depend on finally got its turn —
-  // clicking/typing didn't actually unstick anything, the data had just
-  // finished arriving around the same time. Dashboard already triggers the
-  // Due Dates generate/list pair it needs; ITR Tracking and Tax Audit are
-  // left to load lazily via switchTab() when the user actually opens those
-  // tabs, so login only ever waits on ONE lock-guarded call, not three.
-  try { loadDashboardTab(); } catch(e) {}
-  try { loadClientsTab(); } catch(e) {}
-  try { loadItrHistory(); } catch(e) {}
-  try { loadClientsForVault(); } catch(e) {}
+  if (SHELL_USER.role !== 'admin') {
+    // Staff land straight on Task Manager — Dashboard isn't reachable for
+    // them anyway, so there's no point preloading Dashboard/Clients/ITR
+    // history data they'll never see.
+    switchTab('pm');
+  } else {
+    // Kick off preloading in the background — each loader handles its own
+    // errors and renders independently, so one failing never blocks the rest.
+    //
+    // NOTE: generateDueDates/generateItrTracking/generateTaxAuditTracking all
+    // share ONE LockService.getScriptLock() on the backend (needed to prevent
+    // duplicate rows — see withLock_ in Code.gs), which means they run one at
+    // a time, not in parallel. Eagerly firing all three here at login queued
+    // them up behind each other and made login feel "stuck" until whichever
+    // one the user's next click happened to depend on finally got its turn —
+    // clicking/typing didn't actually unstick anything, the data had just
+    // finished arriving around the same time. Dashboard already triggers the
+    // Due Dates generate/list pair it needs; ITR Tracking and Tax Audit are
+    // left to load lazily via switchTab() when the user actually opens those
+    // tabs, so login only ever waits on ONE lock-guarded call, not three.
+    try { loadDashboardTab(); } catch(e) {}
+    try { loadClientsTab(); } catch(e) {}
+    try { loadItrHistory(); } catch(e) {}
+    try { loadClientsForVault(); } catch(e) {}
+  }
 
   // Splash is a flat 5-second cap, not gated on data success — so a slow or
   // failed fetch never leaves the user staring at the splash indefinitely.
@@ -4470,6 +4496,12 @@ function toggleSidebar(){
 }
 
 function switchTab(name){
+  // Redirect staff back to Task Manager no matter how they got here (drawer
+  // cross-links like openWorkspaceFor/openCredentialsFor, a dashboard "+N
+  // more" link, etc.) — the sidebar hides everything else, but this is the
+  // one choke point every navigation path runs through, so it's the right
+  // place to enforce it rather than trying to guard every caller.
+  if (SHELL_USER && SHELL_USER.role !== 'admin' && name !== 'pm') { name = 'pm'; }
   document.querySelectorAll('.sb-item').forEach(function(t){ t.classList.toggle('active', t.dataset.tab===name); });
   document.querySelectorAll('.shell-panel').forEach(function(p){ p.classList.remove('active'); });
   document.getElementById('panel-'+name).classList.add('active');
