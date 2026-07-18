@@ -290,11 +290,10 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
         <div class="sb-item" data-tab="credentials" onclick="switchTab('credentials')"><i class="ti ti-key"></i><span class="sb-label">Credentials</span></div>
         <div class="sb-group-label">Work</div>
         <div class="sb-item" data-tab="pm" onclick="switchTab('pm')"><i class="ti ti-checklist"></i><span class="sb-label">Task Manager</span></div>
-        <div class="sb-group-label">Finance</div>
-        <div class="sb-item" data-tab="billing" onclick="switchTab('billing')"><i class="ti ti-receipt-2"></i><span class="sb-label">Billing</span></div>
-        <div class="sb-group-label">Compliance</div>
         <div class="sb-item" data-tab="duedates" onclick="switchTab('duedates')"><i class="ti ti-calendar-due"></i><span class="sb-label">Due Dates</span></div>
         <div class="sb-item" data-tab="itr" onclick="switchTab('itr')"><i class="ti ti-file-text"></i><span class="sb-label">Audit &amp; ITR Tracking</span></div>
+        <div class="sb-group-label">Finance</div>
+        <div class="sb-item" data-tab="billing" onclick="switchTab('billing')"><i class="ti ti-receipt-2"></i><span class="sb-label">Billing</span></div>
         <div class="sb-group-label">Documents</div>
         <div class="sb-item" data-tab="vault" onclick="switchTab('vault')"><i class="ti ti-folder"></i><span class="sb-label">Documents Vault</span></div>
       </div>
@@ -1496,13 +1495,17 @@ function pmInit(){
       <div class="fg2">
         <div class="fg"><label class="lbl">Receipt No <span style="font-size:9px;color:var(--muted);font-weight:400;">(assigned on save)</span></label><input id="r-no" placeholder="Will be assigned on save" disabled style="background:#f8fafc;color:var(--muted);cursor:not-allowed;"></div>
         <div class="fg"><label class="lbl">Receipt Date *</label><input type="date" id="r-date"></div>
-        <div class="fg"><label class="lbl">Firm *</label><select id="r-firm"></select></div>
+        <div class="fg"><label class="lbl">Firm *</label><select id="r-firm" onchange="Billing.loadOpenBills()"></select></div>
         <div class="fg"><label class="lbl">Amount (₹) *</label><input type="number" id="r-amt" placeholder="0" oninput="Billing.updBal()"></div>
         <div class="fg"><label class="lbl">Mode</label>
           <select id="r-mode"><option>Bank Transfer (NEFT/RTGS)</option><option>UPI</option><option>Cheque</option><option>Cash</option><option>IMPS</option></select>
         </div>
         <div class="fg"><label class="lbl">UTR / Reference</label><input id="r-ref" placeholder="Reference no."></div>
         <div class="fg"><label class="lbl">Discount / Write-off (₹)</label><input type="number" id="r-discount" placeholder="0" oninput="Billing.updBal()"></div>
+        <div class="fg sp2" id="r-bills-wrap" style="display:none;">
+          <label class="lbl">Against Pending Invoices <span style="font-size:9px;color:var(--muted);font-weight:400;">(tick to allocate; unticked amount stays as advance)</span></label>
+          <div id="r-bills-list" style="max-height:160px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--rs);"></div>
+        </div>
         <div class="fg sp2" id="r-bal" style="display:none;background:var(--bg);padding:10px;border-radius:var(--rs);">
           <div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:var(--muted);">Balance before</span><span id="r-before" style="font-weight:600;">₹0</span></div>
           <div id="r-disc-row" style="display:none;justify-content:space-between;font-size:12px;margin-top:5px;"><span style="color:var(--muted);">Discount / write-off</span><span id="r-disc-amt" style="font-weight:600;color:#c2410c;">₹0</span></div>
@@ -2599,7 +2602,44 @@ function openRec(id,name,out){
   document.getElementById('r-nar').value='';
   document.getElementById('r-discount').value='';
   document.getElementById('r-bal').style.display='none';
+  window._linkedBills=[];
+  document.getElementById('r-bills-wrap').style.display='none';
+  document.getElementById('r-bills-list').innerHTML='';
   openM('mAddReceipt');
+  loadOpenBills();
+}
+function loadOpenBills(){
+  var firm=document.getElementById('r-firm').value;
+  var wrap=document.getElementById('r-bills-wrap');
+  var list=document.getElementById('r-bills-list');
+  if(!curId||!firm){ wrap.style.display='none'; return; }
+  list.innerHTML='<div style="padding:10px;font-size:12px;color:var(--muted);">Loading pending invoices…</div>';
+  wrap.style.display='block';
+  api({action:'getOpenBillsForClient',clientId:curId,firm:firm},function(d){
+    window._openBills=(d&&d.ok&&d.bills)||[];
+    window._linkedBills=[];
+    if(!window._openBills.length){
+      list.innerHTML='<div style="padding:10px;font-size:12px;color:var(--muted);">No pending invoices for this client/firm.</div>';
+      return;
+    }
+    list.innerHTML=window._openBills.map(function(b){
+      return '<label class="dbal-row" style="cursor:pointer;padding:8px 10px;">'
+        +'<span style="display:flex;align-items:center;gap:8px;"><input type="checkbox" data-bill-id="'+b.id+'" data-outstanding="'+b.outstanding+'" data-billno="'+b.billNo+'" onchange="Billing.onBillCheckChange()"> '+b.billNo+' <span style="color:var(--muted);font-size:11px;">('+fmtDate(b.billDate)+')</span></span>'
+        +'<span style="font-weight:600;">₹'+fmt(b.outstanding)+'</span>'
+        +'</label>';
+    }).join('');
+  });
+}
+function onBillCheckChange(){
+  var checks=document.querySelectorAll('#r-bills-list input[type=checkbox]:checked');
+  var total=0;
+  window._linkedBills=[];
+  checks.forEach(function(c){
+    total+=parseFloat(c.dataset.outstanding)||0;
+    window._linkedBills.push({billId:c.dataset.billId,billNo:c.dataset.billno});
+  });
+  if(total>0){ document.getElementById('r-amt').value=total.toFixed(2); }
+  updBal();
 }
 function updBal(){
   var a=parseFloat(document.getElementById('r-amt').value)||0;
@@ -2625,7 +2665,8 @@ function saveReceipt(){
   document.getElementById('saveRecBtn').disabled=true;
   document.getElementById('saveRecBtn').textContent='Saving…';
   api({action:'addReceipt',receiptDate:dt,clientId:curId,clientName:curName,
-    firm:firm,amount:amt,discount:discount,mode:mode,ref:ref,narration:recNar
+    firm:firm,amount:amt,discount:discount,mode:mode,ref:ref,narration:recNar,
+    linkedBills:JSON.stringify(window._linkedBills||[])
   },function(d){
     busy=false;
     document.getElementById('saveRecBtn').disabled=false;
@@ -2878,11 +2919,10 @@ function printCSS(){
     +'.psign{text-align:right;font-size:11px;line-height:2;}'
     +'.rtitle{font-size:16px;font-weight:bold;text-align:center;margin-bottom:4mm;border-bottom:1.5px solid #000;padding-bottom:3mm;}'
     +'.rtbl{width:100%;border-collapse:collapse;margin-bottom:4mm;}'
-    +'.rtbl td{padding:6px 10px;border-bottom:1px solid #ddd;font-size:11px;}'
-    +'.rtbl td:first-child{color:#555;width:40%;}'
-    +'.rtbl td:last-child{font-weight:bold;}'
+    +'.rtbl th{border:1px solid #000;padding:5px 8px;text-align:left;font-size:11px;background:#f0f0f0;width:40%;}'
+    +'.rtbl td{padding:6px 8px;border:1px solid #ccc;font-size:11px;font-weight:bold;}'
     +'.ramt{text-align:center;font-size:20px;font-weight:bold;border:1.5px solid #000;padding:4mm;margin-bottom:4mm;}'
-    +'.rwords{font-size:11px;color:#444;text-align:center;margin-bottom:5mm;}'
+    +'.rwords{border:1px solid #ccc;padding:5px 8px;font-size:11px;margin-bottom:4mm;}'
     +'@media print{.no-print{display:none!important;}}</style>';
 }
 
@@ -2944,21 +2984,24 @@ function recHTML(r){
   var discount=Number(r.discount)||0;
   var allocRows='';
   if(r.allocations && r.allocations.length){
-    allocRows='<tr><td>Applied To Bills</td><td>'+r.allocations.map(function(a){return esc(a.billNo)+' (₹'+fmt(a.amount)+')';}).join(', ')+'</td></tr>';
+    allocRows='<tr><th>Applied To Bills</th><td>'+r.allocations.map(function(a){return esc(a.billNo)+' (₹'+fmt(a.amount)+')';}).join(', ')+'</td></tr>';
   }
-  var discRow=discount>0?('<tr><td>Discount / Write-off</td><td>₹'+fmt(discount)+'</td></tr>'):'';
-  return '<div class="doc"><div class="phdr"><div><div class="pfirm">'+esc(fd.printName)+'</div><div class="pfsub">'+(fd.sub?esc(fd.sub)+'<br>':'')+esc(fd.address)+'</div></div>'
+  var discRow=discount>0?('<tr><th>Discount / Write-off</th><td>₹'+fmt(discount)+'</td></tr>'):'';
+  return '<div class="doc">'
+    +'<div class="phdr"><div><div class="pfirm">'+esc(fd.printName)+'</div>'
+    +'<div class="pfsub">'+(fd.sub?esc(fd.sub)+'<br>':'')+esc(fd.address)+(fd.meta?'<br>'+fd.meta:'')+'</div></div>'
     +'<div><div class="pdtype">Receipt Voucher</div>'
     +'<div class="pdmeta">Receipt No: <strong>'+esc(r.receiptNo)+'</strong><br>Date: <strong>'+esc(r.date)+'</strong></div></div></div>'
+    +'<div class="pparties"><div class="pparty"><div class="pplbl">Received By</div><div class="ppname">'+esc(fd.printName)+'</div></div>'
+    +'<div class="pparty"><div class="pplbl">Received From</div><div class="ppname">'+esc(r.clientName)+'</div></div></div>'
     +'<div class="rtitle">RECEIPT</div>'
     +'<div class="ramt">₹ '+fmt(r.amount)+'</div>'
     +'<div class="rwords">Rupees: '+numWords(Math.round(r.amount))+' Only</div>'
     +'<table class="rtbl">'
-    +'<tr><td>Received From</td><td>'+esc(r.clientName)+'</td></tr>'
-    +'<tr><td>Mode of Payment</td><td>'+esc(r.mode)+'</td></tr>'
-    +'<tr><td>Reference / UTR</td><td>'+esc(r.ref||'—')+'</td></tr>'
+    +'<tr><th>Mode of Payment</th><td>'+esc(r.mode)+'</td></tr>'
+    +'<tr><th>Reference / UTR</th><td>'+esc(r.ref||'—')+'</td></tr>'
     +discRow+allocRows
-    +'<tr><td>Narration</td><td>'+esc(r.narration||'—')+'</td></tr>'
+    +'<tr><th>Narration</th><td>'+esc(r.narration||'—')+'</td></tr>'
     +'</table>'
     +'<div class="pfooter"><div class="ppow">This is a digitally generated receipt and does not require a signature.<br>Powered by Bhayani Business Solutions</div>'
     +'<div class="psign">For '+esc(fd.printName)+'</div></div></div>';
@@ -3180,7 +3223,8 @@ function confirmArchive(){
     btn.innerHTML = '<i class="ti ti-archive"></i> Archive';
     if(d.ok){
       closeM('mArchive');
-      toast(archiveTarget.name+' archived ✓','ok');
+      var msg=archiveTarget.name+' archived ✓'+(d.tasksRemoved?' ('+d.tasksRemoved+' task'+(d.tasksRemoved>1?'s':'')+' removed)':'');
+      toast(msg,'ok');
       archiveTarget = null;
       loadAll();
     } else {
@@ -3270,6 +3314,8 @@ function numWords(n){
     cdRenderPending:cdRenderPending,
     cdRenderTasks:cdRenderTasks,
     cdToggleDD:cdToggleDD,
+    loadOpenBills:loadOpenBills,
+    onBillCheckChange:onBillCheckChange,
     cdToggleITR:cdToggleITR,
     cdToggleTA:cdToggleTA,
     cdTogglePw:cdTogglePw,
@@ -5037,9 +5083,14 @@ function saveClientTab(){
   });
 }
 function deleteClientTab(id){
-  if(!confirm('Remove this client? This does not delete their bills/tasks/documents.')) return;
+  if(!confirm('Remove this client? This will also delete all of their tasks (bills/documents are kept).')) return;
   api('delClient',{id:id},function(d){
-    if(d.ok){ toast('Client removed ✓','ok'); GETALL_CACHE=null; loadClientsTab(); }
+    if(d.ok){
+      toast('Client removed ✓'+(d.tasksRemoved?' ('+d.tasksRemoved+' task'+(d.tasksRemoved>1?'s':'')+' removed)':''),'ok');
+      GETALL_CACHE=null; loadClientsTab();
+      if(typeof TASKS_CACHE!=='undefined') TASKS_CACHE=null;
+      if(typeof loadTasksTab==='function' && document.getElementById('panel-tasks') && document.getElementById('panel-tasks').classList.contains('active')) loadTasksTab();
+    }
     else toast(d.error||'Remove failed','err');
   });
 }
