@@ -1279,6 +1279,7 @@ function pmInit(){
       <input type="date" class="dt" id="bto">
     </div>
     <button class="btn btn-p" onclick="Billing.fetchBills()"><i class="ti ti-database-import"></i> Fetch Bills</button>
+    <button class="btn btn-o" onclick="Billing.openBulkBills()"><i class="ti ti-stack-2"></i> Bulk Create Bills</button>
   </div>
   <div class="twrap"><div class="tbox">
     <table>
@@ -1480,6 +1481,58 @@ function pmInit(){
     <div class="mfoot">
       <button class="btn btn-o" onclick="Billing.closeM('mAddBill')">Cancel</button>
       <button class="btn btn-p" id="saveBillBtn" onclick="Billing.saveBill()"><i class="ti ti-device-floppy"></i> Save Bill</button>
+    </div>
+  </div>
+</div>
+
+<datalist id="bulkSvcList"></datalist>
+
+<div class="moverlay" id="mBulkBills">
+  <div class="modal" style="width:920px;max-width:95vw;">
+    <div class="mhdr">
+      <div class="mtitle" style="color:var(--accent)"><i class="ti ti-stack-2"></i> Bulk Create Bills</div>
+      <button class="mclose" onclick="Billing.closeM('mBulkBills')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="mbody">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Pick a client, description and amount per row — one bill is created per row, all with the same firm/date. When done, every bill opens as a single print window (one bill per page) so you can Print &rarr; Save as PDF once for the whole batch.</p>
+      <div class="fg2">
+        <div class="fg"><label class="lbl">Firm *</label><select id="bk-firm" onchange="Billing.refreshBulkGstUI()"></select></div>
+        <div class="fg"><label class="lbl">Bill Date *</label><input type="date" id="bk-date"></div>
+        <div class="fg sp2"><label class="lbl">Service Period</label><input id="bk-period" placeholder="FY 2025-26 (optional, applied to all rows)"></div>
+      </div>
+      <div class="fg2" style="align-items:center;">
+        <div class="fg sp2" style="display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" id="bk-gst-on" onchange="Billing.toggleBulkGst()" style="width:16px;height:16px;cursor:pointer;">
+          <label class="lbl" style="margin:0;cursor:pointer;" onclick="document.getElementById('bk-gst-on').click()">Charge GST on these bills (Tax Invoice instead of Bill of Supply) — applied to every row</label>
+        </div>
+      </div>
+      <div id="bk-gst-fields" style="display:none;">
+        <div class="fg2">
+          <div class="fg"><label class="lbl">GST Rate (%)</label>
+            <select id="bk-gst-rate">
+              <option value="18" selected>18%</option><option value="12">12%</option><option value="5">5%</option><option value="0.1">0.1%</option><option value="28">28%</option>
+            </select>
+          </div>
+          <div class="fg"><label class="lbl">SAC Code</label><input id="bk-gst-sac" placeholder="998231"></div>
+          <div class="fg sp2" style="font-size:11px;color:var(--muted);align-self:flex-end;padding-bottom:6px;">Place of Supply is guessed per client from their GSTIN (falls back to the firm's home state).</div>
+        </div>
+      </div>
+      <hr class="hdivider">
+      <label class="lbl" style="display:block;margin-bottom:6px;">Bills</label>
+      <table class="itbl">
+        <thead><tr><th style="width:34%">Client</th><th style="width:38%">Description</th><th style="width:18%">Amount (₹)</th><th style="width:10%"></th></tr></thead>
+        <tbody id="bk-rows"></tbody>
+      </table>
+      <button class="addbtn" onclick="Billing.addBulkRow()"><i class="ti ti-plus"></i> Add row</button>
+      <div class="btots">
+        <div><div class="btot-lbl">Rows Ready</div><div class="btot-big" id="bk-count">0</div></div>
+        <div><div class="btot-lbl">Total Amount</div><div class="btot-big" id="bk-tot">₹0</div></div>
+      </div>
+      <div id="bk-progress" style="display:none;font-size:12px;color:var(--muted);margin-top:8px;"></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-o" onclick="Billing.closeM('mBulkBills')">Cancel</button>
+      <button class="btn btn-p" id="saveBulkBtn" onclick="Billing.saveBulkBills()"><i class="ti ti-file-download"></i> Create All &amp; Download PDF</button>
     </div>
   </div>
 </div>
@@ -2537,6 +2590,154 @@ function saveBill(){
   });
 }
 
+// =========================================================================
+// BULK CREATE BILLS — one modal, many rows (client + description + amount),
+// same firm/date/GST settings applied to every row. Each row is saved as its
+// own bill via the normal addBill route (sequentially, one at a time, so we
+// don't hammer the Apps Script backend with a burst of parallel requests).
+// Once every row is saved, all the resulting bills are rendered through the
+// same billHTML()/printCSS() used for a single bill and opened in ONE print
+// window — one bill per page — so "Print > Save as PDF" produces a single
+// multi-page PDF for the whole batch in one go.
+// =========================================================================
+function clientOptionsHTML(){
+  return allClients.map(function(c){return '<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>';}).join('');
+}
+
+function bulkRowHTML(){
+  return '<tr>'
+    +'<td style="padding:0;"><select class="bk-client" onchange="Billing.calcBulkTots()" style="width:100%;border:none;padding:4px 6px;font-size:12px;background:transparent;outline:none;"><option value="">— Select client —</option>'+clientOptionsHTML()+'</select></td>'
+    +'<td style="padding:0;"><input type="text" class="bk-desc" list="bulkSvcList" placeholder="Describe service…" style="width:100%;border:none;padding:4px 6px;font-size:12px;background:transparent;outline:none;"></td>'
+    +'<td><input type="number" placeholder="0" class="bk-amt" oninput="Billing.calcBulkTots()" style="border:none;padding:4px 6px;font-size:13px;background:transparent;outline:none;width:100%;"></td>'
+    +'<td><button class="delbtn" onclick="Billing.delBulkRow(this)"><i class="ti ti-x"></i></button></td>'
+  +'</tr>';
+}
+
+function openBulkBills(){
+  document.getElementById('bulkSvcList').innerHTML=SERVICES.filter(function(s){return s!=='Other';}).map(function(s){return '<option value="'+esc(s)+'">';}).join('');
+  var firmSel=document.getElementById('bk-firm');
+  firmSel.innerHTML=FIRMS.map(function(f){return '<option>'+esc(f)+'</option>';}).join('');
+  var dateEl=document.getElementById('bk-date');
+  if(!dateEl.value) dateEl.value=new Date().toISOString().split('T')[0];
+  document.getElementById('bk-period').value='';
+  document.getElementById('bk-gst-on').checked=false;
+  refreshBulkGstUI();
+  toggleBulkGst();
+  var rows=document.getElementById('bk-rows');
+  rows.innerHTML='';
+  for(var i=0;i<3;i++) rows.insertAdjacentHTML('beforeend',bulkRowHTML());
+  calcBulkTots();
+  openM('mBulkBills');
+}
+
+function refreshBulkGstUI(){
+  var sacInp=document.getElementById('bk-gst-sac');
+  var firm=document.getElementById('bk-firm').value;
+  if(sacInp) sacInp.value=(GST_SETTINGS[firm]||{}).sac||'998231';
+}
+
+function toggleBulkGst(){
+  var on=document.getElementById('bk-gst-on').checked;
+  document.getElementById('bk-gst-fields').style.display=on?'block':'none';
+}
+
+function addBulkRow(){ document.getElementById('bk-rows').insertAdjacentHTML('beforeend',bulkRowHTML()); calcBulkTots(); }
+function delBulkRow(btn){ if(document.querySelectorAll('#bk-rows tr').length>1){ btn.closest('tr').remove(); calcBulkTots(); } }
+
+function calcBulkTots(){
+  var tot=0,count=0;
+  document.querySelectorAll('#bk-rows tr').forEach(function(r){
+    var cid=r.querySelector('.bk-client').value;
+    var amt=parseFloat(r.querySelector('.bk-amt').value)||0;
+    if(cid&&amt>0){ tot+=amt; count++; }
+  });
+  document.getElementById('bk-count').textContent=count;
+  document.getElementById('bk-tot').textContent='₹'+fmt(tot);
+}
+
+function saveBulkBills(){
+  if(busy) return;
+  var dt=document.getElementById('bk-date').value;
+  var firm=document.getElementById('bk-firm').value;
+  if(!dt||!firm){toast('Date and firm are required','err');return;}
+  var period=document.getElementById('bk-period').value;
+  var gstOn=document.getElementById('bk-gst-on').checked;
+  var gstRate=gstOn?(parseFloat(document.getElementById('bk-gst-rate').value)||0):0;
+  var sacCode=gstOn?document.getElementById('bk-gst-sac').value:'';
+  var firmState=(GST_SETTINGS[firm]||{}).state||'Maharashtra';
+
+  var jobs=[], invalidRow=false;
+  document.querySelectorAll('#bk-rows tr').forEach(function(r){
+    var sel=r.querySelector('.bk-client');
+    var cid=sel.value;
+    var cname=cid?sel.options[sel.selectedIndex].text:'';
+    var desc=(r.querySelector('.bk-desc').value||'').trim();
+    var amt=parseFloat(r.querySelector('.bk-amt').value)||0;
+    if(!cid&&!desc&&!amt) return; // fully blank row — skip silently
+    if(!cid||amt<=0){ invalidRow=true; return; }
+    var client=allClients.find(function(c){return c.id===cid;});
+    var pos=gstOn?((client&&client.gstin?guessStateFromGstin(client.gstin):'')||firmState):'';
+    jobs.push({clientId:cid,clientName:cname,desc:desc||'Professional Services',amt:amt,placeOfSupply:pos});
+  });
+  if(invalidRow){ toast('Every row needs a client selected and an amount greater than 0','err'); return; }
+  if(!jobs.length){ toast('Add at least one bill row','err'); return; }
+
+  busy=true;
+  var btn=document.getElementById('saveBulkBtn');
+  btn.disabled=true;
+  var progress=document.getElementById('bk-progress');
+  progress.style.display='block';
+  var results=[], failed=[];
+
+  function next(i){
+    if(i>=jobs.length){ finishBulk(); return; }
+    var job=jobs[i];
+    progress.textContent='Creating bill '+(i+1)+' of '+jobs.length+' — '+job.clientName+'…';
+    var items=[{desc:job.desc,amt:job.amt}];
+    api({action:'addBill',billDate:dt,clientId:job.clientId,clientName:job.clientName,firm:firm,
+      description:job.desc,period:period,taxable:job.amt,narration:'',items:JSON.stringify(items),
+      gstRate:gstRate,placeOfSupply:job.placeOfSupply,sacCode:sacCode
+    },function(d){
+      if(d.ok){
+        results.push(Object.assign({date:fmtDate(dt),total:job.amt,items:items}, d.data));
+      } else {
+        failed.push(job.clientName+' ('+(d.error||'failed')+')');
+      }
+      next(i+1);
+    });
+  }
+
+  function finishBulk(){
+    busy=false;
+    btn.disabled=false;
+    progress.style.display='none';
+    if(results.length){
+      loadAll();
+      closeM('mBulkBills');
+      toast(results.length+' bill'+(results.length>1?'s':'')+' created ✓'+(failed.length?(' — '+failed.length+' failed'):''),failed.length?'err':'ok');
+      doBulkPrint(results);
+    } else {
+      toast('No bills were created — '+failed.join(', '),'err');
+    }
+    if(failed.length) console.warn('Bulk bill failures:',failed);
+  }
+
+  next(0);
+}
+
+function doBulkPrint(list){
+  var w=window.open('','_blank');
+  if(!w){ toast('Bills were saved, but please allow popups for this site to open the combined print/PDF view','err'); return; }
+  var pages=list.map(function(pd){ return '<div style="page-break-after:always;">'+billHTML(pd)+'</div>'; }).join('');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Print</title>'+printCSS()+'</head><body>');
+  w.document.write('<div class="no-print" style="background:#1a3a5c;padding:10px 16px;display:flex;gap:10px;align-items:center;">');
+  w.document.write('<span style="color:#fff;font-weight:600;font-size:13px;">Atik Bhayani &amp; Associates — '+list.length+' bill'+(list.length>1?'s':'')+'</span>');
+  w.document.write('<button onclick="window.print()" style="margin-left:auto;padding:6px 18px;background:#fff;color:#1a3a5c;border:none;border-radius:5px;font-weight:600;cursor:pointer;">&#128424; Print / Save as PDF</button>');
+  w.document.write('<button onclick="window.close()" style="padding:6px 14px;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:5px;cursor:pointer;">Close</button>');
+  w.document.write('</div>'+pages+'</body></html>');
+  w.document.close();
+}
+
 function fetchBills(){
   var d=new Date(),m=d.getMonth();
   var fyS=m>=3?new Date(d.getFullYear(),3,1):new Date(d.getFullYear()-1,3,1);
@@ -3310,6 +3511,13 @@ function numWords(n){
 
   window.Billing = {
     addRow:addRow,
+    addBulkRow:addBulkRow,
+    delBulkRow:delBulkRow,
+    calcBulkTots:calcBulkTots,
+    openBulkBills:openBulkBills,
+    refreshBulkGstUI:refreshBulkGstUI,
+    toggleBulkGst:toggleBulkGst,
+    saveBulkBills:saveBulkBills,
     calcTots:calcTots,
     cancelBillIdx:cancelBillIdx,
     cancelRecIdx:cancelRecIdx,
