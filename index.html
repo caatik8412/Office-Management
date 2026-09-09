@@ -2886,48 +2886,48 @@ function doPrint(){
 
 function printCSS(){
   return '<style>*{box-sizing:border-box;margin:0;padding:0;}'
-    +'body{font-family:Arial,sans-serif;font-size:12px;color:#000;background:#fff;}'
+    +'body{font-family:Arial,sans-serif;font-size:12px;color:#1a1a1a;background:#fff;}'
     +'.doc{width:100%;max-width:190mm;margin:0 auto;padding:10mm 12mm;}'
-    +'.phdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5mm;padding-bottom:3mm;border-bottom:1.5px solid #000;}'
-    +'.pfirm{font-size:15px;font-weight:bold;}'
-    +'.pfsub{font-size:10px;color:#444;margin-top:2px;}'
-    +'.pdtype{font-size:13px;font-weight:bold;text-align:right;text-transform:uppercase;}'
-    +'.pdmeta{font-size:11px;color:#444;text-align:right;margin-top:3px;line-height:1.6;}'
-    +'.pparties{display:grid;grid-template-columns:1fr 1fr;gap:5mm;margin-bottom:5mm;}'
-    +'.pparty{border:1px solid #ccc;padding:3mm;}'
-    +'.pplbl{font-size:9px;font-weight:bold;text-transform:uppercase;color:#555;margin-bottom:2px;}'
-    +'.ppname{font-size:12px;font-weight:bold;}'
+    +'.phdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6mm;padding-bottom:4mm;border-bottom:2.5px solid var(--accent,#000);}'
+    +'.pfirm{font-size:17px;font-weight:800;color:var(--accent,#111);letter-spacing:.2px;}'
+    +'.pfsub{font-size:10px;color:#555;margin-top:3px;line-height:1.5;}'
+    +'.pdtype{font-size:11px;font-weight:800;text-align:right;text-transform:uppercase;letter-spacing:.6px;color:var(--accent,#000);background:var(--accent-bg,#f4f4f4);display:inline-block;padding:4px 10px;border-radius:3px;float:right;}'
+    +'.pdmeta{font-size:11px;color:#555;text-align:right;margin-top:8px;line-height:1.7;clear:both;}'
+    +'.billto{border-left:3px solid var(--accent,#000);background:var(--accent-bg,#f7f7f7);padding:3.5mm 5mm;margin-bottom:5mm;border-radius:0 4px 4px 0;}'
+    +'.pplbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#666;margin-bottom:2px;}'
+    +'.ppname{font-size:14px;font-weight:800;color:#111;}'
     +'.ptbl{width:100%;border-collapse:collapse;margin-bottom:4mm;}'
-    +'.ptbl th{border:1px solid #000;padding:5px 8px;text-align:left;font-size:11px;background:#f0f0f0;}'
+    +'.ptbl th{border:1px solid var(--accent,#000);padding:6px 8px;text-align:left;font-size:11px;background:var(--accent-bg,#f0f0f0);color:var(--accent,#000);font-weight:700;}'
     +'.ptbl th.r,.ptbl td.r{text-align:right;}'
-    +'.ptbl td{padding:6px 8px;border:1px solid #ccc;font-size:11px;}'
+    +'.ptbl td{padding:6px 8px;border:1px solid #ddd;font-size:11px;}'
     +'.ptots{margin-bottom:4mm;}'
-    +'.ptrow{display:flex;justify-content:flex-end;gap:15mm;font-size:11px;padding:2px 0;}'
-    +'.ptrow.grand{font-size:13px;font-weight:bold;border-top:1.5px solid #000;padding-top:4px;margin-top:3px;}'
-    +'.ptlbl{min-width:30mm;text-align:right;color:#444;}'
+    +'.ptrow{display:flex;justify-content:flex-end;gap:15mm;font-size:11px;padding:2px 4px;}'
+    +'.ptrow.grand{font-size:14px;font-weight:800;border-top:2px solid var(--accent,#000);padding:6px 8px;margin-top:4px;background:var(--accent-bg,#f7f7f7);border-radius:3px;color:var(--accent,#000);}'
+    +'.ptlbl{min-width:30mm;text-align:right;color:#555;}'
+    +'.ptrow.grand .ptlbl{color:var(--accent,#000);}'
     +'.ptval{min-width:25mm;text-align:right;}'
-    +'.pwords{border:1px solid #ccc;padding:5px 8px;font-size:11px;margin-bottom:4mm;}'
-    +'.paybox{display:flex;gap:6mm;align-items:center;border:1.5px solid #000;border-radius:3px;padding:4mm;margin-bottom:4mm;background:#fafafa;}'
-    +'.payqr{width:28mm;height:28mm;object-fit:contain;flex-shrink:0;border:1px solid #ccc;border-radius:4px;}'
+    +'.pwords{border:1px solid #ddd;padding:5px 8px;font-size:11px;margin-bottom:4mm;font-style:italic;color:#333;}'
+    +'.paybox{display:flex;gap:6mm;align-items:center;border:1.5px solid var(--accent,#000);border-radius:4px;padding:4mm;margin-bottom:4mm;background:var(--accent-bg,#fafafa);}'
+    +'.payqr{width:28mm;height:28mm;object-fit:contain;flex-shrink:0;border:1px solid #ccc;border-radius:4px;background:#fff;}'
     +'.paydetails{flex:1;font-size:10.5px;line-height:1.7;}'
-    +'.paytitle{font-size:11px;font-weight:bold;margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;}'
+    +'.paytitle{font-size:11px;font-weight:800;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px;color:var(--accent,#000);}'
     +'.payrow{display:flex;gap:6px;}'
     +'.paylbl{color:#555;min-width:30mm;}'
     +'.payval{font-weight:600;font-family:monospace;}'
-    +'.pfooter{display:flex;justify-content:space-between;align-items:flex-end;padding-top:3mm;border-top:1px solid #ccc;margin-top:5mm;}'
-    +'.ppow{font-size:9px;color:#444;font-weight:600;}'
-    +'.psign{text-align:right;font-size:11px;line-height:2;}'
-    +'.rtitle{font-size:16px;font-weight:bold;text-align:center;margin-bottom:4mm;border-bottom:1.5px solid #000;padding-bottom:3mm;}'
+    +'.pfooter{display:flex;justify-content:space-between;align-items:flex-end;padding-top:3mm;border-top:1px solid #ddd;margin-top:5mm;}'
+    +'.ppow{font-size:9px;color:#777;font-weight:600;}'
+    +'.psign{text-align:right;font-size:11px;line-height:2;color:#333;}'
+    +'.rtitle{font-size:17px;font-weight:800;text-align:center;margin-bottom:4mm;border-bottom:2px solid var(--accent,#000);padding-bottom:3mm;color:var(--accent,#000);letter-spacing:1.5px;}'
     +'.rtbl{width:100%;border-collapse:collapse;margin-bottom:4mm;}'
-    +'.rtbl th{border:1px solid #000;padding:5px 8px;text-align:left;font-size:11px;background:#f0f0f0;width:40%;}'
-    +'.rtbl td{padding:6px 8px;border:1px solid #ccc;font-size:11px;font-weight:bold;}'
-    +'.ramt{text-align:center;font-size:20px;font-weight:bold;border:1.5px solid #000;padding:4mm;margin-bottom:4mm;}'
-    +'.rwords{border:1px solid #ccc;padding:5px 8px;font-size:11px;margin-bottom:4mm;}'
+    +'.rtbl th{border:1px solid var(--accent,#000);padding:6px 8px;text-align:left;font-size:11px;background:var(--accent-bg,#f0f0f0);color:var(--accent,#000);width:40%;font-weight:700;}'
+    +'.rtbl td{padding:6px 8px;border:1px solid #ddd;font-size:11px;font-weight:bold;}'
+    +'.ramt{text-align:center;font-size:22px;font-weight:800;border:2px solid var(--accent,#000);color:var(--accent,#000);background:var(--accent-bg,#fff);padding:4mm;margin-bottom:4mm;border-radius:4px;}'
+    +'.rwords{border:1px solid #ddd;padding:5px 8px;font-size:11px;margin-bottom:4mm;font-style:italic;color:#333;}'
     +'@media print{.no-print{display:none!important;}}</style>';
 }
 
 function billHTML(b){
-  var fd=FIRM_DETAILS[b.firm]||{printName:b.firm,sub:'',address:'Pandharpur, Maharashtra',meta:''};
+  var fd=FIRM_DETAILS[b.firm]||{printName:b.firm,sub:'',address:'Pandharpur, Maharashtra',meta:'',color:'#000',bg:'#f4f4f4'};
   var items=b.items||[{desc:b.description||'Professional Services',amt:b.taxable}];
   var taxable=0;
   items.forEach(function(it){ taxable+=it.amt||0; });
@@ -2953,13 +2953,15 @@ function billHTML(b){
       taxRows+='<div class="ptrow"><span class="ptlbl">IGST ('+gstRate+'%)</span><span class="ptval">₹'+fmt(igst)+'</span></div>';
     }
   }
-  return '<div class="doc">'
+  // Client name now appears ONCE — in the "Billed To" strip below the header.
+  // The old "From" box just repeated the firm name that's already the
+  // headline at the top of the doc, so it's been dropped.
+  return '<div class="doc" style="--accent:'+esc(fd.color||'#000')+';--accent-bg:'+esc(fd.bg||'#f4f4f4')+';">'
     +'<div class="phdr"><div><div class="pfirm">'+esc(fd.printName)+'</div>'
     +'<div class="pfsub">'+(fd.sub?esc(fd.sub)+'<br>':'')+esc(fd.address)+(fd.meta?'<br>'+fd.meta:'')+gstMetaLines+'</div></div>'
     +'<div><div class="pdtype">'+docType+'</div>'
     +'<div class="pdmeta">Bill No: <strong>'+esc(b.billNo)+'</strong><br>Date: <strong>'+esc(b.date)+'</strong>'+(b.period?'<br>Period: '+esc(b.period):'')+(isGst&&b.sacCode?'<br>SAC: '+esc(b.sacCode):'')+'</div></div></div>'
-    +'<div class="pparties"><div class="pparty"><div class="pplbl">From</div><div class="ppname">'+esc(fd.printName)+'</div></div>'
-    +'<div class="pparty"><div class="pplbl">Bill To</div><div class="ppname">'+esc(b.clientName)+'</div></div></div>'
+    +'<div class="billto"><div class="pplbl">Billed To</div><div class="ppname">'+esc(b.clientName)+'</div></div>'
     +'<table class="ptbl"><thead><tr><th style="width:75%">Description</th><th class="r" style="width:25%">Amount</th></tr></thead><tbody>'+irows+'</tbody></table>'
     +'<div class="ptots">'+taxRows+'<div class="ptrow grand"><span class="ptlbl">'+(isGst?'Grand Total':'Total Amount')+'</span><span class="ptval">₹'+fmt(grandTotal)+'</span></div></div>'
     +'<div class="pwords">Rupees: '+numWords(Math.round(grandTotal))+' Only</div>'
@@ -2980,20 +2982,21 @@ function billHTML(b){
 }
 
 function recHTML(r){
-  var fd=FIRM_DETAILS[r.firm]||{printName:r.firm,sub:'',address:'Pandharpur, Maharashtra',meta:''};
+  var fd=FIRM_DETAILS[r.firm]||{printName:r.firm,sub:'',address:'Pandharpur, Maharashtra',meta:'',color:'#000',bg:'#f4f4f4'};
   var discount=Number(r.discount)||0;
   var allocRows='';
   if(r.allocations && r.allocations.length){
     allocRows='<tr><th>Applied To Bills</th><td>'+r.allocations.map(function(a){return esc(a.billNo)+' (₹'+fmt(a.amount)+')';}).join(', ')+'</td></tr>';
   }
   var discRow=discount>0?('<tr><th>Discount / Write-off</th><td>₹'+fmt(discount)+'</td></tr>'):'';
-  return '<div class="doc">'
+  // Same fix as billHTML — "Received By" just repeated the firm name already
+  // shown as the headline, so only the payer ("Received From") gets a strip.
+  return '<div class="doc" style="--accent:'+esc(fd.color||'#000')+';--accent-bg:'+esc(fd.bg||'#f4f4f4')+';">'
     +'<div class="phdr"><div><div class="pfirm">'+esc(fd.printName)+'</div>'
     +'<div class="pfsub">'+(fd.sub?esc(fd.sub)+'<br>':'')+esc(fd.address)+(fd.meta?'<br>'+fd.meta:'')+'</div></div>'
     +'<div><div class="pdtype">Receipt Voucher</div>'
     +'<div class="pdmeta">Receipt No: <strong>'+esc(r.receiptNo)+'</strong><br>Date: <strong>'+esc(r.date)+'</strong></div></div></div>'
-    +'<div class="pparties"><div class="pparty"><div class="pplbl">Received By</div><div class="ppname">'+esc(fd.printName)+'</div></div>'
-    +'<div class="pparty"><div class="pplbl">Received From</div><div class="ppname">'+esc(r.clientName)+'</div></div></div>'
+    +'<div class="billto"><div class="pplbl">Received From</div><div class="ppname">'+esc(r.clientName)+'</div></div>'
     +'<div class="rtitle">RECEIPT</div>'
     +'<div class="ramt">₹ '+fmt(r.amount)+'</div>'
     +'<div class="rwords">Rupees: '+numWords(Math.round(r.amount))+' Only</div>'
