@@ -2575,7 +2575,7 @@ function renderBills(){
     var f=FIRM_DETAILS[b.firm]||{color:'#64748b',bg:'#f1f5f9'};
     return '<tr class="row">'
       +'<td style="font-weight:600;">'+esc(b.billNo)+'</td>'
-      +'<td style="font-size:12px;color:var(--muted);">'+esc(b.date)+'</td>'
+      +'<td style="font-size:12px;color:var(--muted);">'+esc(fmtDate(b.date))+'</td>'
       +'<td style="font-weight:500;">'+esc(b.clientName)+'</td>'
       +'<td><span class="cbadge" style="background:'+f.bg+';color:'+f.color+'">'+esc(b.firm)+'</span></td>'
       +'<td style="font-size:12px;color:var(--muted);">'+esc(b.period||'—')+(Number(b.gstRate)>0?' <span class="cbadge" style="background:#dcfce7;color:#15803d;font-size:9px;">GST '+b.gstRate+'%</span>':'')+'</td>'
@@ -2706,7 +2706,7 @@ function renderReceipts(){
     var f=FIRM_DETAILS[r.firm]||{color:'#64748b',bg:'#f1f5f9'};
     return '<tr class="row">'
       +'<td style="font-weight:600;">'+esc(r.receiptNo)+'</td>'
-      +'<td style="font-size:12px;color:var(--muted);">'+esc(r.date)+'</td>'
+      +'<td style="font-size:12px;color:var(--muted);">'+esc(fmtDate(r.date))+'</td>'
       +'<td style="font-weight:500;">'+esc(r.clientName)+'</td>'
       +'<td><span class="cbadge" style="background:'+f.bg+';color:'+f.color+'">'+esc(r.firm)+'</span></td>'
       +'<td style="font-size:12px;">'+esc(r.mode)+'</td>'
@@ -2960,7 +2960,7 @@ function billHTML(b){
     +'<div class="phdr"><div><div class="pfirm">'+esc(fd.printName)+'</div>'
     +'<div class="pfsub">'+(fd.sub?esc(fd.sub)+'<br>':'')+esc(fd.address)+(fd.meta?'<br>'+fd.meta:'')+gstMetaLines+'</div></div>'
     +'<div><div class="pdtype">'+docType+'</div>'
-    +'<div class="pdmeta">Bill No: <strong>'+esc(b.billNo)+'</strong><br>Date: <strong>'+esc(b.date)+'</strong>'+(b.period?'<br>Period: '+esc(b.period):'')+(isGst&&b.sacCode?'<br>SAC: '+esc(b.sacCode):'')+'</div></div></div>'
+    +'<div class="pdmeta">Bill No: <strong>'+esc(b.billNo)+'</strong><br>Date: <strong>'+esc(fmtDate(b.date))+'</strong>'+(b.period?'<br>Period: '+esc(b.period):'')+(isGst&&b.sacCode?'<br>SAC: '+esc(b.sacCode):'')+'</div></div></div>'
     +'<div class="billto"><div class="pplbl">Billed To</div><div class="ppname">'+esc(b.clientName)+'</div></div>'
     +'<table class="ptbl"><thead><tr><th style="width:75%">Description</th><th class="r" style="width:25%">Amount</th></tr></thead><tbody>'+irows+'</tbody></table>'
     +'<div class="ptots">'+taxRows+'<div class="ptrow grand"><span class="ptlbl">'+(isGst?'Grand Total':'Total Amount')+'</span><span class="ptval">₹'+fmt(grandTotal)+'</span></div></div>'
@@ -2995,7 +2995,7 @@ function recHTML(r){
     +'<div class="phdr"><div><div class="pfirm">'+esc(fd.printName)+'</div>'
     +'<div class="pfsub">'+(fd.sub?esc(fd.sub)+'<br>':'')+esc(fd.address)+(fd.meta?'<br>'+fd.meta:'')+'</div></div>'
     +'<div><div class="pdtype">Receipt Voucher</div>'
-    +'<div class="pdmeta">Receipt No: <strong>'+esc(r.receiptNo)+'</strong><br>Date: <strong>'+esc(r.date)+'</strong></div></div></div>'
+    +'<div class="pdmeta">Receipt No: <strong>'+esc(r.receiptNo)+'</strong><br>Date: <strong>'+esc(fmtDate(r.date))+'</strong></div></div></div>'
     +'<div class="billto"><div class="pplbl">Received From</div><div class="ppname">'+esc(r.clientName)+'</div></div>'
     +'<div class="rtitle">RECEIPT</div>'
     +'<div class="ramt">₹ '+fmt(r.amount)+'</div>'
@@ -3173,7 +3173,7 @@ function fetchCancelledBills(){
       var reason=parts[1]||'—', ts=parts[2]||'';
       return '<tr class="row" style="opacity:.7;">'
         +'<td style="font-weight:600;text-decoration:line-through;color:var(--muted);">'+esc(b.billNo)+'</td>'
-        +'<td style="font-size:12px;color:var(--muted);">'+esc(b.date)+'</td>'
+        +'<td style="font-size:12px;color:var(--muted);">'+esc(fmtDate(b.date))+'</td>'
         +'<td style="font-weight:500;">'+esc(b.clientName)+'</td>'
         +'<td><span class="cbadge" style="background:'+f.bg+';color:'+f.color+'">'+esc(b.firm)+'</span></td>'
         +'<td style="font-size:12px;color:var(--muted);">'+esc(b.period||'—')+'</td>'
@@ -3198,7 +3198,7 @@ function fetchCancelledReceipts(){
       var reason=parts[1]||'—', ts=parts[2]||'';
       return '<tr class="row" style="opacity:.7;">'
         +'<td style="font-weight:600;text-decoration:line-through;color:var(--muted);">'+esc(r.receiptNo)+'</td>'
-        +'<td style="font-size:12px;color:var(--muted);">'+esc(r.date)+'</td>'
+        +'<td style="font-size:12px;color:var(--muted);">'+esc(fmtDate(r.date))+'</td>'
         +'<td style="font-weight:500;">'+esc(r.clientName)+'</td>'
         +'<td><span class="cbadge" style="background:'+f.bg+';color:'+f.color+'">'+esc(r.firm)+'</span></td>'
         +'<td class="amt" style="text-decoration:line-through;color:var(--muted);">₹'+fmt(r.amount)+'</td>'
@@ -3273,7 +3273,13 @@ function toast(msg,type){
   clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},3500);
 }
 function fmtDate(s){
-  var p=s.split('-'),m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  if(!s) return '';
+  // Sheet-backed dates sometimes come back as a full ISO datetime
+  // (e.g. "2026-09-08T07:00:00.000Z") instead of a plain "YYYY-MM-DD"
+  // string — strip any time portion first so both shapes format the same.
+  var s2=String(s).split('T')[0];
+  var p=s2.split('-'),m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  if(p.length<3||isNaN(+p[1])) return String(s);
   return p[2]+' '+m[+p[1]-1]+' '+p[0];
 }
 function parseDate(s){
