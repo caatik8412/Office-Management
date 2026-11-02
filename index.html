@@ -491,7 +491,9 @@ var CU=null,CLIENTS=[],TASKS=[],PENDING=[];
 var TTAB='active',MTAB='active',TIMER=null;
 
 function api(a,d){
-  return fetch(URL+'?action='+a+'&d='+encodeURIComponent(JSON.stringify(d||{}))).then(function(r){return r.json();});
+  return fetch(URL+'?action='+a+'&d='+encodeURIComponent(JSON.stringify(d||{}))+(window.authQS_?window.authQS_():''))
+    .then(function(r){return r.json();})
+    .then(function(x){ if(x&&x.code==='auth'&&window.authExpired_) window.authExpired_(); return x; });
 }
 
 function doLogout(){
@@ -715,73 +717,51 @@ function renderDash(){
   }
 }
 
+// ---------------------------------------------------------------------------
+// DUE DATES — single source of truth is the server's rule engine (Compliance
+// tab). This adapter fetches the month once (generate = idempotent, then list)
+// and hands the Task Manager the same shape it always used. Never computes
+// dates in the browser, so this screen and the Due Dates tab cannot disagree.
+// ---------------------------------------------------------------------------
+var DUE_CACHE={}, DUE_LOADING={};
+function ensureDues(m,y){
+  var key=y+'-'+m;
+  if(DUE_CACHE[key]||DUE_LOADING[key]) return;
+  DUE_LOADING[key]=true;
+  api('generateDueDates',{month:m,year:y})
+    .then(function(){return api('listDueDates',{month:m,year:y});})
+    .then(function(r){ DUE_CACHE[key]=(r&&r.ok&&r.rows)||[]; })
+    .catch(function(){ DUE_CACHE[key]=[]; })
+    .then(function(){
+      delete DUE_LOADING[key];
+      try{renderDD();}catch(e){}
+      try{renderDash();}catch(e){}
+    });
+}
 function genDueDates(dispMonth, dispYear){
-  var dues=[];
-  var pm=dispMonth===1?12:dispMonth-1;
-  var py=dispMonth===1?dispYear-1:dispYear;
-  var isQE=(pm%3===0);
-  var mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var period=mn[pm-1]+' '+py;
-
-  function dd(cid,cname,label,due,cat,type,pMonth,pYear){
-    var ddid=cid+'_'+type+'_'+pMonth+'_'+pYear;
-    dues.push({ddid:ddid,cid:cid,cname:cname,label:label,due:due,cat:cat,type:type,period:period});
-  }
-  function dtStr(y,m,d){return y+'-'+(m<10?'0'+m:m)+'-'+(d<10?'0'+d:d);}
-
-  CLIENTS.forEach(function(c){
-    var cstart=c.start_date?new Date(c.start_date):new Date('2025-04-01');
-    var periodEnd=new Date(py,pm-1,28);
-    if(cstart>periodEnd)return;
-
-    var g=c.gst_type||'none',f=c.gst_freq||'monthly',emp=c.has_employees==='yes';
-    var cn=c.short_name||c.name;
-
-    if(g==='regular'&&f==='monthly'){
-      dd(c.id,cn,'GSTR-1 | '+period,dtStr(dispYear,dispMonth,11),  'GST','GSTR-1',pm,py);
-      dd(c.id,cn,'GSTR-3B | '+period,dtStr(dispYear,dispMonth,20), 'GST','GSTR-3B',pm,py);
-    }
-    if(g==='regular'&&f==='quarterly'){
-      if(isQE){
-        dd(c.id,cn,'GSTR-1 Qtr | '+period,dtStr(dispYear,dispMonth,13),'GST','GSTR-1 (Quarterly)',pm,py);
-        dd(c.id,cn,'GSTR-3B Qtr | '+period,dtStr(dispYear,dispMonth,22),'GST','GSTR-3B (Quarterly)',pm,py);
-      } else {
-        dd(c.id,cn,'PMT-06 | '+period,dtStr(dispYear,dispMonth,25),'GST','PMT-06',pm,py);
-      }
-    }
-    if(g==='composition'&&isQE){
-      dd(c.id,cn,'CMP-08 | '+period,dtStr(dispYear,dispMonth,18),'GST','CMP-08',pm,py);
-    }
-    if(emp){
-      dd(c.id,cn,'TDS Payment | '+period,dtStr(dispYear,dispMonth,7),'TDS','TDS Payment',pm,py);
-      dd(c.id,cn,'PF / ESIC | '+period,dtStr(dispYear,dispMonth,15),'PF / ESIC','PF / ESIC',pm,py);
-    }
-    if(emp&&(dispMonth===7||dispMonth===10||dispMonth===1||dispMonth===5)){
-      var qmap={7:'Q1',10:'Q2',1:'Q3',5:'Q4'};
-      var qday={7:31,10:31,1:31,5:31};
-      var fyStart = (dispMonth===5||dispMonth===1) ? dispYear-1 : dispYear;
-      var fyEnd = fyStart+1;
-      dd(c.id,cn,'TDS Return '+qmap[dispMonth]+' | FY '+fyStart+'-'+String(fyEnd).slice(2),
-        dtStr(dispYear,dispMonth,qday[dispMonth]),'TDS','TDS Returns',pm,py);
-    }
-    var audit=c.turnover==='above1cr';
-    var pvt=c.entity==='Private Limited'||c.entity==='LLP';
-    if(dispMonth===9&&audit) dd(c.id,cn,'Tax Audit 3CD | FY '+py+'-'+String(py+1).slice(2),dtStr(dispYear,9,30),'Audit','Tax Audit',py,py);
-    if(dispMonth===10&&pvt) dd(c.id,cn,'ROC AOC-4 | FY '+py+'-'+String(py+1).slice(2),dtStr(dispYear,10,30),'ROC / MCA','ROC AOC-4',py,py);
-    if(dispMonth===11&&pvt) dd(c.id,cn,'ROC MGT-7 | FY '+py+'-'+String(py+1).slice(2),dtStr(dispYear,11,29),'ROC / MCA','ROC MGT-7',py,py);
-    if(dispMonth===6) dd(c.id,cn,'Advance Tax Q1 | FY '+dispYear+'-'+String(dispYear+1).slice(2),dtStr(dispYear,6,15),'Income Tax','Advance Tax Q1',dispYear,dispYear);
-    if(dispMonth===9) dd(c.id,cn,'Advance Tax Q2 | FY '+dispYear+'-'+String(dispYear+1).slice(2),dtStr(dispYear,9,15),'Income Tax','Advance Tax Q2',dispYear,dispYear);
-    if(dispMonth===12) dd(c.id,cn,'Advance Tax Q3 | FY '+dispYear+'-'+String(dispYear+1).slice(2),dtStr(dispYear,12,15),'Income Tax','Advance Tax Q3',dispYear,dispYear);
-    if(dispMonth===3) dd(c.id,cn,'Advance Tax Q4 | FY '+(dispYear-1)+'-'+String(dispYear).slice(2),dtStr(dispYear,3,15),'Income Tax','Advance Tax Q4',dispYear-1,dispYear-1);
-    if(dispMonth===12&&c.gstr9_applicable==='yes') dd(c.id,cn,'GSTR-9 Annual | FY '+py+'-'+String(py+1).slice(2),dtStr(dispYear,12,31),'GST','GSTR-9',py,py);
+  var key=dispYear+'-'+dispMonth;
+  var rows=DUE_CACHE[key];
+  if(!rows){ ensureDues(dispMonth,dispYear); return []; }
+  return rows.map(function(r){
+    var c=gc(r.client_id);
+    var cat=r.category;
+    if(cat==='Labour') cat=/^TDS/.test(r.compliance)?'TDS':'PF / ESIC';
+    return {ddid:r.id,cid:r.client_id,cname:c?(c.short_name||c.name):r.client_name,
+      label:r.compliance+(r.period?' | '+r.period:''),
+      due:String(r.due_date||'').split('T')[0],cat:cat,type:r.compliance,period:r.period||'',
+      done:r.status==='done'};
   });
-
-  dues.sort(function(a,b){return new Date(a.due)-new Date(b.due);});
-  return dues;
 }
 
 function findLinkedTask(ddid){
-  return TASKS.find(function(t){return t.dd_id===ddid;});
+  var t=TASKS.find(function(t){return t.dd_id===ddid;});
+  if(t) return t;
+  // Filed from the Due Dates tab (no task made): still show it as done here.
+  for(var k in DUE_CACHE){
+    var hit=(DUE_CACHE[k]||[]).find(function(r){return r.id===ddid&&r.status==='done';});
+    if(hit) return {id:'',status:'done',_virtual:true,dd_id:ddid};
+  }
+  return undefined;
 }
 
 function renderDD(){
@@ -1280,6 +1260,7 @@ function pmInit(){
   <div id="bills-active-bar" class="bar" style="gap:6px;">
     <div class="sbox"><i class="ti ti-search"></i><input id="bsearch" placeholder="Search client / bill no…" oninput="Billing.renderBills()"></div>
     <select class="sel" id="bfirm" onchange="Billing.renderBills()"><option value="">All Firms</option></select>
+    <select class="sel" id="bstatus" onchange="Billing.renderBills()"><option value="">All Payment Status</option><option value="due">Not fully paid</option><option value="unpaid">Unpaid</option><option value="partial">Part paid</option><option value="paid">Paid</option></select>
     <div style="display:flex;align-items:center;gap:4px;">
       <label style="font-size:11px;color:var(--muted);white-space:nowrap;">From</label>
       <input type="date" class="dt" id="bfrom">
@@ -1293,8 +1274,8 @@ function pmInit(){
   </div>
   <div class="twrap"><div class="tbox">
     <table>
-      <thead><tr><th>Bill No.</th><th>Date</th><th>Client</th><th>Firm</th><th>Period</th><th class="r">Amount</th><th class="r">Actions</th></tr></thead>
-      <tbody id="bbody"><tr><td colspan="7"><div class="fetch-msg"><i class="ti ti-file-invoice"></i><p>Click Fetch Bills to load records.</p></div></td></tr></tbody>
+      <thead><tr><th>Bill No.</th><th>Date</th><th>Client</th><th>Firm</th><th>Period</th><th class="r">Amount</th><th>Payment</th><th class="r">Outstanding</th><th class="r">Actions</th></tr></thead>
+      <tbody id="bbody"><tr><td colspan="9"><div class="fetch-msg"><i class="ti ti-file-invoice"></i><p>Click Fetch Bills to load records.</p></div></td></tr></tbody>
     </table>
   </div></div>
   <div id="bills-cancelled-section" style="display:none;">
@@ -1802,9 +1783,10 @@ function api(params,cb){
   var qs=Object.keys(params).map(function(k){
     return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);
   }).join('&');
-  fetch(SCRIPT_URL+'?'+qs)
+  fetch(SCRIPT_URL+'?'+qs+(window.authQS_?window.authQS_():''))
     .then(function(r){return r.json();})
     .then(function(d){
+      if(d&&d.code==='auth'&&window.authExpired_){ window.authExpired_(); return; }
       if(d.error) toast(d.error,'err');
       if(cb) cb(d);
     })
@@ -2155,6 +2137,7 @@ function openClientDrawer(id){
       +field('Email', c.email)
       +field('Entity Type', c.entity)
       +field('Start Date', c.start_date)
+      +field('Service End Date', c.end_date)
     +'</div></div>'
     +'<div class="dsec"><div class="dsec-title">Compliance Profile</div><div class="dgrid">'
       +field('GST Type', GST_TYPE_LABELS[c.gst_type]||c.gst_type)
@@ -2732,7 +2715,7 @@ function fetchBills(){
   var bto=document.getElementById('bto');
   if(!bfrom.value) bfrom.value=fyS.toISOString().split('T')[0];
   if(!bto.value)   bto.value=new Date().toISOString().split('T')[0];
-  document.getElementById('bbody').innerHTML='<tr class="ldg"><td colspan="7"><div style="display:flex;align-items:center;justify-content:center;gap:8px;"><div class="sp"></div> Fetching…</div></td></tr>';
+  document.getElementById('bbody').innerHTML='<tr class="ldg"><td colspan="9"><div style="display:flex;align-items:center;justify-content:center;gap:8px;"><div class="sp"></div> Fetching…</div></td></tr>';
   api({action:'getBills',from:bfrom.value,to:bto.value},function(d){
     allBills=d.bills||[];
     document.getElementById('st-bills').textContent=allBills.length;
@@ -2740,22 +2723,31 @@ function fetchBills(){
   });
 }
 
+function payChip(b){
+  var m={paid:['#dcfce7','#15803d','Paid'],partial:['#fef9c3','#a16207','Part paid'],unpaid:['#fef2f2','#dc2626','Unpaid']};
+  var r=m[b.payStatus]||['#f1f5f9','#475569','—'];
+  return '<span class="cbadge" style="background:'+r[0]+';color:'+r[1]+'">'+r[2]+'</span>';
+}
 function renderBills(){
   var q=document.getElementById('bsearch').value.toLowerCase();
   var firm=document.getElementById('bfirm').value;
   var list=allBills.filter(function(b){
     if(firm&&b.firm!==firm) return false;
     if(q&&!b.clientName.toLowerCase().includes(q)&&!b.billNo.toLowerCase().includes(q)) return false;
+    var ps=(document.getElementById('bstatus')||{}).value;
+    if(ps==='due'&&b.payStatus==='paid') return false;
+    if(ps&&ps!=='due'&&b.payStatus!==ps) return false;
     return true;
   });
   list.sort(function(a,b){ return parseDate(b.rawDate||b.date)-parseDate(a.rawDate||a.date); });
-  if(!list.length){document.getElementById('bbody').innerHTML='<tr><td colspan="7"><div class="empty"><i class="ti ti-file-off"></i>No bills found.</div></td></tr>';return;}
+  if(!list.length){document.getElementById('bbody').innerHTML='<tr><td colspan="9"><div class="empty"><i class="ti ti-file-off"></i>No bills found.</div></td></tr>';return;}
 
-  var bTot={},bGrand=0;
-  list.forEach(function(b){bTot[b.firm]=(bTot[b.firm]||0)+b.total;bGrand+=b.total;});
+  var bTot={},bGrand=0,bOut=0;
+  list.forEach(function(b){bTot[b.firm]=(bTot[b.firm]||0)+b.total;bGrand+=b.total;bOut+=(Number(b.outstanding)||0);});
   var bs='<div class="sumcard tot" style="min-width:110px;"><div class="sumlbl">Total Bills</div><div class="sumval">'+list.length+'</div></div>';
   FIRMS.forEach(function(f){if(bTot[f])bs+='<div class="sumcard" style="background:'+FIRM_DETAILS[f].bg+';min-width:110px;"><div class="sumlbl" style="color:'+FIRM_DETAILS[f].color+'">'+esc(f)+'</div><div class="sumval" style="color:'+FIRM_DETAILS[f].color+'">₹'+fmt(bTot[f])+'</div></div>';});
   bs+='<div class="sumcard tot" style="min-width:110px;"><div class="sumlbl">Grand Total</div><div class="sumval">₹'+fmt(bGrand)+'</div></div>';
+  bs+='<div class="sumcard" style="background:#fef2f2;min-width:110px;"><div class="sumlbl" style="color:#dc2626">Outstanding</div><div class="sumval" style="color:#dc2626">₹'+fmt(bOut)+'</div></div>';
   var bss=document.getElementById('bsumstrip');bss.innerHTML=bs;bss.style.display='flex';
 
   document.getElementById('bbody').innerHTML=list.map(function(b,idx){
@@ -2768,6 +2760,8 @@ function renderBills(){
       +'<td><span class="cbadge" style="background:'+f.bg+';color:'+f.color+'">'+esc(b.firm)+'</span></td>'
       +'<td style="font-size:12px;color:var(--muted);">'+esc(b.period||'—')+(Number(b.gstRate)>0?' <span class="cbadge" style="background:#dcfce7;color:#15803d;font-size:9px;">GST '+b.gstRate+'%</span>':'')+'</td>'
       +'<td class="amt amtt">₹'+fmt(b.total)+'</td>'
+      +'<td>'+payChip(b)+'</td>'
+      +'<td class="amt" style="color:'+((Number(b.outstanding)||0)>0?'var(--red)':'var(--muted)')+';">'+((Number(b.outstanding)||0)>0?'₹'+fmt(b.outstanding)+(b.ageDays>30?'<div style="font-size:10px;font-weight:500;">'+b.ageDays+' days</div>':''):'—')+'</td>'
       +'<td><div class="acts">'
         +'<button class="icn ip" data-idx="'+idx+'" onclick="Billing.printBillIdx(this)" title="Print"><i class="ti ti-printer"></i></button>'
         +'<button class="icn" style="color:var(--red);" data-idx="'+idx+'" onclick="Billing.cancelBillIdx(this)" title="Cancel"><i class="ti ti-ban"></i></button>'
@@ -3815,7 +3809,7 @@ async function loadClients() {
   clientPickerHint.textContent = 'Loading client list…';
   clientPickerHint.classList.remove('err');
   try {
-    const resp = await fetch(CONFIG.WEB_APP_URL + '?action=clients');
+    const resp = await fetch(CONFIG.WEB_APP_URL + '?action=clients' + (window.authQS_ ? window.authQS_() : ''));
     if (!resp.ok) throw new Error(`Server responded with HTTP ${resp.status}`);
     const data = await resp.json();
     if (!data.success) throw new Error(data.error || 'Could not load client list.');
@@ -4326,6 +4320,7 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
         fileName: lastFileName,
         pdfBase64: base64,
         documents: sourceDocs,
+        token: (window.authTok_ ? window.authTok_() : ''),
       }),
     });
     const data = await resp.json();
@@ -4662,6 +4657,7 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
         <select class="sel" id="cl-partner-audit" style="width:100%;"><option value="no">No</option><option value="yes">Yes</option></select>
       </div>
       <div class="vf-field"><label>Start Date</label><input type="date" id="cl-startdate"></div>
+      <div class="vf-field"><label>Service End Date <span style="font-weight:400;color:var(--muted)">(no due dates after this date)</span></label><input type="date" id="cl-enddate"></div>
       <div class="vf-field" style="grid-column:1/-1;"><label>Notes</label><input type="text" id="cl-notes" placeholder="Portal logins, contact details…"></div>
       <div class="vf-field" style="grid-column:1/-1;display:flex;align-items:center;gap:8px;">
         <input type="checkbox" id="cl-archived" style="width:16px;height:16px;"> <label for="cl-archived" style="margin:0;">Archived (inactive client)</label>
@@ -4700,6 +4696,20 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
 <script>
 var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxoagx4t2EopKubBQs7iEc4RZAo81MDEyqs25J0YMXNOruPXpkKaoiPSy-0QwbW9Qt0/exec';
 var SHELL_USER = null;
+function shellFmtDate(s){
+  if(!s) return '';
+  var p=String(s).split('T')[0].split('-'),m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  if(p.length<3||isNaN(+p[1])) return String(s);
+  return p[2]+' '+m[+p[1]-1]+' '+p[0];
+}
+// Session token helpers — used by every API wrapper in the page.
+window.authTok_ = function(){ return (SHELL_USER && SHELL_USER.token) || ''; };
+window.authQS_ = function(){ var t = window.authTok_(); return t ? '&token=' + encodeURIComponent(t) : ''; };
+window.authExpired_ = function(){
+  if (!SHELL_USER) return;
+  if (window.toast) window.toast('Session expired — please sign in again.','err');
+  doShellLogout();
+};
 
 window.onload = function(){
   var saved = sessionStorage.getItem('shellUser');
@@ -4715,12 +4725,12 @@ function doShellLogin(){
   err.textContent = '';
   if (!u || !p) { err.textContent = 'Enter username and password'; return; }
   btn.disabled = true; btn.textContent = 'Signing in…';
-  fetch(WEBAPP_URL + '?action=login&username=' + encodeURIComponent(u) + '&password=' + encodeURIComponent(p))
+  fetch(WEBAPP_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify({action:'login', username:u, password:p})})
     .then(function(r){ return r.json(); })
     .then(function(d){
       btn.disabled = false; btn.textContent = 'Sign in';
       if (!d.ok) { err.textContent = d.error || 'Login failed'; return; }
-      SHELL_USER = d.user;
+      SHELL_USER = Object.assign({}, d.user, {token: d.token || ''});
       sessionStorage.setItem('shellUser', JSON.stringify(SHELL_USER));
       enterApp();
     })
@@ -5068,14 +5078,17 @@ function loadDashboardDues(){
 
 function api(action,params,cb){
   var qs=Object.keys(params||{}).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);}).join('&');
-  fetch(WEBAPP_URL+'?action='+action+(qs?'&'+qs:''))
+  fetch(WEBAPP_URL+'?action='+action+(qs?'&'+qs:'')+window.authQS_())
     .then(function(r){return r.json();})
+    .then(function(d){ if(d&&d.code==='auth'){ window.authExpired_(); } return d; })
     .catch(function(e){toast('Network error: '+e.message,'err'); return {ok:false,success:false,error:e.message};})
     .then(function(d){ if(cb)cb(d); });
 }
 function apiPost(body,cb){
+  body = Object.assign({}, body, {token: window.authTok_()});
   fetch(WEBAPP_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)})
     .then(function(r){return r.json();})
+    .then(function(d){ if(d&&d.code==='auth'){ window.authExpired_(); } return d; })
     .catch(function(e){toast('Network error: '+e.message,'err'); return {ok:false,success:false,error:e.message};})
     .then(function(d){ if(cb)cb(d); });
 }
@@ -5141,6 +5154,12 @@ function renderClientsTab(){
   if(!list.length){ document.getElementById('cl-body').innerHTML = '<tr><td colspan="8"><div class="empty"><i class="ti ti-users"></i>No clients found.</div></td></tr>'; return; }
   document.getElementById('cl-body').innerHTML = list.map(function(c){
     var isArchived = String(c.archived).toUpperCase()==='TRUE'||c.archived===true;
+    var endStr = String(c.end_date||'').split('T')[0];
+    var isEnded = endStr && endStr < new Date().toISOString().split('T')[0];
+    var statusCell = isArchived ? '<span class="badge" style="background:#fef2f2;color:#dc2626">Archived</span>'
+      : isEnded ? '<span class="badge" style="background:#fff7ed;color:#c2410c" title="Service ended '+esc(endStr)+'">Ended '+esc(shellFmtDate(endStr))+'</span>'
+      : endStr ? '<span class="badge" style="background:#fef9c3;color:#a16207" title="Service ends '+esc(endStr)+'">Ends '+esc(shellFmtDate(endStr))+'</span>'
+      : '<span class="badge" style="background:#dcfce7;color:#16a34a">Active</span>';
     return '<tr class="row">'
       +'<td style="font-weight:500;color:var(--accent);cursor:pointer;" onclick="Billing.openClientDrawer(\''+c.id+'\')" title="View client profile">'+esc(c.name)+'</td>'
       +'<td>'+esc(c.group||'—')+'</td>'
@@ -5148,7 +5167,7 @@ function renderClientsTab(){
       +'<td style="font-family:monospace;font-size:12px">'+esc(c.pan||'—')+'</td>'
       +'<td style="font-family:monospace;font-size:12px">'+esc(c.gstin||'—')+'</td>'
       +'<td>'+esc(c.mobile||'—')+'</td>'
-      +'<td>'+(isArchived?'<span class="badge" style="background:#fef2f2;color:#dc2626">Archived</span>':'<span class="badge" style="background:#dcfce7;color:#16a34a">Active</span>')+'</td>'
+      +'<td>'+statusCell+'</td>'
       +'<td><button class="btn btn-o" style="padding:5px 10px;font-size:12px" onclick="openClientForm(\''+c.id+'\')"><i class="ti ti-edit"></i> Edit</button> '
       +'<button class="btn btn-r" style="padding:5px 10px;font-size:12px" onclick="deleteClientTab(\''+c.id+'\')"><i class="ti ti-trash"></i></button></td>'
     +'</tr>';
@@ -5173,7 +5192,8 @@ function openClientForm(id){
   document.getElementById('cl-itrtype').value = c ? c.itrType||'' : '';
   document.getElementById('cl-audit').value = c ? (c.audit_applicable||'no') : 'no';
   document.getElementById('cl-partner-audit').value = c ? (c.partner_audit_firm||'no') : 'no';
-  document.getElementById('cl-startdate').value = c ? c.start_date||'' : new Date().toISOString().split('T')[0];
+  document.getElementById('cl-startdate').value = c ? String(c.start_date||'').split('T')[0] : new Date().toISOString().split('T')[0];
+  document.getElementById('cl-enddate').value = c ? String(c.end_date||'').split('T')[0] : '';
   document.getElementById('cl-notes').value = c ? c.notes||'' : '';
   document.getElementById('cl-archived').checked = c ? (String(c.archived).toUpperCase()==='TRUE'||c.archived===true) : false;
   var existingComps = [];
@@ -5205,10 +5225,13 @@ function saveClientTab(){
     audit_applicable: document.getElementById('cl-audit').value,
     partner_audit_firm: document.getElementById('cl-partner-audit').value,
     start_date: document.getElementById('cl-startdate').value,
+    end_date: document.getElementById('cl-enddate').value,
     notes: document.getElementById('cl-notes').value.trim(),
     archived: document.getElementById('cl-archived').checked,
     compliances: JSON.stringify(getCheckedCompsTab())
   };
+  if(payload.end_date && payload.start_date && payload.end_date < payload.start_date){ toast('End date cannot be before the start date','err'); return; }
+  if(payload.end_date && !confirm('Stop this client from '+payload.end_date+'?\n\nAny pending due dates and open tasks after that date will be removed. Filed history is kept.')) return;
   var btn = document.getElementById('cl-save-btn');
   btn.disabled = true; btn.textContent = 'Saving…';
   api('saveClient',payload,function(d){
@@ -5308,23 +5331,33 @@ function renderDueDatesTab(){
     var total=rows.length;
     var completed=rows.filter(function(x){ return x.status==='done'; }).length;
     var pending=total-completed;
+    var od=rows.filter(function(x){ return x.status!=='done' && String(x.due_date||'').split('T')[0] < new Date().toISOString().split('T')[0]; }).length;
     return '<div class="card" style="padding:12px 16px;"><div style="font-size:11px;color:var(--muted);white-space:nowrap;">'+cat.replace(' / MCA','')+'</div>'
       +'<div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">'
       +'<span style="font-size:13px;white-space:nowrap;"><b>'+total+'</b> total</span>'
       +'<span style="font-size:13px;color:var(--green);white-space:nowrap;"><b>'+completed+'</b> done</span>'
-      +'<span style="font-size:13px;color:var(--red);white-space:nowrap;"><b>'+pending+'</b> pending</span></div></div>';
+      +'<span style="font-size:13px;color:var(--amber,#b45309);white-space:nowrap;"><b>'+pending+'</b> pending</span>'+(od?'<span style="font-size:13px;color:var(--red);white-space:nowrap;"><b>'+od+'</b> overdue</span>':'')+'</div></div>';
   }).join('');
   document.getElementById('dd-stat-rows').innerHTML='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;">'+statsHtml+'</div>';
 
   if(!dues.length){ document.getElementById('dd-body').innerHTML='<tr><td colspan="6"><div class="empty"><i class="ti ti-calendar-off"></i>No due dates for this month.</div></td></tr>'; return; }
+  var todayStr=new Date().toISOString().split('T')[0];
   document.getElementById('dd-body').innerHTML=dues.map(function(x){
     var done=x.status==='done';
-    return '<tr class="row">'
+    var dueStr=String(x.due_date||'').split('T')[0];
+    var daysLeft=Math.round((new Date(dueStr)-new Date(todayStr))/86400000);
+    var overdue=!done&&daysLeft<0, soon=!done&&daysLeft>=0&&daysLeft<=7;
+    var dateCell='<span style="font-weight:600;color:'+(overdue?'var(--red)':soon?'#b45309':'inherit')+'">'+esc(shellFmtDate(dueStr))+'</span>'
+      +(overdue?'<div style="font-size:10px;color:var(--red);">'+(-daysLeft)+' day'+(daysLeft===-1?'':'s')+' overdue</div>':soon?'<div style="font-size:10px;color:#b45309;">'+(daysLeft===0?'due today':'in '+daysLeft+' day'+(daysLeft===1?'':'s'))+'</div>':'');
+    var statusCell=done?'<span class="badge" style="background:#dcfce7;color:#16a34a">Done</span>'
+      :overdue?'<span class="badge" style="background:#fee2e2;color:#b91c1c">Overdue</span>'
+      :'<span class="badge" style="background:#fef9c3;color:#a16207">Pending</span>';
+    return '<tr class="row"'+(overdue?' style="background:#fff7f7"':'')+'>'
       +'<td style="font-weight:500">'+esc(x.client_name)+'</td>'
       +'<td><span class="badge" style="background:#f1f5f9;color:#475569">'+esc(x.category.replace(' / MCA',''))+'</span></td>'
-      +'<td>'+esc(x.compliance)+'</td>'
-      +'<td>'+new Date(x.due_date).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})+'</td>'
-      +'<td>'+(done?'<span class="badge" style="background:#dcfce7;color:#16a34a">Done</span>':'<span class="badge" style="background:#fef2f2;color:#dc2626">Pending</span>')+'</td>'
+      +'<td>'+esc(x.compliance)+(x.period?'<div style="font-size:11px;color:var(--muted);">'+esc(x.period)+'</div>':'')+'</td>'
+      +'<td>'+dateCell+'</td>'
+      +'<td>'+statusCell+'</td>'
       +'<td><button class="btn btn-o" style="padding:5px 10px;font-size:12px;margin-right:4px;" onclick="ddAddOpenTask(\''+x.client_id+'\',\''+esc(x.compliance)+'\',\''+esc(x.category)+'\',\''+x.due_date+'\')"><i class="ti ti-plus"></i> Task</button>'
       +'<button class="btn '+(done?'btn-o':'btn-p')+'" style="padding:5px 10px;font-size:12px;margin-right:4px;" onclick="ddToggle(\''+x.id+'\')">'+(done?'Mark Pending':'Mark Done')+'</button>'
       +'<button class="btn" style="padding:5px 8px;font-size:12px;background:#25D366;color:#fff;" title="WhatsApp reminder" onclick="sendRowWhatsApp(\''+x.id+'\')"><i class="ti ti-brand-whatsapp"></i></button></td>'
