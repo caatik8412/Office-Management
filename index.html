@@ -6,9 +6,6 @@
 <link rel="icon" href="data:,">
 <title>CA Atik Bhayani &amp; Associates — Practice Suite</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;600;700&family=DM+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <style>
 :root{
@@ -231,35 +228,190 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
   }#appRoot .btn-secondary:hover{ border-color:var(--navy-2); }#appRoot .status-log{ margin-top:16px; font-family:var(--mono); font-size:12px; color:#5C5447; min-height:18px; line-height:1.6; }#appRoot .status-log .ok{ color:var(--success); }#appRoot .status-log .err{ color:var(--danger); }#appRoot .status-log a{ color:var(--navy-2); }#appRoot /* --- Ledger preview card: the signature element --- */
   .ledger{ position:sticky; top:24px; background:#FFFDF8; border:1px solid var(--hairline); box-shadow:0 1px 0 var(--hairline), 0 8px 18px -12px rgba(20,20,10,.35); position:relative; padding:26px 22px 22px 46px; min-height:520px; }#appRoot .ledger::before{ content:''; position:absolute; left:30px; top:0; bottom:0; width:1.5px; background:var(--ledger-red); opacity:.55; }#appRoot .ledger__eyebrow{ font-family:var(--mono); font-size:10px; letter-spacing:.08em; color:var(--gold); text-transform:uppercase; }#appRoot .ledger__firm{ font-family:var(--serif); font-weight:700; font-size:18px; color:var(--navy); margin:4px 0 2px; }#appRoot .ledger__firmsub{ font-size:10.5px; color:#5C5447; }#appRoot .ledger__contact{ font-size:9.5px; color:#8A8174; margin-top:3px; }#appRoot .ledger__rule{ height:1px; background:var(--gold); margin:12px 0 16px; opacity:.8; }#appRoot .ledger__h1{ font-family:var(--sans); font-weight:700; font-size:11px; color:var(--gold); letter-spacing:.1em; text-transform:uppercase; }#appRoot .ledger__clientname{ font-family:var(--serif); font-weight:700; font-size:21px; color:var(--navy); line-height:1.2; margin:5px 0 18px; }#appRoot .ledger__h2{ font-size:11.5px; color:var(--charcoal); margin-top:0; margin-bottom:18px; }#appRoot .ledger__row{ display:flex; gap:10px; font-size:12px; margin-bottom:7px; }#appRoot .ledger__row dt{ font-weight:600; color:#5C5447; width:84px; flex:0 0 auto; }#appRoot .ledger__row dd{ font-family:var(--mono); color:var(--navy); margin:0; word-break:break-word; }#appRoot .ledger__hr{ height:1px; background:var(--hairline); margin:16px 0; }#appRoot .ledger__index-title{ font-size:10.5px; font-weight:700; letter-spacing:.08em; color:var(--navy); text-transform:uppercase; margin-bottom:10px; }#appRoot .ledger__index-item{ display:flex; align-items:baseline; gap:6px; font-size:12px; margin-bottom:9px; }#appRoot .ledger__index-num{ font-family:var(--mono); color:var(--gold); flex:0 0 auto; width:14px; }#appRoot .ledger__index-label{ flex:0 1 auto; }#appRoot .ledger__index-leader{ flex:1 1 auto; border-bottom:1px dotted var(--hairline); margin:0 4px; transform:translateY(-3px); }#appRoot .ledger__index-page{ font-family:var(--mono); font-size:11px; color:var(--navy); flex:0 0 auto; }#appRoot .ledger__index-empty{ font-size:12px; color:#8A8174; font-style:italic; }#appRoot .ledger__disclaimer{ font-size:11px; font-style:italic; color:#8A8174; line-height:1.45; margin-top:16px; }#appRoot .ledger__footer-row{ margin-top:auto; padding-top:10px; border-top:1px solid var(--hairline); display:flex; justify-content:space-between; align-items:flex-end; gap:10px; }#appRoot .ledger__footer{ font-size:10.5px; color:#8A8174; }#appRoot .ledger__sigline{ margin-top:14px; padding-top:4px; border-top:1px solid var(--hairline); width:120px; font-size:9px; color:#8A8174; }#appRoot .ledger__footer-right{ font-size:9.5px; color:#8A8174; text-align:right; white-space:nowrap; }#appRoot .ledger__summary{ display:flex; border:1px solid var(--gold); background:#FBF6EA; border-radius:2px; margin-top:14px; overflow:hidden; }#appRoot .ledger__summary-col{ flex:1; padding:9px 12px; }#appRoot .ledger__summary-col + .ledger__summary-col{ border-left:1px solid var(--gold); }#appRoot .ledger__summary-label{ font-size:9px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--gold); }#appRoot .ledger__summary-value{ font-family:var(--mono); font-size:15px; font-weight:600; color:var(--navy); margin-top:2px; }
 </style>
+<style id="design-system">
+/* ============================================================
+   Design system — ONE token set + ONE component look for every
+   module (shell, Task Manager, Billing, ITR). Legacy variable
+   names are remapped here so nothing else needs to change.
+   To restyle the app, edit the tokens below.
+   ============================================================ */
+:root{
+  --ink:#18181b; --ink-2:#6b7280; --ink-3:#9ca3af;
+  --line:#ececef; --canvas:#fafafa; --surface:#fff; --hover:#f4f4f6;
+  --accent:#2563a8; --accent-soft:#eef4fb;
+  --ok:#15803d; --ok-soft:#ecfdf3; --warn:#b45309; --warn-soft:#fffbeb; --bad:#c62828; --bad-soft:#fef2f2;
+  --font:-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter','Segoe UI',system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+
+  /* legacy names -> tokens */
+  --navy:var(--ink); --border:var(--line); --bg:var(--canvas); --text:var(--ink); --muted:var(--ink-2);
+  --green:var(--ok); --red:var(--bad); --r:10px; --rs:6px; --sh:none;
+  --s:var(--surface); --b:var(--line); --t:var(--ink); --t2:var(--ink-2); --t3:var(--ink-3);
+  --bl:var(--accent); --bl-b:var(--accent-soft); --gr:var(--ok); --gr-b:var(--ok-soft);
+  --am:var(--warn); --am-b:var(--warn-soft); --rd:var(--bad); --rd-b:var(--bad-soft); --pu:#6d28d9; --pu-b:#f5f3ff;
+  --paper:var(--surface); --paper-2:var(--surface); --navy-2:var(--accent); --gold:var(--accent);
+  --charcoal:var(--ink); --hairline:var(--line); --danger:var(--bad); --danger-bg:var(--bad-soft);
+  --success:var(--ok); --success-bg:var(--ok-soft); --ledger-red:var(--bad); --serif:var(--font); --sans:var(--font);
+}
+*{scrollbar-width:thin;scrollbar-color:#d4d4d8 transparent}
+html,body{font-family:var(--font);background:var(--canvas);color:var(--ink);-webkit-font-smoothing:antialiased}
+body{font-size:13.5px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---- sign in ---- */
+.login-wrap{background:var(--canvas)}
+.login-box{box-shadow:none;border:1px solid var(--line);border-radius:12px;padding:32px}
+.login-logo{margin-bottom:8px}
+.login-logo-title{color:var(--ink);font-size:16px;font-weight:600}
+.login-divider{display:none}
+.login-field label{font-size:12px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--ink-2)}
+.login-field input{border-radius:6px;padding:9px 11px;font-size:14px}
+.login-btn{background:var(--ink);border-radius:6px;font-weight:500}
+.login-btn:hover{background:#34343a}
+
+/* ---- chrome: slim bar + quiet sidebar ---- */
+.top-hdr{display:flex;align-items:center;gap:8px;background:var(--surface);padding:0 12px;height:44px;box-shadow:none;border-bottom:1px solid var(--line)}
+.top-hdr-left{gap:0}
+.top-hdr-center{justify-content:flex-start}
+.top-hdr-title{font-size:13px;font-weight:600;color:var(--ink);letter-spacing:0}
+.top-hdr-right{display:none}
+.sb-collapse{background:transparent;color:var(--ink-2)}
+.sb-collapse:hover{background:var(--hover);color:var(--ink)}
+.sidebar{background:var(--canvas);border-right:1px solid var(--line)}
+.sb-nav{padding:8px}
+.sb-item{border-left:0;border-radius:6px;padding:7px 10px;gap:10px;color:var(--ink-2);font-size:13px;margin-bottom:1px}
+.sb-item i{font-size:16px}
+.sb-item:hover{background:var(--hover);color:var(--ink)}
+.sb-item.active{background:#ececef;color:var(--ink);font-weight:500}
+.sb-group-label{display:none}
+.sb-user{border-top:1px solid var(--line);padding:10px 12px}
+.sb-av{background:#e4e4e7;color:var(--ink)}
+.sb-uname{color:var(--ink);font-weight:500}
+.sb-urole{display:none}
+.sb-logout{color:var(--ink-3)}
+.sb-logout:hover{color:var(--ink)}
+.sidebar.collapsed .sb-item{padding:8px 0}
+.native-wrap{padding:24px 28px}
+h2.sectitle{font-size:18px;font-weight:600;color:var(--ink);letter-spacing:-.01em;margin-bottom:16px}
+h2.sectitle i{display:none}
+#db-asof{display:none}
+
+/* ---- buttons ---- */
+#app .btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:6px;font-size:13px;font-weight:500;background:var(--surface);color:var(--ink);border:1px solid var(--line);box-shadow:none;opacity:1}
+#app .btn:hover{background:var(--hover)}
+#app .btn-p,#app .btn-g,#app .btk{background:var(--ink);color:#fff;border-color:var(--ink)}
+#app .btn-p:hover,#app .btn-g:hover,#app .btk:hover{background:#34343a;opacity:1}
+#app .btn-r,#app .btr{background:var(--surface);color:var(--bad);border-color:var(--line)}
+#app .btn-r:hover,#app .btr:hover{background:var(--bad-soft)}
+#app .btg{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+#app .btn:disabled{opacity:.45;cursor:not-allowed}
+#app .bts,#app .btn-sm{height:26px;padding:0 9px;font-size:12px}
+#app .icn{border-radius:6px;border-color:var(--line)}
+
+/* ---- fields ---- */
+#app label.lbl,#app .fi label,#app .vf-field label,#app .field label{font-size:12px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--ink-2)}
+#app .sbox input,#app select.sel,#app select.si,#app input.si,#app input.dt,#app .fg input,#app .fg select,#app .fg textarea,
+#app .fi input,#app .fi select,#app .fi textarea,#app .vf-field input,#app .vf-field select,#app .vf-field textarea,
+#app .field input[type=text],#app .field input[type=date],#app .field select,#app .combo input[type=text],#app .doc-row input[type=text]{
+  border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font-size:13px;box-shadow:none;font-family:var(--font)}
+#app .sbox input:focus,#app select.sel:focus,#app .fg input:focus,#app .fg select:focus,#app .fg textarea:focus,#app .fi input:focus,
+#app .fi select:focus,#app .fi textarea:focus,#app .vf-field input:focus,#app .vf-field select:focus,#app .field input:focus,
+#app .field select:focus,#app .combo input:focus,#app input.si:focus,#app input.dt:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,168,.12);outline:none}
+#app .toggle-wrap{background:var(--hover);border:1px solid var(--line);color:var(--ink)}
+
+/* ---- surfaces ---- */
+#app .card,#app .stat,#app .db-stat,#app .set-section,#app .tbox,#app .panel,#app .cpl{box-shadow:none;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+#app .card{overflow:hidden}
+#app .db-stat .db-sv,#app .sv{font-weight:600;letter-spacing:-.01em}
+#app .db-stat .db-sl,#app .sl{font-weight:500}
+#app .db-ctit,#app .ctit,#app .set-title{font-size:13px;font-weight:600;color:var(--ink)}
+#app .sumstrip{background:transparent;border:0;padding:12px 20px 0;gap:10px}
+#app .sumcard,#app .sumcard.tot{background:var(--surface)!important;border:1px solid var(--line);border-radius:10px;text-align:left;padding:10px 14px}
+#app .sumlbl,#app .sumcard.tot .sumlbl{font-size:12px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--ink-2)}
+#app .sumval,#app .sumcard.tot .sumval{font-size:18px;font-weight:600;color:var(--ink)}
+#app .twrap{padding:12px 20px}
+#app .bar{background:transparent;border:0;padding:12px 20px}
+.native-wrap .bar{padding:0 0 14px}
+
+/* ---- tables ---- */
+#app th,#app .itbl th{font-size:12px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--ink-2);background:transparent;border-bottom:1px solid var(--line);padding:9px 12px}
+#app td{font-size:13px}
+#app tr.row:hover,#app tr:hover td{background:var(--canvas)}
+#app tr.grp td{background:var(--canvas);color:var(--ink-2);text-transform:none;letter-spacing:0;font-size:12px;font-weight:600}
+#app .amt,#app .amtt{font-variant-numeric:tabular-nums}
+#app .amtt{color:var(--ink)}
+#app .empty,#app .fetch-msg,#app .emp{color:var(--ink-3)}
+#app .empty i,#app .fetch-msg i{opacity:.35}
+
+/* ---- tabs ---- */
+#app .tabs,#app .inner-tabs,#app .stabs{background:var(--surface);border-bottom:1px solid var(--line);padding:0 20px;gap:2px}
+#app .tab,#app .inner-tab,#app .stab{color:var(--ink-2);font-weight:500;font-size:13px;padding:10px 12px}
+#app .tab:hover,#app .inner-tab:hover,#app .stab:hover{color:var(--ink)}
+#app .tab.active,#app .tab.on,#app .inner-tab.active,#app .stab.active{color:var(--ink);border-bottom-color:var(--ink);font-weight:500}
+#app .subtab.on{background:var(--ink);border-color:var(--ink)}
+
+/* ---- chips ---- */
+#app .badge,#app .bdg,#app .cbadge{font-weight:500;font-size:11px;border-radius:999px;letter-spacing:0}
+#app .cpill{background:var(--hover);border-color:var(--line);color:var(--ink)}
+
+/* ---- dialogs, drawer, toast ---- */
+#app .moverlay,#app .mo,.drawer-overlay{background:rgba(24,24,27,.35)}
+#app .modal,#app .md{border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.14)}
+#app .mhdr,#app .mh{border-bottom:1px solid var(--line)}
+#app .mtitle,#app .mt{font-size:15px;font-weight:600;color:var(--ink)}
+#app .mfoot,#app .mf{border-top:1px solid var(--line);background:var(--surface)}
+.drawer{box-shadow:-12px 0 40px rgba(0,0,0,.12)}
+.drawer-hdr{background:var(--surface);color:var(--ink);border-bottom:1px solid var(--line)}
+.drawer-hdr .dh-sub{color:var(--ink-2)}
+.drawer-close{background:var(--hover);color:var(--ink)}
+.toast,#app .toast{background:var(--ink);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.18);font-size:13px}
+.toast.err,#app .toast.err{background:var(--bad)}
+#app .toast.ok{background:var(--ink)}
+
+/* ---- narrow screens: sidebar collapses to icons by itself ---- */
+@media (max-width:860px){
+  .sidebar{width:56px;min-width:56px}
+  .sidebar .sb-label,.sidebar .sb-uname,.sidebar .sb-logout{display:none}
+  .sidebar .sb-item{justify-content:center;padding:9px 0}
+  .sidebar .sb-user{justify-content:center}
+  .native-wrap{padding:16px}
+  .db-stats{grid-template-columns:repeat(2,1fr)}
+}
+/* ---- ITR pack builder ---- */
+#appRoot{padding-top:24px}
+#appRoot .app__title{font-size:18px;font-weight:600;color:var(--ink)}
+#appRoot .panel__title{font-weight:600}
+#appRoot .field input[type=text],#appRoot .field input[type=date],#appRoot .field select{font-family:var(--font)}
+#appRoot .field__readout,#appRoot .ledger__row dd{font-family:var(--font);font-variant-numeric:tabular-nums}
+#appRoot .btn-generate{background:var(--ink);border-radius:6px;font-weight:500;letter-spacing:0}
+#appRoot .btn-generate:not(:disabled):hover{background:#34343a}
+#appRoot .btn-add{border-radius:6px;font-weight:500}
+</style>
 </head>
 <body>
-
-<div class="login-wrap" id="splashWrap" style="display:none;z-index:10001;">
-  <div style="text-align:center;color:#fff;">
-    <img src="ca-india-logo.png" alt="" style="height:54px;background:#fff;border-radius:10px;padding:8px 14px;margin-bottom:18px;">
-    <div style="font-size:16px;font-weight:700;margin-bottom:14px;">Loading your data…</div>
-    <div style="width:38px;height:38px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto;"></div>
-  </div>
-</div>
 
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
     <div class="login-logo">
       <div class="login-logo-title">CA Atik Bhayani &amp; Associates</div>
-      <div class="login-logo-sub">Powered by Bhayani Business Solutions</div>
     </div>
     <hr class="login-divider">
     <form onsubmit="doShellLogin();return false;" autocomplete="on">
       <div class="login-field">
         <label>User ID</label>
-        <input type="text" id="loginId" placeholder="Enter User ID" autocomplete="username">
+        <input type="text" id="loginId" placeholder="User ID" autocomplete="username">
       </div>
       <div class="login-field">
         <label>Password</label>
-        <input type="password" id="loginPass" placeholder="Enter Password" autocomplete="current-password">
+        <input type="password" id="loginPass" placeholder="Password" autocomplete="current-password">
       </div>
       <button type="submit" class="login-btn" id="loginBtn">Sign in</button>
     </form>
+    <div id="gsiWrap" style="display:none;margin-top:14px;">
+      <div style="display:flex;align-items:center;gap:10px;color:var(--muted);font-size:11px;margin-bottom:12px;"><hr style="flex:1;border:0;border-top:1px solid #e2e8f0;">or<hr style="flex:1;border:0;border-top:1px solid #e2e8f0;"></div>
+      <div id="gsiBtn" style="display:flex;justify-content:center;"></div>
+    </div>
     <div class="login-err" id="loginErr"></div>
   </div>
 </div>
@@ -267,14 +419,11 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
 <div id="app">
   <div class="top-hdr">
     <div class="top-hdr-left">
-      <button class="sb-collapse" id="sbCollapseBtn" onclick="toggleSidebar()"><i class="ti ti-chevrons-left"></i></button>
-      <div class="top-hdr-left-text">CA Practice Manager</div>
+      <button class="sb-collapse" id="sbCollapseBtn" aria-label="Toggle sidebar" onclick="toggleSidebar()"><i class="ti ti-chevrons-left"></i></button>
     </div>
     <div class="top-hdr-center">
-      <div class="top-hdr-logo-wrap"><img class="top-hdr-logo" src="ca-india-logo.png" alt="CA India"></div>
       <div class="top-hdr-text">
         <div class="top-hdr-title">CA Atik Bhayani &amp; Associates</div>
-        <div class="top-hdr-sub">Powered by Bhayani Business Solutions</div>
       </div>
     </div>
     <div class="top-hdr-right"></div>
@@ -282,19 +431,15 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
   <div class="layout">
     <div class="sidebar" id="sidebar">
       <div class="sb-nav">
-        <div class="sb-item active" data-tab="dashboard" onclick="switchTab('dashboard')"><i class="ti ti-layout-dashboard"></i><span class="sb-label">Dashboard</span></div>
-        <div class="sb-item" data-tab="workspace" onclick="switchTab('workspace')"><i class="ti ti-file-pencil"></i><span class="sb-label">Work Desk</span></div>
-        <div class="sb-item" data-tab="assessment" onclick="switchTab('assessment')"><i class="ti ti-alert-triangle"></i><span class="sb-label">Assessment Reminders</span></div>
-        <div class="sb-group-label">Clients</div>
-        <div class="sb-item" data-tab="clients" onclick="switchTab('clients')"><i class="ti ti-users"></i><span class="sb-label">Clients</span></div>
-        <div class="sb-group-label">Work</div>
-        <div class="sb-item" data-tab="pm" onclick="switchTab('pm')"><i class="ti ti-checklist"></i><span class="sb-label">Task Manager</span></div>
-        <div class="sb-item" data-tab="duedates" onclick="switchTab('duedates')"><i class="ti ti-calendar-due"></i><span class="sb-label">Due Dates</span></div>
-        <div class="sb-item" data-tab="itr" onclick="switchTab('itr')"><i class="ti ti-file-text"></i><span class="sb-label">Audit &amp; ITR Tracking</span></div>
-        <div class="sb-group-label">Finance</div>
-        <div class="sb-item" data-tab="billing" onclick="switchTab('billing')"><i class="ti ti-receipt-2"></i><span class="sb-label">Billing</span></div>
-        <div class="sb-group-label">Documents</div>
-        <div class="sb-item" data-tab="vault" onclick="switchTab('vault')"><i class="ti ti-folder"></i><span class="sb-label">Documents Vault</span></div>
+        <div class="sb-item active" data-tab="dashboard" role="button" tabindex="0" onclick="switchTab('dashboard')"><i class="ti ti-layout-dashboard"></i><span class="sb-label">Dashboard</span></div>
+        <div class="sb-item" data-tab="clients" role="button" tabindex="0" onclick="switchTab('clients')"><i class="ti ti-users"></i><span class="sb-label">Clients</span></div>
+        <div class="sb-item" data-tab="pm" role="button" tabindex="0" onclick="switchTab('pm')"><i class="ti ti-checklist"></i><span class="sb-label">Tasks</span></div>
+        <div class="sb-item" data-tab="duedates" role="button" tabindex="0" onclick="switchTab('duedates')"><i class="ti ti-calendar-due"></i><span class="sb-label">Due Dates</span></div>
+        <div class="sb-item" data-tab="itr" role="button" tabindex="0" onclick="switchTab('itr')"><i class="ti ti-file-text"></i><span class="sb-label">ITR &amp; Audit</span></div>
+        <div class="sb-item" data-tab="billing" role="button" tabindex="0" onclick="switchTab('billing')"><i class="ti ti-receipt-2"></i><span class="sb-label">Billing</span></div>
+        <div class="sb-item" data-tab="vault" role="button" tabindex="0" onclick="switchTab('vault')"><i class="ti ti-folder"></i><span class="sb-label">Documents</span></div>
+        <div class="sb-item" data-tab="workspace" role="button" tabindex="0" onclick="switchTab('workspace')"><i class="ti ti-file-pencil"></i><span class="sb-label">Work Desk</span></div>
+        <div class="sb-item" data-tab="assessment" role="button" tabindex="0" onclick="switchTab('assessment')"><i class="ti ti-alert-triangle"></i><span class="sb-label">Assessments</span></div>
       </div>
       <div class="sb-user">
         <div class="sb-av" id="sbAv">--</div>
@@ -302,7 +447,7 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
           <div class="sb-uname" id="sbUname">—</div>
           <div class="sb-urole" id="sbUrole">—</div>
         </div>
-        <button class="sb-logout" title="Sign out" onclick="doShellLogout()"><i class="ti ti-logout"></i></button>
+        <button class="sb-logout" title="Sign out" aria-label="Sign out" onclick="doShellLogout()"><i class="ti ti-logout"></i></button>
       </div>
     </div>
 
@@ -319,27 +464,27 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
           <div class="db-stats" id="db-stats"></div>
           <div class="db-g2">
             <div class="card">
-              <div class="db-ctit">Due This Month <span class="db-ctit-sub">see Compliance &gt; Due Dates for full list</span></div>
+              <div class="db-ctit">Due This Month</div>
               <div id="db-dues"><div class="empty" style="padding:20px;"><i class="ti ti-loader-2"></i>Loading…</div></div>
             </div>
             <div class="card">
-              <div class="db-ctit">Open Tasks <span class="db-ctit-sub">by due date</span></div>
+              <div class="db-ctit">Open Tasks</div>
               <div id="db-tasks"><div class="empty" style="padding:20px;"><i class="ti ti-loader-2"></i>Loading…</div></div>
             </div>
           </div>
           <div class="db-g2">
             <div class="card">
-              <div class="db-ctit">Outstanding Receivables <span class="db-ctit-sub">top clients by balance</span></div>
+              <div class="db-ctit">Outstanding Receivables</div>
               <div id="db-outstanding"><div class="empty" style="padding:20px;"><i class="ti ti-loader-2"></i>Loading…</div></div>
             </div>
             <div class="card">
-              <div class="db-ctit">Pending Client Documents <span class="db-ctit-sub">awaiting from clients</span></div>
+              <div class="db-ctit">Pending Client Documents</div>
               <div id="db-pending"><div class="empty" style="padding:20px;"><i class="ti ti-loader-2"></i>Loading…</div></div>
             </div>
           </div>
           <div class="db-g2">
             <div class="card" style="grid-column:1 / -1;">
-              <div class="db-ctit">Recently Received Documents <span class="db-ctit-sub">last 7 days — so nothing dropped off at the office goes unnoticed</span></div>
+              <div class="db-ctit">Recently Received Documents</div>
               <div id="db-received"><div class="empty" style="padding:20px;"><i class="ti ti-loader-2"></i>Loading…</div></div>
             </div>
           </div>
@@ -350,7 +495,7 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
         <div class="native-wrap">
           <h2 class="sectitle"><i class="ti ti-users"></i> Clients</h2>
           <div class="bar">
-            <div class="sbox"><i class="ti ti-search"></i><input type="text" id="cl-search" placeholder="Search name, PAN, group…" oninput="renderClientsTab()"></div>
+            <div class="sbox"><i class="ti ti-search"></i><input type="text" id="cl-search" placeholder="Search" oninput="renderClientsTab()"></div>
             <select class="sel" id="cl-filter-entity" onchange="renderClientsTab()">
               <option value="">All types</option>
               <option>Individual</option><option>Private Limited</option><option>LLP</option><option>Proprietorship</option><option>Partnership</option><option>HUF</option>
@@ -394,10 +539,10 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
    <div class="pg" id="p-dash">
     <div class="stats" id="dstats"></div>
     <div class="g2">
-     <div class="card"><div class="ctit">Pending Tasks <span style="font-size:11px;font-weight:400;color:var(--t2)">by due date</span></div><div id="dtasks"></div></div>
-     <div class="card"><div class="ctit">Upcoming Due Dates <span style="font-size:11px;font-weight:400;color:var(--t2)">this month</span></div><div id="ddates"></div></div>
+     <div class="card"><div class="ctit">Pending Tasks</div><div id="dtasks"></div></div>
+     <div class="card"><div class="ctit">Upcoming Due Dates</div><div id="ddates"></div></div>
     </div>
-    <div class="card"><div class="ctit">Pending Documents <span style="font-size:11px;font-weight:400;color:var(--t2)">awaiting from clients</span></div><div id="dpend"></div></div>
+    <div class="card"><div class="ctit">Pending Documents</div><div id="dpend"></div></div>
    </div>
 
    <!-- TASKS -->
@@ -473,11 +618,11 @@ h2.sectitle{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--navy);
   <div class="mb">
    <input type="hidden" id="pdid">
    <div class="fi"><label>Client *</label><select id="pdcli"><option value="">Select</option></select></div>
-   <div class="fi"><label>Document Needed *</label><input type="text" id="pdname" placeholder="e.g. Bank statement April 2026"></div>
+   <div class="fi"><label>Document Needed *</label><input type="text" id="pdname"></div>
    <div class="fi"><label>Category</label><select id="pdcat"><option>Bank Statement</option><option>Purchase Register</option><option>Sales Register</option><option>TDS Certificate</option><option>Salary Details</option><option>Others</option></select></div>
    <div class="fi"><label>Needed By</label><input type="date" id="pddue"></div>
    <div class="fi"><label>Remarks</label><textarea id="pdrm"></textarea></div>
-   <div class="fi"><label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:12px;font-weight:500"><input type="checkbox" id="pdgotit" style="width:auto"> Already received (e.g. client dropped it off at the office) — log it as received right away</label></div>
+   <div class="fi"><label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:12px;font-weight:500"><input type="checkbox" id="pdgotit" style="width:auto"> Already received</label></div>
   </div>
   <div class="mf"><button class="btn" onclick="PM.closeMo('mo-pd')">Cancel</button><button class="btn btk" id="pdsavebtn" onclick="PM.savePD()">Save</button></div>
  </div>
@@ -1221,7 +1366,7 @@ function pmInit(){
   <div class="sumstrip" id="sumstrip"></div>
   <div id="clients-active-section">
   <div class="bar">
-    <div class="sbox"><i class="ti ti-search"></i><input id="csearch" placeholder="Search client / group…" oninput="Billing.renderClients()"></div>
+    <div class="sbox"><i class="ti ti-search"></i><input id="csearch" placeholder="Search" oninput="Billing.renderClients()"></div>
     <label class="toggle-wrap">
       <input type="checkbox" id="outOnly" onchange="Billing.renderClients()" checked>
       <span>Outstanding Only</span>
@@ -1245,7 +1390,7 @@ function pmInit(){
     <div class="twrap"><div class="tbox">
       <table>
         <thead><tr><th>Name</th><th>Group</th><th>PAN</th><th>Mobile</th><th class="r">Actions</th></tr></thead>
-        <tbody id="incbody"><tr><td colspan="5"><div class="fetch-msg"><i class="ti ti-users-off"></i><p>Click Refresh to load inactive clients.</p></div></td></tr></tbody>
+        <tbody id="incbody"><tr><td colspan="5"><div class="fetch-msg"><i class="ti ti-users-off"></i></div></td></tr></tbody>
       </table>
     </div></div>
   </div>
@@ -1258,7 +1403,7 @@ function pmInit(){
   </div>
   <div class="sumstrip" id="bsumstrip" style="display:none;"></div>
   <div id="bills-active-bar" class="bar" style="gap:6px;">
-    <div class="sbox"><i class="ti ti-search"></i><input id="bsearch" placeholder="Search client / bill no…" oninput="Billing.renderBills()"></div>
+    <div class="sbox"><i class="ti ti-search"></i><input id="bsearch" placeholder="Search" oninput="Billing.renderBills()"></div>
     <select class="sel" id="bfirm" onchange="Billing.renderBills()"><option value="">All Firms</option></select>
     <select class="sel" id="bstatus" onchange="Billing.renderBills()"><option value="">All Payment Status</option><option value="due">Not fully paid</option><option value="unpaid">Unpaid</option><option value="partial">Part paid</option><option value="paid">Paid</option></select>
     <div style="display:flex;align-items:center;gap:4px;">
@@ -1275,7 +1420,7 @@ function pmInit(){
   <div class="twrap"><div class="tbox">
     <table>
       <thead><tr><th>Bill No.</th><th>Date</th><th>Client</th><th>Firm</th><th>Period</th><th class="r">Amount</th><th>Payment</th><th class="r">Outstanding</th><th class="r">Actions</th></tr></thead>
-      <tbody id="bbody"><tr><td colspan="9"><div class="fetch-msg"><i class="ti ti-file-invoice"></i><p>Click Fetch Bills to load records.</p></div></td></tr></tbody>
+      <tbody id="bbody"><tr><td colspan="9"><div class="fetch-msg"><i class="ti ti-file-invoice"></i></div></td></tr></tbody>
     </table>
   </div></div>
   <div id="bills-cancelled-section" style="display:none;">
@@ -1293,7 +1438,7 @@ function pmInit(){
     <div class="twrap"><div class="tbox">
       <table>
         <thead><tr><th>Bill No.</th><th>Date</th><th>Client</th><th>Firm</th><th>Period</th><th class="r">Amount</th><th>Cancelled Reason</th></tr></thead>
-        <tbody id="cbbody"><tr><td colspan="7"><div class="fetch-msg"><i class="ti ti-file-off"></i><p>Click Fetch Cancelled to load.</p></div></td></tr></tbody>
+        <tbody id="cbbody"><tr><td colspan="7"><div class="fetch-msg"><i class="ti ti-file-off"></i></div></td></tr></tbody>
       </table>
     </div></div>
   </div>
@@ -1321,7 +1466,7 @@ function pmInit(){
   <div class="twrap"><div class="tbox">
     <table>
       <thead><tr><th>Receipt No.</th><th>Date</th><th>Client</th><th>Firm</th><th>Mode</th><th>Reference</th><th class="r">Amount</th><th class="r">Actions</th></tr></thead>
-      <tbody id="rbody"><tr><td colspan="8"><div class="fetch-msg"><i class="ti ti-receipt"></i><p>Select date range and click Fetch Receipts.</p></div></td></tr></tbody>
+      <tbody id="rbody"><tr><td colspan="8"><div class="fetch-msg"><i class="ti ti-receipt"></i></div></td></tr></tbody>
     </table>
   </div></div>
   <div id="rec-cancelled-section" style="display:none;">
@@ -1339,7 +1484,7 @@ function pmInit(){
     <div class="twrap"><div class="tbox">
       <table>
         <thead><tr><th>Receipt No.</th><th>Date</th><th>Client</th><th>Firm</th><th class="r">Amount</th><th>Cancelled Reason</th></tr></thead>
-        <tbody id="crbody"><tr><td colspan="6"><div class="fetch-msg"><i class="ti ti-receipt-off"></i><p>Click Fetch Cancelled to load.</p></div></td></tr></tbody>
+        <tbody id="crbody"><tr><td colspan="6"><div class="fetch-msg"><i class="ti ti-receipt-off"></i></div></td></tr></tbody>
       </table>
     </div></div>
   </div>
@@ -1347,14 +1492,14 @@ function pmInit(){
 
 <div id="p-quoted" class="panel">
   <div class="bar">
-    <div class="sbox"><i class="ti ti-search"></i><input id="qsearch" placeholder="Search client / service…" oninput="Billing.renderQuoted()"></div>
+    <div class="sbox"><i class="ti ti-search"></i><input id="qsearch" placeholder="Search" oninput="Billing.renderQuoted()"></div>
     <button class="btn btn-o" onclick="Billing.loadQuoted()"><i class="ti ti-refresh"></i> Refresh</button>
     <button class="btn btn-p" onclick="Billing.openQuotedModal()"><i class="ti ti-plus"></i> Add Quoted Fee</button>
   </div>
   <div class="twrap"><div class="tbox">
     <table>
       <thead><tr><th>Date</th><th>Client</th><th>Service</th><th class="r">Quoted Amount</th><th>Notes</th><th class="r">Actions</th></tr></thead>
-      <tbody id="qbody"><tr><td colspan="6"><div class="fetch-msg"><i class="ti ti-file-text"></i><p>Click Refresh to load.</p></div></td></tr></tbody>
+      <tbody id="qbody"><tr><td colspan="6"><div class="fetch-msg"><i class="ti ti-file-text"></i></div></td></tr></tbody>
     </table>
   </div></div>
 </div>
@@ -1364,16 +1509,13 @@ function pmInit(){
     <div class="set-section">
       <div class="set-title"><i class="ti ti-building"></i> Firms</div>
       <div id="firmsList" style="margin-bottom:4px;"></div>
-      <div style="font-size:12px;color:var(--muted);margin-top:8px;">Fill in GST Settings below to start raising Tax Invoices (bills without it stay Bill of Supply).</div>
     </div>
     <div class="set-section">
       <div class="set-title"><i class="ti ti-receipt-tax"></i> GST Settings</div>
-      <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Per-firm GSTIN, home state (used to decide CGST+SGST vs IGST) and default SAC code for GST-charged bills.</p>
       <div id="gstSettingsList"></div>
     </div>
     <div class="set-section">
       <div class="set-title"><i class="ti ti-file-export"></i> GSTR-1 Export</div>
-      <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Exports GST-charged bills for one firm and date range as B2B + B2CS CSVs, in the same column layout as the official GSTR-1 offline tool.</p>
       <div class="fg2">
         <div class="fg"><label class="lbl">Firm</label><select id="g1-firm"></select></div>
         <div class="fg"><label class="lbl">From</label><input type="date" id="g1-from"></div>
@@ -1392,19 +1534,17 @@ function pmInit(){
     </div>
     <div class="set-section">
       <div class="set-title"><i class="ti ti-calendar-stats"></i> Opening Balance Entry</div>
-      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Add outstanding as on a date without entering old bills.</p>
       <div class="fg2">
         <div class="fg"><label class="lbl">Client</label><select id="ob-client"></select></div>
         <div class="fg"><label class="lbl">Firm</label><select id="ob-firm"></select></div>
         <div class="fg"><label class="lbl">As On Date</label><input type="date" id="ob-date"></div>
         <div class="fg"><label class="lbl">Amount (₹)</label><input type="number" id="ob-amount" placeholder="0"></div>
-        <div class="fg sp2"><label class="lbl">Narration</label><input type="text" id="ob-nar" placeholder="Opening Balance as on 01/06/2026"></div>
+        <div class="fg sp2"><label class="lbl">Narration</label><input type="text" id="ob-nar"></div>
       </div>
       <button class="btn btn-p btn-sm" style="margin-top:8px;" onclick="Billing.saveOB()"><i class="ti ti-plus"></i> Add Opening Balance</button>
     </div>
     <div class="set-section">
       <div class="set-title"><i class="ti ti-database"></i> Data</div>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Clear locally cached data and reload fresh from Google Sheets.</p>
       <button class="btn btn-r" onclick="Billing.clearCache()"><i class="ti ti-trash"></i> Clear Cache &amp; Reload</button>
     </div>
     <div class="set-section">
@@ -1424,7 +1564,7 @@ function pmInit(){
     <div class="mbody">
       <div class="cpill"><i class="ti ti-user"></i><span id="b-cname">—</span></div>
       <div class="fg2">
-        <div class="fg"><label class="lbl">Bill No <span style="font-size:9px;color:var(--muted);font-weight:400;">(assigned on save)</span></label><input id="b-no" placeholder="Will be assigned on save" disabled style="background:#f8fafc;color:var(--muted);cursor:not-allowed;"></div>
+        <div class="fg" style="display:none"><label class="lbl">Bill No</label><input id="b-no" disabled style="background:#f8fafc;color:var(--muted);cursor:not-allowed;"></div>
         <div class="fg"><label class="lbl">Bill Date *</label><input type="date" id="b-date"></div>
         <div class="fg"><label class="lbl">Firm *</label><select id="b-firm"></select></div>
         <div class="fg"><label class="lbl">Service Period</label><input id="b-period" placeholder="FY 2025-26"></div>
@@ -1432,7 +1572,7 @@ function pmInit(){
       <div class="fg2" style="align-items:center;">
         <div class="fg sp2" style="display:flex;align-items:center;gap:8px;">
           <input type="checkbox" id="b-gst-on" onchange="Billing.toggleBillGst()" style="width:16px;height:16px;cursor:pointer;">
-          <label class="lbl" style="margin:0;cursor:pointer;" onclick="document.getElementById('b-gst-on').click()">Charge GST on this bill (Tax Invoice instead of Bill of Supply)</label>
+          <label class="lbl" style="margin:0;cursor:pointer;" onclick="document.getElementById('b-gst-on').click()">Charge GST</label>
         </div>
       </div>
       <div id="b-gst-fields" style="display:none;">
@@ -1485,16 +1625,15 @@ function pmInit(){
       <button class="mclose" onclick="Billing.closeM('mBulkBills')"><i class="ti ti-x"></i></button>
     </div>
     <div class="mbody">
-      <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Pick a client, description and amount per row — one bill is created per row, all with the same firm/date. When done, every bill opens as a single print window (one bill per page) so you can Print &rarr; Save as PDF once for the whole batch.</p>
       <div class="fg2">
         <div class="fg"><label class="lbl">Firm *</label><select id="bk-firm" onchange="Billing.refreshBulkGstUI()"></select></div>
         <div class="fg"><label class="lbl">Bill Date *</label><input type="date" id="bk-date"></div>
-        <div class="fg sp2"><label class="lbl">Service Period</label><input id="bk-period" placeholder="FY 2025-26 (optional, applied to all rows)"></div>
+        <div class="fg sp2"><label class="lbl">Service Period</label><input id="bk-period"></div>
       </div>
       <div class="fg2" style="align-items:center;">
         <div class="fg sp2" style="display:flex;align-items:center;gap:8px;">
           <input type="checkbox" id="bk-gst-on" onchange="Billing.toggleBulkGst()" style="width:16px;height:16px;cursor:pointer;">
-          <label class="lbl" style="margin:0;cursor:pointer;" onclick="document.getElementById('bk-gst-on').click()">Charge GST on these bills (Tax Invoice instead of Bill of Supply) — applied to every row</label>
+          <label class="lbl" style="margin:0;cursor:pointer;" onclick="document.getElementById('bk-gst-on').click()">Charge GST on all rows</label>
         </div>
       </div>
       <div id="bk-gst-fields" style="display:none;">
@@ -1505,7 +1644,6 @@ function pmInit(){
             </select>
           </div>
           <div class="fg"><label class="lbl">SAC Code</label><input id="bk-gst-sac" placeholder="998231"></div>
-          <div class="fg sp2" style="font-size:11px;color:var(--muted);align-self:flex-end;padding-bottom:6px;">Place of Supply is guessed per client from their GSTIN (falls back to the firm's home state).</div>
         </div>
       </div>
       <hr class="hdivider">
@@ -1537,7 +1675,7 @@ function pmInit(){
     <div class="mbody">
       <div class="cpill"><i class="ti ti-user"></i><span id="r-cname">—</span></div>
       <div class="fg2">
-        <div class="fg"><label class="lbl">Receipt No <span style="font-size:9px;color:var(--muted);font-weight:400;">(assigned on save)</span></label><input id="r-no" placeholder="Will be assigned on save" disabled style="background:#f8fafc;color:var(--muted);cursor:not-allowed;"></div>
+        <div class="fg" style="display:none"><label class="lbl">Receipt No</label><input id="r-no" disabled style="background:#f8fafc;color:var(--muted);cursor:not-allowed;"></div>
         <div class="fg"><label class="lbl">Receipt Date *</label><input type="date" id="r-date"></div>
         <div class="fg"><label class="lbl">Firm *</label><select id="r-firm" onchange="Billing.loadOpenBills()"></select></div>
         <div class="fg"><label class="lbl">Amount (₹) *</label><input type="number" id="r-amt" placeholder="0" oninput="Billing.updBal()"></div>
@@ -1547,7 +1685,7 @@ function pmInit(){
         <div class="fg"><label class="lbl">UTR / Reference</label><input id="r-ref" placeholder="Reference no."></div>
         <div class="fg"><label class="lbl">Discount / Write-off (₹)</label><input type="number" id="r-discount" placeholder="0" oninput="Billing.updBal()"></div>
         <div class="fg sp2" id="r-bills-wrap" style="display:none;">
-          <label class="lbl">Against Pending Invoices <span style="font-size:9px;color:var(--muted);font-weight:400;">(tick to allocate; unticked amount stays as advance)</span></label>
+          <label class="lbl">Against pending invoices</label>
           <div id="r-bills-list" style="max-height:160px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--rs);"></div>
         </div>
         <div class="fg sp2" id="r-bal" style="display:none;background:var(--bg);padding:10px;border-radius:var(--rs);">
@@ -1555,7 +1693,7 @@ function pmInit(){
           <div id="r-disc-row" style="display:none;justify-content:space-between;font-size:12px;margin-top:5px;"><span style="color:var(--muted);">Discount / write-off</span><span id="r-disc-amt" style="font-weight:600;color:#c2410c;">₹0</span></div>
           <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:5px;padding-top:5px;border-top:1px dashed var(--border);"><span style="color:var(--muted);">Balance after</span><span id="r-after" style="font-weight:700;color:var(--green);">₹0</span></div>
         </div>
-        <div class="fg sp2"><label class="lbl">Narration</label><textarea id="r-nar" placeholder="e.g. Received for Tax Audit FY 2025-26"></textarea></div>
+        <div class="fg sp2"><label class="lbl">Narration</label><textarea id="r-nar"></textarea></div>
       </div>
     </div>
     <div class="mfoot">
@@ -1583,9 +1721,9 @@ function pmInit(){
     </div>
     <div class="mbody">
       <div class="fg2">
-        <div class="fg sp2"><label class="lbl">Name *</label><input id="nc-name" placeholder="Full name / firm name"></div>
-        <div class="fg sp2"><label class="lbl">Group (optional)</label>
-          <input id="nc-group" placeholder="e.g. K21 Group" list="groupList" autocomplete="off">
+        <div class="fg sp2"><label class="lbl">Name *</label><input id="nc-name"></div>
+        <div class="fg sp2"><label class="lbl">Group</label>
+          <input id="nc-group" list="groupList" autocomplete="off">
           <datalist id="groupList"></datalist>
         </div>
         <div class="fg"><label class="lbl">PAN <span style="color:var(--red);">*</span></label><input id="nc-pan" placeholder="ABCDE1234F" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" maxlength="10"></div>
@@ -1593,7 +1731,7 @@ function pmInit(){
           <select id="nc-status"><option>INDIVIDUAL</option><option>44AB</option><option>44AD</option><option>8% BUSINESS</option><option>PARTNER</option><option>DIRECTOR</option><option>OTHER</option><option>HUF</option><option>FIRM</option></select>
         </div>
         <div class="fg sp2"><label class="lbl">Mobile</label><input id="nc-mobile" placeholder="10-digit number"></div>
-        <div class="fg sp2"><label class="lbl">GSTIN <span style="font-weight:400;color:var(--muted);">(if GST registered)</span></label><input id="nc-gstin" placeholder="27XXXXX0000X0XX" style="text-transform:uppercase"></div>
+        <div class="fg sp2"><label class="lbl">GSTIN</label><input id="nc-gstin" style="text-transform:uppercase"></div>
       </div>
     </div>
     <div class="mfoot">
@@ -2165,7 +2303,7 @@ function openClientDrawer(id){
         +'<button class="btn btn-p btn-sm" onclick="Billing.cdAddPending(\''+c.id+'\',\''+esc(c.name)+'\')"><i class="ti ti-plus"></i> Request</button>'
         +'<label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);white-space:nowrap;"><input type="checkbox" id="cd-pd-gotit" style="width:auto;">Already received</label>'
       +'</div></div>'
-    +'<div class="dsec"><div class="dsec-title">Compliance Status <span class="db-ctit-sub">this period</span></div>'
+    +'<div class="dsec"><div class="dsec-title">Compliance Status</div>'
       +'<div id="cd-compliance"><div style="color:var(--muted);font-size:12px;">Loading…</div></div></div>'
     +'<div class="dsec"><div class="dsec-title">Work Desk Documents <button class="btn btn-o btn-sm" style="padding:2px 8px;font-size:11px;" onclick="openWorkspaceFor(\''+c.id+'\',\''+esc(c.name)+'\')"><i class="ti ti-plus"></i> New</button></div>'
       +'<div id="cd-workspace"><div style="color:var(--muted);font-size:12px;">Loading…</div></div></div>'
@@ -3234,6 +3372,14 @@ function switchTab(t){
     if(g1to && !g1to.value) g1to.value=new Date().toISOString().split('T')[0];
   }
   if(t==='quoted' && !allQuoted.length) loadQuoted();
+  // Lists load when opened — no "click Fetch" step.
+  if(t==='bills' && !allBills.length) fetchBills();
+  if(t==='receipts'){
+    var d=new Date(), fy=d.getMonth()>=3?new Date(d.getFullYear(),3,1):new Date(d.getFullYear()-1,3,1);
+    if(!document.getElementById('rfrom').value) document.getElementById('rfrom').value=fy.toISOString().split('T')[0];
+    if(!document.getElementById('rto').value) document.getElementById('rto').value=d.toISOString().split('T')[0];
+    if(!allReceipts.length) fetchReceipts();
+  }
 }
 function openM(id){document.getElementById(id).classList.add('open');}
 function closeM(id){document.getElementById(id).classList.remove('open');}
@@ -3583,9 +3729,9 @@ function numWords(n){
             <div class="native-wrap">
               <h2 class="sectitle"><i class="ti ti-calendar-due"></i> ITR Clients &amp; Due Dates</h2>
               <div class="inner-tabs" style="padding:0;margin-bottom:14px;">
-                <div class="inner-tab active" data-itrbucket="itr12" onclick="switchItrBucket('itr12')"><i class="ti ti-file-text"></i> ITR-1 / ITR-2 <span style="font-size:10px;color:var(--muted);font-weight:400;">(31 Jul)</span></div>
-                <div class="inner-tab" data-itrbucket="itr34" onclick="switchItrBucket('itr34')"><i class="ti ti-file-text"></i> ITR-3 / ITR-4 <span style="font-size:10px;color:var(--muted);font-weight:400;">(31 Aug)</span></div>
-                <div class="inner-tab" data-itrbucket="audit" onclick="switchItrBucket('audit')"><i class="ti ti-stamp"></i> Audit Related <span style="font-size:10px;color:var(--muted);font-weight:400;">(Firms &amp; Partners — 31 Oct)</span></div>
+                <div class="inner-tab active" data-itrbucket="itr12" onclick="switchItrBucket('itr12')"><i class="ti ti-file-text"></i> ITR-1 / ITR-2</div>
+                <div class="inner-tab" data-itrbucket="itr34" onclick="switchItrBucket('itr34')"><i class="ti ti-file-text"></i> ITR-3 / ITR-4</div>
+                <div class="inner-tab" data-itrbucket="audit" onclick="switchItrBucket('audit')"><i class="ti ti-stamp"></i> Audit Related</div>
               </div>
               <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">
                 <div class="card" style="padding:12px 18px;"><div style="font-size:11px;color:var(--muted);">Total</div><div style="font-size:20px;font-weight:700;color:var(--navy);" id="itrd-total">0</div></div>
@@ -3593,7 +3739,7 @@ function numWords(n){
                 <div class="card" style="padding:12px 18px;"><div style="font-size:11px;color:var(--muted);">Pending</div><div style="font-size:20px;font-weight:700;color:var(--red);" id="itrd-pending">0</div></div>
               </div>
               <div class="bar">
-                <div class="sbox"><i class="ti ti-search"></i><input type="text" id="itrd-search" placeholder="Search client…" oninput="renderItrDueDates()"></div>
+                <div class="sbox"><i class="ti ti-search"></i><input type="text" id="itrd-search" placeholder="Search" oninput="renderItrDueDates()"></div>
                 <select class="sel" id="itrd-filter">
                   <option value="">All statuses</option><option value="filed">Filed only</option><option value="pending">Pending only</option>
                 </select>
@@ -3611,14 +3757,13 @@ function numWords(n){
           <div class="inner-panel" id="ipanel-taxaudit">
             <div class="native-wrap">
               <h2 class="sectitle"><i class="ti ti-stamp"></i> Tax Audit Tracking</h2>
-              <div style="font-size:12px;color:var(--muted);margin:-8px 0 14px;">Clients with <strong>Audit Applicable</strong> set to Yes on their record. Tax Audit due 30 Sep; their ITR follows at 31 Oct (tracked under Clients &amp; Due Dates → Audit Related).</div>
               <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">
                 <div class="card" style="padding:12px 18px;"><div style="font-size:11px;color:var(--muted);">Total</div><div style="font-size:20px;font-weight:700;color:var(--navy);" id="ta-total">0</div></div>
                 <div class="card" style="padding:12px 18px;"><div style="font-size:11px;color:var(--muted);">Filed</div><div style="font-size:20px;font-weight:700;color:var(--green);" id="ta-filed">0</div></div>
                 <div class="card" style="padding:12px 18px;"><div style="font-size:11px;color:var(--muted);">Pending</div><div style="font-size:20px;font-weight:700;color:var(--red);" id="ta-pending">0</div></div>
               </div>
               <div class="bar">
-                <div class="sbox"><i class="ti ti-search"></i><input type="text" id="ta-search" placeholder="Search client…" oninput="renderTaxAudit()"></div>
+                <div class="sbox"><i class="ti ti-search"></i><input type="text" id="ta-search" placeholder="Search" oninput="renderTaxAudit()"></div>
                 <select class="sel" id="ta-filter">
                   <option value="">All statuses</option><option value="filed">Filed only</option><option value="pending">Pending only</option>
                 </select>
@@ -3639,9 +3784,7 @@ function numWords(n){
   <header class="app__header">
     <div>
       <h1 class="app__title">ITR Pack Builder</h1>
-      <div class="app__tagline">Cover page + index, computation, and acknowledgement — merged into one client-ready PDF and filed straight to Drive.</div>
     </div>
-    <div class="app__badge">CA ATIK BHAYANI &amp; ASSOCIATES</div>
   </header>
 
   <main class="app__main">
@@ -3651,7 +3794,7 @@ function numWords(n){
       <div class="field" id="clientPickerField">
         <label for="clientSearchInput">Select Client</label>
         <div class="combo">
-          <input type="text" id="clientSearchInput" placeholder="Type to search clients…" autocomplete="off" disabled />
+          <input type="text" id="clientSearchInput" placeholder="Client" autocomplete="off" disabled />
           <div class="combo__results" id="clientSearchResults"></div>
         </div>
         <div class="field__hint" id="clientPickerHint">Loading client list…</div>
@@ -3660,7 +3803,7 @@ function numWords(n){
       <div class="field-row">
         <div class="field">
           <label for="clientName">Client Name</label>
-          <input type="text" id="clientName" placeholder="e.g. Ramesh Kumar Thakur" />
+          <input type="text" id="clientName" />
         </div>
         <div class="field">
           <label for="pan">PAN</label>
@@ -3696,11 +3839,11 @@ function numWords(n){
         </div>
       </div>
 
-      <h2 class="panel__title" style="margin-top:24px;">Tax Summary <span style="font-weight:400;color:#8A8174;text-transform:none;font-size:12px;">(optional — shown on the cover page if filled in)</span></h2>
+      <h2 class="panel__title" style="margin-top:24px;">Tax summary</h2>
       <div class="field-row field-row--three">
         <div class="field">
           <label for="totalIncome">Total Income (₹)</label>
-          <input type="text" id="totalIncome" placeholder="e.g. 1250000" inputmode="numeric" />
+          <input type="text" id="totalIncome" inputmode="numeric" />
         </div>
         <div class="field">
           <label for="resultType">Result</label>
@@ -3713,7 +3856,7 @@ function numWords(n){
         </div>
         <div class="field">
           <label for="resultAmount">Amount (₹)</label>
-          <input type="text" id="resultAmount" placeholder="e.g. 18500" inputmode="numeric" />
+          <input type="text" id="resultAmount" inputmode="numeric" />
         </div>
       </div>
 
@@ -4357,7 +4500,7 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
             <div class="native-wrap">
               <h2 class="sectitle"><i class="ti ti-list"></i> Previously Generated ITR Packs</h2>
               <div class="bar">
-                <div class="sbox"><i class="ti ti-search"></i><input type="text" id="ih-search" placeholder="Search client name…" oninput="renderItrHistory()"></div>
+                <div class="sbox"><i class="ti ti-search"></i><input type="text" id="ih-search" placeholder="Search" oninput="renderItrHistory()"></div>
                 <button class="btn btn-o" onclick="loadItrHistory()"><i class="ti ti-refresh"></i> Refresh</button>
               </div>
               <div class="card">
@@ -4418,7 +4561,7 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
               <div class="card" style="padding:18px;max-width:560px;">
                 <div class="vf-field">
                   <label>Client</label>
-                  <input type="text" id="dv-client" list="dv-client-list" placeholder="Type to search a client…" oninput="onDocClientPick()" autocomplete="off">
+                  <input type="text" id="dv-client" list="dv-client-list" placeholder="Client" oninput="onDocClientPick()" autocomplete="off">
                   <datalist id="dv-client-list"></datalist>
                 </div>
                 <div class="vf-field">
@@ -4434,18 +4577,18 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
                 </div>
                 <div class="vf-field" id="dv-other-wrap" style="display:none;">
                   <label>Specify</label>
-                  <input type="text" id="dv-other-text" placeholder="Type the document type…">
+                  <input type="text" id="dv-other-text">
                 </div>
                 <div class="vf-field">
                   <label>File</label>
                   <div class="dropzone" id="dv-drop" onclick="document.getElementById('dv-file').click()" style="padding:20px;">
                     <i class="ti ti-cloud-upload"></i>
-                    <div id="dv-filename">Click to choose a file, or drag &amp; drop it here</div>
+                    <div id="dv-filename">Choose or drop a file</div>
                     <input type="file" id="dv-file" style="display:none" onchange="onDocFilePicked(this.files[0])">
                   </div>
                 </div>
                 <div class="vf-field">
-                  <label>Note (optional)</label>
+                  <label>Note</label>
                   <input type="text" id="dv-note" placeholder="Any remarks…">
                 </div>
                 <button class="btn btn-p" style="width:100%;justify-content:center;" onclick="saveDocument()" id="dv-upload-btn"><i class="ti ti-upload"></i> Upload</button>
@@ -4460,7 +4603,7 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
             <div class="native-wrap">
               <h2 class="sectitle"><i class="ti ti-list"></i> Document Records</h2>
               <div class="bar">
-                <div class="sbox"><i class="ti ti-search"></i><input type="text" id="dv-search" placeholder="Search client or file name…" oninput="renderDocs()"></div>
+                <div class="sbox"><i class="ti ti-search"></i><input type="text" id="dv-search" placeholder="Search" oninput="renderDocs()"></div>
                 <select class="sel" id="dv-filter-cat" onchange="renderDocs()">
                   <option value="">All categories</option>
                   <option>KYC</option><option>INCOME TAX</option><option>GST</option><option>ROC</option><option>OTHERS</option>
@@ -4493,13 +4636,13 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
               <div class="card" style="padding:18px;max-width:640px;">
                 <div class="vf-field">
                   <label>Client</label>
-                  <input type="text" id="ws-client" list="ws-client-list" placeholder="Type to search a client…" oninput="onWsClientPick()" autocomplete="off">
+                  <input type="text" id="ws-client" list="ws-client-list" placeholder="Client" oninput="onWsClientPick()" autocomplete="off">
                   <datalist id="ws-client-list"></datalist>
                 </div>
                 <div id="ws-new" style="display:none;">
                   <div class="vf-field">
                     <label>Document Name</label>
-                    <input type="text" id="ws-name" placeholder="e.g. GST Notice Reply - March 2026">
+                    <input type="text" id="ws-name">
                   </div>
                   <div style="display:flex;gap:8px;margin-bottom:6px;">
                     <button class="btn btn-p" style="flex:1;justify-content:center;" onclick="createWsDoc('doc')" id="ws-create-doc-btn"><i class="ti ti-file-text"></i> New Word Document</button>
@@ -4533,7 +4676,7 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
             <div class="native-wrap">
               <h2 class="sectitle"><i class="ti ti-list"></i> Work on Existing</h2>
               <div class="bar">
-                <div class="sbox"><i class="ti ti-search"></i><input type="text" id="ws-search" placeholder="Search client or document name…" oninput="renderWorkspaceRecords()"></div>
+                <div class="sbox"><i class="ti ti-search"></i><input type="text" id="ws-search" placeholder="Search" oninput="renderWorkspaceRecords()"></div>
                 <select class="sel" id="ws-filter-type" onchange="renderWorkspaceRecords()">
                   <option value="">All types</option>
                   <option value="doc">Word Documents</option>
@@ -4561,13 +4704,13 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
             <input type="hidden" id="ar-id">
             <div class="fg" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
               <div class="vf-field"><label>Client</label>
-                <input type="text" id="ar-client" list="ar-client-list" placeholder="Type to search a client…" autocomplete="off">
+                <input type="text" id="ar-client" list="ar-client-list" placeholder="Client" autocomplete="off">
                 <datalist id="ar-client-list"></datalist>
               </div>
               <div class="vf-field"><label>Assigned To</label>
                 <select class="sel" id="ar-assigned" style="width:100%;"><option value="">Unassigned</option><option>Atik Bhayani</option><option>Rushiraj</option><option>Sahil</option></select>
               </div>
-              <div class="vf-field"><label>Year</label><input type="text" id="ar-year" placeholder="e.g. 2023-24"></div>
+              <div class="vf-field"><label>Year</label><input type="text" id="ar-year"></div>
               <div class="vf-field"><label>Type</label>
                 <select class="sel" id="ar-type" style="width:100%;"><option>GST</option><option>Income Tax</option></select>
               </div>
@@ -4575,7 +4718,7 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
                 <select class="sel" id="ar-mode" style="width:100%;"><option>Online</option><option>Offline</option></select>
               </div>
               <div class="vf-field"><label>Assessment Submission Date</label><input type="date" id="ar-date"></div>
-              <div class="vf-field" style="grid-column:span 2;"><label>Notes (optional)</label><input type="text" id="ar-notes"></div>
+              <div class="vf-field" style="grid-column:span 2;"><label>Notes</label><input type="text" id="ar-notes"></div>
             </div>
             <div style="display:flex;gap:8px;margin-top:6px;align-items:center;">
               <button class="btn btn-p" onclick="saveAssessmentReminder()" id="ar-save-btn"><i class="ti ti-plus"></i> Add Reminder</button>
@@ -4584,7 +4727,7 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
             </div>
           </div>
           <div class="bar">
-            <div class="sbox"><i class="ti ti-search"></i><input type="text" id="ar-search" placeholder="Search client…" oninput="renderAssessmentReminders()"></div>
+            <div class="sbox"><i class="ti ti-search"></i><input type="text" id="ar-search" placeholder="Search" oninput="renderAssessmentReminders()"></div>
             <select class="sel" id="ar-filter">
               <option value="">All statuses</option><option value="pending">Pending only</option><option value="done">Submitted only</option>
             </select>
@@ -4612,7 +4755,7 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
     <div style="padding:22px;display:grid;grid-template-columns:1fr 1fr;gap:14px;">
       <input type="hidden" id="cl-id">
       <div class="vf-field"><label>Client Name *</label><input type="text" id="cl-name"></div>
-      <div class="vf-field"><label>Group <span style="font-weight:400;color:var(--muted)">(family/business group)</span></label><input type="text" id="cl-group" list="cl-groupList"><datalist id="cl-groupList"></datalist></div>
+      <div class="vf-field"><label>Group</label><input type="text" id="cl-group" list="cl-groupList"><datalist id="cl-groupList"></datalist></div>
       <div class="vf-field"><label>PAN *</label><input type="text" id="cl-pan" maxlength="10" style="text-transform:uppercase"></div>
       <div class="vf-field"><label>GSTIN</label><input type="text" id="cl-gstin" maxlength="15" style="text-transform:uppercase"></div>
       <div class="vf-field"><label>Mobile</label><input type="text" id="cl-mobile"></div>
@@ -4637,12 +4780,12 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
           <option value="monthly">Monthly</option><option value="quarterly">Quarterly (QRMP)</option>
         </select>
       </div>
-      <div class="vf-field"><label>Has Employees (TDS/PF)</label>
+      <div class="vf-field"><label>Has employees</label>
         <select class="sel" id="cl-emp" style="width:100%;" onchange="updCompsTab()"><option value="no">No</option><option value="yes">Yes</option></select>
       </div>
       <div class="vf-field"><label>Turnover</label>
         <select class="sel" id="cl-turnover" style="width:100%;" onchange="updCompsTab()">
-          <option value="below40l">Below 40L</option><option value="above40l">40L to 1 Cr</option><option value="above1cr">Above 1 Cr (Audit)</option>
+          <option value="below40l">Below 40L</option><option value="above40l">40L to 1 Cr</option><option value="above1cr">Above 1 Cr</option>
         </select>
       </div>
       <div class="vf-field"><label>ITR Type</label>
@@ -4650,17 +4793,17 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
           <option value="">Select…</option><option>ITR-1</option><option>ITR-2</option><option>ITR-3</option><option>ITR-4</option><option>ITR-5</option><option>ITR-6</option><option>ITR-7</option>
         </select>
       </div>
-      <div class="vf-field"><label>Audit Applicable? <span style="font-weight:400;color:var(--muted)">(Tax Audit 30 Sep, ITR 31 Oct)</span></label>
+      <div class="vf-field"><label>Audit Applicable?</label>
         <select class="sel" id="cl-audit" style="width:100%;" onchange="updCompsTab()"><option value="no">No</option><option value="yes">Yes</option></select>
       </div>
-      <div class="vf-field"><label>Partner in Audited Firm? <span style="font-weight:400;color:var(--muted)">(ITR 31 Oct, no personal tax audit)</span></label>
+      <div class="vf-field"><label>Partner in Audited Firm?</label>
         <select class="sel" id="cl-partner-audit" style="width:100%;"><option value="no">No</option><option value="yes">Yes</option></select>
       </div>
       <div class="vf-field"><label>Start Date</label><input type="date" id="cl-startdate"></div>
-      <div class="vf-field"><label>Service End Date <span style="font-weight:400;color:var(--muted)">(no due dates after this date)</span></label><input type="date" id="cl-enddate"></div>
-      <div class="vf-field" style="grid-column:1/-1;"><label>Notes</label><input type="text" id="cl-notes" placeholder="Portal logins, contact details…"></div>
+      <div class="vf-field"><label>Service End Date</label><input type="date" id="cl-enddate"></div>
+      <div class="vf-field" style="grid-column:1/-1;"><label>Notes</label><input type="text" id="cl-notes"></div>
       <div class="vf-field" style="grid-column:1/-1;display:flex;align-items:center;gap:8px;">
-        <input type="checkbox" id="cl-archived" style="width:16px;height:16px;"> <label for="cl-archived" style="margin:0;">Archived (inactive client)</label>
+        <input type="checkbox" id="cl-archived" style="width:16px;height:16px;"> <label for="cl-archived" style="margin:0;">Archived</label>
       </div>
       <div style="grid-column:1/-1;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:14px 16px;">
         <div style="font-size:12px;font-weight:600;margin-bottom:10px;color:var(--navy);">Applicable Compliances <span class="badge" style="background:#eff6ff;color:#2563a8" id="cl-ccnt">0</span></div>
@@ -4696,6 +4839,10 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
 <script>
 var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxoagx4t2EopKubBQs7iEc4RZAo81MDEyqs25J0YMXNOruPXpkKaoiPSy-0QwbW9Qt0/exec';
 var SHELL_USER = null;
+// Keyboard: anything marked role="button" (sidebar, tabs) activates on Enter / Space.
+document.addEventListener('keydown',function(e){
+  if((e.key==='Enter'||e.key===' ')&&e.target.getAttribute&&e.target.getAttribute('role')==='button'){e.preventDefault();e.target.click();}
+});
 function shellFmtDate(s){
   if(!s) return '';
   var p=String(s).split('T')[0].split('-'),m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -4712,10 +4859,49 @@ window.authExpired_ = function(){
 };
 
 window.onload = function(){
+  document.querySelectorAll('.tab,.inner-tab,.stab').forEach(function(el){ if(!el.getAttribute('role')){ el.setAttribute('role','button'); el.tabIndex=0; } });
   var saved = sessionStorage.getItem('shellUser');
   if (saved) { SHELL_USER = JSON.parse(saved); enterApp(); }
-  else document.getElementById('loginId').focus();
+  else { document.getElementById('loginId').focus(); initGoogleLogin(); }
 };
+
+function finishLogin(d){
+  SHELL_USER = Object.assign({}, d.user, {token: d.token || ''});
+  sessionStorage.setItem('shellUser', JSON.stringify(SHELL_USER));
+  enterApp();
+}
+
+// ---- Sign in with Google (shown only when the server has GOOGLE_CLIENT_ID set)
+function initGoogleLogin(){
+  fetch(WEBAPP_URL + '?action=authConfig').then(function(r){ return r.json(); }).then(function(c){
+    if (!c || !c.ok) return;
+    if (c.passwordLogin === false) {
+      var f = document.querySelector('#loginWrap form'); if (f) f.style.display = 'none';
+      var dv = document.querySelector('#loginWrap .login-divider'); if (dv) dv.style.display = 'none';
+    }
+    if (!c.clientId) return;
+    var s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client'; s.async = true; s.defer = true;
+    s.onload = function(){
+      google.accounts.id.initialize({ client_id: c.clientId, callback: onGoogleCredential });
+      google.accounts.id.renderButton(document.getElementById('gsiBtn'), { theme: 'outline', size: 'large', text: 'signin_with', width: 280 });
+      document.getElementById('gsiWrap').style.display = 'block';
+      if (c.passwordLogin === false) document.getElementById('gsiWrap').firstElementChild.style.display = 'none';
+    };
+    document.head.appendChild(s);
+  }).catch(function(){});
+}
+function onGoogleCredential(resp){
+  var err = document.getElementById('loginErr');
+  err.textContent = '';
+  fetch(WEBAPP_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify({action:'googleLogin', credential:resp.credential})})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d.ok) { err.textContent = d.error || 'Google sign-in failed'; return; }
+      finishLogin(d);
+    })
+    .catch(function(e){ err.textContent = 'Network error: ' + e.message; });
+}
 
 function doShellLogin(){
   var u = document.getElementById('loginId').value.trim();
@@ -4730,14 +4916,13 @@ function doShellLogin(){
     .then(function(d){
       btn.disabled = false; btn.textContent = 'Sign in';
       if (!d.ok) { err.textContent = d.error || 'Login failed'; return; }
-      SHELL_USER = Object.assign({}, d.user, {token: d.token || ''});
-      sessionStorage.setItem('shellUser', JSON.stringify(SHELL_USER));
-      enterApp();
+      finishLogin(d);
     })
     .catch(function(e){ btn.disabled = false; btn.textContent = 'Sign in'; err.textContent = 'Network error: ' + e.message; });
 }
 
 function doShellLogout(){
+  try { if (window.google && google.accounts && google.accounts.id) google.accounts.id.disableAutoSelect(); } catch(e){}
   sessionStorage.removeItem('shellUser');
   SHELL_USER = null;
   document.getElementById('app').style.display = 'none';
@@ -4765,7 +4950,7 @@ function applyRolePermissions(){
 
 function enterApp(){
   document.getElementById('loginWrap').style.display = 'none';
-  document.getElementById('splashWrap').style.display = 'flex';
+  document.getElementById('app').style.display = 'flex';
 
   var initials = (SHELL_USER.name || '?').split(' ').map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
   document.getElementById('sbAv').textContent = initials;
@@ -4806,12 +4991,6 @@ function enterApp(){
     try { loadClientsForVault(); } catch(e) {}
   }
 
-  // Splash is a flat 5-second cap, not gated on data success — so a slow or
-  // failed fetch never leaves the user staring at the splash indefinitely.
-  setTimeout(function(){
-    document.getElementById('splashWrap').style.display = 'none';
-    document.getElementById('app').style.display = 'flex';
-  }, 5000);
 }
 
 function toggleSidebar(){
@@ -4948,7 +5127,7 @@ function renderDashboardAssessments(){
     var typeColor=function(t){ return t==='GST' ? {bg:'#eff6ff',fg:'#2563eb'} : {bg:'#f5f3ff',fg:'#7c3aed'}; };
     var modeColor=function(m){ return (m||'').toLowerCase()==='online' ? {bg:'#ecfdf5',fg:'#059669'} : {bg:'#f9fafb',fg:'#6b7280'}; };
     el.innerHTML='<div class="card" style="border-left:4px solid #dc2626;padding:18px;">'
-      +'<div class="db-ctit"><i class="ti ti-alert-triangle" style="color:#dc2626;"></i> Assessment Reminders <span class="db-ctit-sub">GST / Income Tax submission dates</span></div>'
+      +'<div class="db-ctit"><i class="ti ti-alert-triangle" style="color:#dc2626;"></i> Assessment Reminders</div>'
       +shown.map(function(r){
         var cls=dbIsPastDue(r.submission_date)?'od':(dbIsSoon(r.submission_date)?'soon':'ok');
         var tc=typeColor(r.type), mc=modeColor(r.submission_mode);
